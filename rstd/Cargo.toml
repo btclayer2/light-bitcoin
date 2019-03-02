@@ -1,0 +1,12 @@
+[package]
+name = "rstd"
+version = "0.1.0"
+authors = ["koushiro <koushiro.cqx@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+cfg-if = "0.1.6"
+
+[features]
+default = ["std"]
+std = []

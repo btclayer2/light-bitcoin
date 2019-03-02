@@ -1,0 +1,18 @@
+[package]
+name = "bitcrypto"
+version = "0.1.0"
+authors = ["debris <marek.kotewicz@gmail.com> and koushiro <koushiro.cqx@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+rstd = { path = "../rstd" }
+primitives = { path = "../primitives" }
+rust-crypto = "0.2.36"
+siphasher = "0.1.1"
+
+[features]
+default = []
+std = [
+    "rstd/std",
+    "primitives/std"
+]
