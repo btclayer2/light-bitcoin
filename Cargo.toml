@@ -3,7 +3,7 @@ name = "light-bitcoin"
 version = "0.1.0"
 license = "GPL-3.0"
 authors = ["Parity Technologies <admin@parity.io> and koushiro <koushiro.cqx@gmail.com>"]
-description = "A light bitcoin library that supports `no_std`."
+description = "A light bitcoin library inherited from parity-bitcoin, with `no_std` support."
 edition = "2018"
 
 [dependencies]
