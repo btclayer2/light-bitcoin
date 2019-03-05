@@ -10,23 +10,10 @@ use super::private::Private;
 use super::public::Public;
 use super::Secret;
 
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default)]
 pub struct KeyPair {
     private: Private,
     public: Public,
-}
-
-impl fmt::Debug for KeyPair {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.private.fmt(f)?;
-        writeln!(f, "public: {:?}", self.public)
-    }
-}
-
-impl fmt::Display for KeyPair {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "private: {}", self.private)?;
-        writeln!(f, "public: {}", self.public)
-    }
 }
 
 impl KeyPair {
@@ -79,6 +66,20 @@ impl KeyPair {
             network: self.private.network,
             hash: self.public.address_hash(),
         }
+    }
+}
+
+impl fmt::Debug for KeyPair {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.private.fmt(f)?;
+        writeln!(f, "public: {:?}", self.public)
+    }
+}
+
+impl fmt::Display for KeyPair {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "private: {}", self.private)?;
+        writeln!(f, "public: {}", self.public)
     }
 }
 

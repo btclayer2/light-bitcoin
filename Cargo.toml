@@ -12,10 +12,9 @@ primitives = { path = "primitives" }
 bitcrypto = { path = "crypto" }
 base58 = { path = "base58" }
 keys = { path = "keys" }
-#chain = { path = "chain" }
+chain = { path = "chain" }
 #script = { path = "script" }
 serialization = { path = "serialization" }
-serialization_derive = { path = "serialization_derive" }
 
 [workspace]
 members = [
@@ -24,8 +23,7 @@ members = [
     "crypto",
     "base58",
     "keys",
-#    "chain",
+    "chain",
 #    "script",
-    "serialization",
-    "serialization_derive"
+    "serialization"
 ]

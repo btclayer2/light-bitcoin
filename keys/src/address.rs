@@ -47,7 +47,7 @@ impl Default for Network {
 }
 
 /// `AddressHash` with network identifier and format type
-#[derive(PartialEq, Clone, Debug, Default)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Default)]
 pub struct Address {
     /// The type of the address.
     pub kind: Type,
@@ -57,6 +57,31 @@ pub struct Address {
     pub hash: AddressHash,
 }
 
+impl fmt::Display for Address {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.layout().to_base58().fmt(f)
+    }
+}
+
+impl str::FromStr for Address {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Error>
+    where
+        Self: Sized,
+    {
+        let hex = s.from_base58().map_err(|_| Error::InvalidAddress)?;
+        Address::from_layout(&hex)
+    }
+}
+
+impl From<&'static str> for Address {
+    fn from(s: &'static str) -> Self {
+        s.parse().unwrap()
+    }
+}
+
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Default)]
 pub struct AddressDisplayLayout([u8; 25]);
 
 impl ops::Deref for AddressDisplayLayout {
@@ -113,30 +138,6 @@ impl DisplayLayout for Address {
             network,
             hash,
         })
-    }
-}
-
-impl fmt::Display for Address {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.layout().to_base58().fmt(f)
-    }
-}
-
-impl str::FromStr for Address {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self, Error>
-    where
-        Self: Sized,
-    {
-        let hex = s.from_base58().map_err(|_| Error::InvalidAddress)?;
-        Address::from_layout(&hex)
-    }
-}
-
-impl From<&'static str> for Address {
-    fn from(s: &'static str) -> Self {
-        s.parse().unwrap()
     }
 }
 

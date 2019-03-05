@@ -1,12 +1,11 @@
 //! Wrapper around `Vec<u8>`
 
-use rstd::prelude::*;
-use rstd::{fmt, marker, ops, str};
+use rstd::{fmt, marker, ops, prelude::*, str};
 
 use rustc_hex::{FromHex, FromHexError, ToHex};
 
 /// Wrapper around `Vec<u8>`
-#[derive(Default, PartialEq, Clone, Eq, Hash)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Default, Hash)]
 pub struct Bytes(Vec<u8>);
 
 impl Bytes {

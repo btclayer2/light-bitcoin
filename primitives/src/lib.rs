@@ -1,11 +1,11 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use fixed_hash::construct_fixed_hash;
-pub use primitive_types::*;
-
 mod bytes;
 mod compact;
 pub mod io;
+
+use fixed_hash::construct_fixed_hash;
+pub use primitive_types::*;
 
 pub use self::bytes::{Bytes, TaggedBytes};
 pub use self::compact::Compact;

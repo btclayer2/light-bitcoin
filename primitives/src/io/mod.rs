@@ -1,10 +1,10 @@
+mod error;
+
 use rstd::prelude::*;
 use rstd::{cmp, fmt, mem, ptr, str};
 
 use byteorder::ByteOrder;
 pub use byteorder::{BigEndian, LittleEndian};
-
-mod error;
 
 pub use self::error::{Error, ErrorKind, Result};
 

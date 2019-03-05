@@ -8,6 +8,7 @@ use super::signature::{CompactSignature, Signature};
 use super::{AddressHash, Message};
 
 /// Secret public key
+#[derive(Ord, PartialOrd, Eq, Copy, Clone)]
 pub enum Public {
     /// Normal version of public key
     Normal(H520),
@@ -76,6 +77,12 @@ impl PartialEq for Public {
         let s_slice: &[u8] = self;
         let o_slice: &[u8] = other;
         s_slice == o_slice
+    }
+}
+
+impl Default for Public {
+    fn default() -> Public {
+        Public::Normal(H520::default())
     }
 }
 

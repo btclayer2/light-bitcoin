@@ -8,7 +8,7 @@ use super::reader::{Deserializable, Error as ReaderError, Reader};
 use super::stream::{Serializable, Stream};
 
 /// A type of variable-length integer commonly used in the Bitcoin P2P protocol and Bitcoin serialized data structures.
-#[derive(Default, Debug, Clone, Copy, PartialEq)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default, Debug)]
 pub struct CompactInteger(u64);
 
 impl fmt::Display for CompactInteger {

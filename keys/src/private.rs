@@ -14,7 +14,7 @@ use super::signature::{CompactSignature, Signature};
 use super::{Message, Secret};
 
 /// Secret with additional network identifier and format type
-#[derive(PartialEq, Clone, Default)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default)]
 pub struct Private {
     /// The network on which this key should be used.
     pub network: Network,
@@ -147,7 +147,9 @@ mod tests {
 
     #[test]
     fn test_private_to_string() {
-        let mut secret: Vec<u8> = FromHex::from_hex("063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5").unwrap();
+        let mut secret: Vec<u8> =
+            FromHex::from_hex("063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5")
+                .unwrap();
         secret.reverse();
         let private = Private {
             network: Network::Mainnet,
@@ -163,7 +165,9 @@ mod tests {
 
     #[test]
     fn test_private_from_str() {
-        let mut secret: Vec<u8> = FromHex::from_hex("063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5").unwrap();
+        let mut secret: Vec<u8> =
+            FromHex::from_hex("063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5")
+                .unwrap();
         secret.reverse();
         let private = Private {
             network: Network::Mainnet,

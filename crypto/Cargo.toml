@@ -7,11 +7,11 @@ edition = "2018"
 [dependencies]
 rstd = { path = "../rstd" }
 primitives = { path = "../primitives" }
-rust-crypto = "0.2.36"
+rcrypto = { version = "0.2.36", package = "rust-crypto" }
 siphasher = "0.1.1"
 
 [features]
-default = []
+default = ["std"]
 std = [
     "rstd/std",
     "primitives/std"

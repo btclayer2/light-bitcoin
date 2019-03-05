@@ -3,7 +3,7 @@
 use super::U256;
 
 /// Compact representation of `U256`
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy, Default, Debug)]
 pub struct Compact(u32);
 
 impl From<u32> for Compact {

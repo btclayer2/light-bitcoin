@@ -9,7 +9,7 @@ use rustc_hex::{FromHex, ToHex};
 
 use super::Error;
 
-#[derive(PartialEq)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Default)]
 pub struct Signature(Vec<u8>);
 
 impl fmt::Debug for Signature {
@@ -71,7 +71,7 @@ impl<'a> From<&'a [u8]> for Signature {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default)]
 pub struct CompactSignature(H520);
 
 impl fmt::Debug for CompactSignature {
