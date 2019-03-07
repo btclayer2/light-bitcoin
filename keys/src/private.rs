@@ -24,6 +24,38 @@ pub struct Private {
     pub compressed: bool,
 }
 
+impl fmt::Debug for Private {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "network: {:?}", self.network)?;
+        writeln!(f, "secret: {}", self.secret)?;
+        writeln!(f, "compressed: {}", self.compressed)
+    }
+}
+
+impl fmt::Display for Private {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.layout().to_base58().fmt(f)
+    }
+}
+
+impl str::FromStr for Private {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Error>
+    where
+        Self: Sized,
+    {
+        let hex = s.from_base58().map_err(|_| Error::InvalidPrivate)?;
+        Private::from_layout(&hex)
+    }
+}
+
+impl From<&'static str> for Private {
+    fn from(s: &'static str) -> Self {
+        s.parse().unwrap()
+    }
+}
+
 impl Private {
     pub fn sign(&self, message: &Message) -> Result<Signature, Error> {
         let secret = secp256k1::SecretKey::parse(self.secret.as_fixed_bytes())?;
@@ -104,38 +136,6 @@ impl DisplayLayout for Private {
         };
 
         Ok(private)
-    }
-}
-
-impl fmt::Debug for Private {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "network: {:?}", self.network)?;
-        writeln!(f, "secret: {}", self.secret)?;
-        writeln!(f, "compressed: {}", self.compressed)
-    }
-}
-
-impl fmt::Display for Private {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.layout().to_base58().fmt(f)
-    }
-}
-
-impl str::FromStr for Private {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self, Error>
-    where
-        Self: Sized,
-    {
-        let hex = s.from_base58().map_err(|_| Error::InvalidPrivate)?;
-        Private::from_layout(&hex)
-    }
-}
-
-impl From<&'static str> for Private {
-    fn from(s: &'static str) -> Self {
-        s.parse().unwrap()
     }
 }
 

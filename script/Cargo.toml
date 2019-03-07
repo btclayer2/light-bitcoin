@@ -1,0 +1,27 @@
+[package]
+name = "script"
+version = "0.1.0"
+authors = ["debris <marek.kotewicz@gmail.com> and koushiro <koushiro.cqx@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+rstd = { path = "../rstd", default-features = false }
+primitives = { path = "../primitives", default-features = false }
+bitcrypto = { path = "../crypto", default-features = false }
+serialization = { path = "../serialization", default-features = false }
+keys = { path = "../keys", default-features = false }
+chain = { path = "../chain", default-features = false }
+
+[dev-dependencies]
+rustc-hex = { version = "2.0", default-features = false }
+
+[features]
+default = ["std"]
+std = [
+    "rstd/std",
+    "primitives/std",
+    "bitcrypto/std",
+    "serialization/std",
+    "keys/std",
+    "chain/std"
+]

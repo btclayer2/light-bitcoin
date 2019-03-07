@@ -16,6 +16,20 @@ pub struct KeyPair {
     public: Public,
 }
 
+impl fmt::Debug for KeyPair {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.private.fmt(f)?;
+        writeln!(f, "public: {:?}", self.public)
+    }
+}
+
+impl fmt::Display for KeyPair {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "private: {}", self.private)?;
+        writeln!(f, "public: {}", self.public)
+    }
+}
+
 impl KeyPair {
     pub fn private(&self) -> &Private {
         &self.private
@@ -66,20 +80,6 @@ impl KeyPair {
             network: self.private.network,
             hash: self.public.address_hash(),
         }
-    }
-}
-
-impl fmt::Debug for KeyPair {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.private.fmt(f)?;
-        writeln!(f, "public: {:?}", self.public)
-    }
-}
-
-impl fmt::Display for KeyPair {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "private: {}", self.private)?;
-        writeln!(f, "public: {}", self.public)
     }
 }
 

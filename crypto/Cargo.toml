@@ -5,14 +5,24 @@ authors = ["debris <marek.kotewicz@gmail.com> and koushiro <koushiro.cqx@gmail.c
 edition = "2018"
 
 [dependencies]
-rstd = { path = "../rstd" }
-primitives = { path = "../primitives" }
-rcrypto = { version = "0.2.36", package = "rust-crypto" }
-siphasher = "0.1.1"
+rstd = { path = "../rstd", default-features = false }
+primitives = { path = "../primitives", default-features = false }
+digest = { version = "0.8", default-features = false }      # support `no_std`
+ripemd160 = { version = "0.8", default-features = false }   # support `no_std`
+sha-1 = { version = "0.8", default-features = false }       # support `no_std`
+sha2 = { version = "0.8", default-features = false }        # support `no-std`
+siphasher = "0.3"   # support `no_std`
+
+[dev-dependencies]
+rustc-hex = { version = "2.0", default-features = false }
 
 [features]
 default = ["std"]
 std = [
     "rstd/std",
-    "primitives/std"
+    "primitives/std",
+    "digest/std",
+    "ripemd160/std",
+    "sha-1/std",
+    "sha2/std"
 ]

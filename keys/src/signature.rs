@@ -98,8 +98,8 @@ impl str::FromStr for CompactSignature {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Error> {
-        match s.parse() {
-            Ok(hash) => Ok(CompactSignature(hash)),
+        match FromHex::from_hex::<Vec<u8>>(s) {
+            Ok(hash) => Ok(CompactSignature(H520::from_slice(&hash))),
             _ => Err(Error::InvalidSignature),
         }
     }

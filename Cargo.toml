@@ -13,7 +13,7 @@ bitcrypto = { path = "crypto" }
 base58 = { path = "base58" }
 keys = { path = "keys" }
 chain = { path = "chain" }
-#script = { path = "script" }
+script = { path = "script" }
 serialization = { path = "serialization" }
 
 [workspace]
@@ -24,6 +24,6 @@ members = [
     "base58",
     "keys",
     "chain",
-#    "script",
+    "script",
     "serialization"
 ]

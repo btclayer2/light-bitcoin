@@ -20,6 +20,32 @@ pub struct IndexedBlock {
     pub transactions: Vec<IndexedTransaction>,
 }
 
+impl PartialEq for IndexedBlock {
+    fn eq(&self, other: &Self) -> bool {
+        self.header.hash == other.header.hash
+    }
+}
+
+impl From<Block> for IndexedBlock {
+    fn from(block: Block) -> Self {
+        let Block {
+            block_header,
+            transactions,
+        } = block;
+
+        IndexedBlock {
+            header: block_header.into(),
+            transactions: transactions.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+impl From<&'static str> for IndexedBlock {
+    fn from(s: &'static str) -> Self {
+        deserialize(&s.from_hex::<Vec<u8>>().unwrap() as &[u8]).unwrap()
+    }
+}
+
 impl IndexedBlock {
     pub fn new(header: IndexedBlockHeader, transactions: Vec<IndexedTransaction>) -> Self {
         IndexedBlock {
@@ -90,32 +116,6 @@ impl IndexedBlock {
         self.transactions
             .iter()
             .all(|tx| tx.raw.is_final_in_block(height, self.header.raw.time))
-    }
-}
-
-impl PartialEq for IndexedBlock {
-    fn eq(&self, other: &Self) -> bool {
-        self.header.hash == other.header.hash
-    }
-}
-
-impl From<Block> for IndexedBlock {
-    fn from(block: Block) -> Self {
-        let Block {
-            block_header,
-            transactions,
-        } = block;
-
-        IndexedBlock {
-            header: block_header.into(),
-            transactions: transactions.into_iter().map(Into::into).collect(),
-        }
-    }
-}
-
-impl From<&'static str> for IndexedBlock {
-    fn from(s: &'static str) -> Self {
-        deserialize(&s.from_hex::<Vec<u8>>().unwrap() as &[u8]).unwrap()
     }
 }
 

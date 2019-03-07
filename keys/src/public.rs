@@ -16,6 +16,49 @@ pub enum Public {
     Compressed(H264),
 }
 
+impl PartialEq for Public {
+    fn eq(&self, other: &Self) -> bool {
+        let s_slice: &[u8] = self;
+        let o_slice: &[u8] = other;
+        s_slice == o_slice
+    }
+}
+
+impl fmt::Debug for Public {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Public::Normal(ref hash) => writeln!(f, "normal: {}", hash),
+            Public::Compressed(ref hash) => writeln!(f, "compressed: {}", hash),
+        }
+    }
+}
+
+impl fmt::Display for Public {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Public::Normal(ref hash) => writeln!(f, "normal: {}", hash),
+            Public::Compressed(ref hash) => writeln!(f, "compressed: {}", hash),
+        }
+    }
+}
+
+impl ops::Deref for Public {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        match *self {
+            Public::Normal(ref hash) => hash.as_bytes(),
+            Public::Compressed(ref hash) => hash.as_bytes(),
+        }
+    }
+}
+
+impl Default for Public {
+    fn default() -> Public {
+        Public::Normal(H520::default())
+    }
+}
+
 impl Public {
     pub fn from_slice(data: &[u8]) -> Result<Self, Error> {
         match data.len() {
@@ -58,48 +101,5 @@ impl Public {
             Public::Normal(public)
         };
         Ok(public)
-    }
-}
-
-impl ops::Deref for Public {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        match *self {
-            Public::Normal(ref hash) => hash.as_bytes(),
-            Public::Compressed(ref hash) => hash.as_bytes(),
-        }
-    }
-}
-
-impl PartialEq for Public {
-    fn eq(&self, other: &Self) -> bool {
-        let s_slice: &[u8] = self;
-        let o_slice: &[u8] = other;
-        s_slice == o_slice
-    }
-}
-
-impl Default for Public {
-    fn default() -> Public {
-        Public::Normal(H520::default())
-    }
-}
-
-impl fmt::Debug for Public {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Public::Normal(ref hash) => writeln!(f, "normal: {}", hash),
-            Public::Compressed(ref hash) => writeln!(f, "compressed: {}", hash),
-        }
-    }
-}
-
-impl fmt::Display for Public {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Public::Normal(ref hash) => writeln!(f, "normal: {}", hash),
-            Public::Compressed(ref hash) => writeln!(f, "compressed: {}", hash),
-        }
     }
 }

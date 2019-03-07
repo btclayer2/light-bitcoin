@@ -16,12 +16,6 @@ pub struct BlockHeader {
     pub nonce: u32,
 }
 
-impl BlockHeader {
-    pub fn hash(&self) -> H256 {
-        dhash256(&serialize(self))
-    }
-}
-
 impl fmt::Debug for BlockHeader {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let reverse_hash = |hash: &H256| {
@@ -47,6 +41,12 @@ impl fmt::Debug for BlockHeader {
 impl From<&'static str> for BlockHeader {
     fn from(s: &'static str) -> Self {
         deserialize(&s.from_hex::<Vec<u8>>().unwrap() as &[u8]).unwrap()
+    }
+}
+
+impl BlockHeader {
+    pub fn hash(&self) -> H256 {
+        dhash256(&serialize(self))
     }
 }
 

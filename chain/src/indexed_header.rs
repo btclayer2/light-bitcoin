@@ -12,9 +12,9 @@ pub struct IndexedBlockHeader {
     pub raw: BlockHeader,
 }
 
-impl IndexedBlockHeader {
-    pub fn new(hash: H256, header: BlockHeader) -> Self {
-        IndexedBlockHeader { hash, raw: header }
+impl PartialEq for IndexedBlockHeader {
+    fn eq(&self, other: &Self) -> bool {
+        self.hash == other.hash
     }
 }
 
@@ -33,18 +33,18 @@ impl fmt::Debug for IndexedBlockHeader {
     }
 }
 
-impl PartialEq for IndexedBlockHeader {
-    fn eq(&self, other: &Self) -> bool {
-        self.hash == other.hash
-    }
-}
-
 impl From<BlockHeader> for IndexedBlockHeader {
     fn from(header: BlockHeader) -> Self {
         IndexedBlockHeader {
             hash: header.hash(),
             raw: header,
         }
+    }
+}
+
+impl IndexedBlockHeader {
+    pub fn new(hash: H256, header: BlockHeader) -> Self {
+        IndexedBlockHeader { hash, raw: header }
     }
 }
 

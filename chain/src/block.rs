@@ -19,6 +19,12 @@ pub struct Block {
     pub transactions: Vec<Transaction>,
 }
 
+impl From<&'static str> for Block {
+    fn from(s: &'static str) -> Self {
+        deserialize(&s.from_hex::<Vec<u8>>().unwrap() as &[u8]).unwrap()
+    }
+}
+
 impl Block {
     pub fn new(header: BlockHeader, transactions: Vec<Transaction>) -> Self {
         Block {
@@ -60,12 +66,6 @@ impl Block {
 
     pub fn hash(&self) -> H256 {
         self.block_header.hash()
-    }
-}
-
-impl From<&'static str> for Block {
-    fn from(s: &'static str) -> Self {
-        deserialize(&s.from_hex::<Vec<u8>>().unwrap() as &[u8]).unwrap()
     }
 }
 

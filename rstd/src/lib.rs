@@ -59,6 +59,7 @@ cfg_if! {
 
         pub use alloc::boxed;
         pub use alloc::collections;
+        pub use alloc::fmt as alloc_fmt;
         pub use alloc::prelude as alloc_prelude;
         pub use alloc::rc;
         pub use alloc::string;
@@ -70,7 +71,7 @@ cfg_if! {
         pub use core::cmp;
         pub use core::convert;
         pub use core::default;
-        pub use core::fmt;
+        pub use core::fmt as core_fmt;
         pub use core::hash;
         pub use core::intrinsics;
         pub use core::iter;
@@ -89,6 +90,19 @@ cfg_if! {
     }
 }
 
+pub mod fmt {
+    #[cfg(not(feature = "std"))]
+    pub use crate::{alloc_fmt::*, core_fmt::*};
+    #[cfg(feature = "std")]
+    pub use std::fmt::*;
+}
+
+#[cfg(not(feature = "std"))]
+#[macro_export]
+macro_rules! format {
+    ($($arg:tt)*) => ($crate::fmt::format(format_args!($($arg)*)))
+}
+
 /// Prelude of common useful imports.
 ///
 /// This should include only things which are in the normal std prelude.
@@ -100,6 +114,8 @@ pub mod prelude {
 
     // Re-export `vec!` macro here, but not in `std` mode, since
     // std's prelude already brings `vec!` into the scope.
+    #[cfg(not(feature = "std"))]
+    pub use crate::format;
     #[cfg(not(feature = "std"))]
     pub use crate::vec;
 }

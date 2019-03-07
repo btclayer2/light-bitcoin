@@ -12,12 +12,9 @@ pub struct IndexedTransaction {
     pub raw: Transaction,
 }
 
-impl IndexedTransaction {
-    pub fn new(hash: H256, transaction: Transaction) -> Self {
-        IndexedTransaction {
-            hash,
-            raw: transaction,
-        }
+impl PartialEq for IndexedTransaction {
+    fn eq(&self, other: &Self) -> bool {
+        self.hash == other.hash
     }
 }
 
@@ -36,12 +33,6 @@ impl fmt::Debug for IndexedTransaction {
     }
 }
 
-impl PartialEq for IndexedTransaction {
-    fn eq(&self, other: &Self) -> bool {
-        self.hash == other.hash
-    }
-}
-
 impl<T> From<T> for IndexedTransaction
 where
     Transaction: From<T>,
@@ -51,6 +42,15 @@ where
         IndexedTransaction {
             hash: tx.hash(),
             raw: tx,
+        }
+    }
+}
+
+impl IndexedTransaction {
+    pub fn new(hash: H256, transaction: Transaction) -> Self {
+        IndexedTransaction {
+            hash,
+            raw: transaction,
         }
     }
 }

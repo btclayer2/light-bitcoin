@@ -144,13 +144,16 @@ impl DisplayLayout for Address {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rustc_hex::FromHex;
 
     #[test]
     fn test_address_to_string() {
         let address = Address {
             kind: Type::P2PKH,
             network: Network::Mainnet,
-            hash: str::FromStr::from_str("3f4aa1fedf1f54eeb03b759deadb36676b184911").unwrap(),
+            hash: AddressHash::from_slice(
+                &FromHex::from_hex::<Vec<u8>>("3f4aa1fedf1f54eeb03b759deadb36676b184911").unwrap(),
+            ),
         };
 
         assert_eq!(
@@ -164,7 +167,9 @@ mod tests {
         let address = Address {
             kind: Type::P2PKH,
             network: Network::Mainnet,
-            hash: str::FromStr::from_str("3f4aa1fedf1f54eeb03b759deadb36676b184911").unwrap(),
+            hash: AddressHash::from_slice(
+                &FromHex::from_hex::<Vec<u8>>("3f4aa1fedf1f54eeb03b759deadb36676b184911").unwrap(),
+            ),
         };
 
         assert_eq!(address, "16meyfSoQV6twkAAxPe51RtMVz7PGRmWna".into());
