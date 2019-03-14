@@ -1,6 +1,6 @@
 //! Serialized script, used inside transaction inputs and outputs.
 
-use rstd::{fmt, ops, prelude::*};
+use ustd::{fmt, ops, prelude::*};
 
 use keys::{self, AddressHash, Public};
 use primitives::Bytes;
@@ -635,7 +635,7 @@ mod tests {
 
     #[test]
     fn test_script_debug() {
-        use rstd::fmt::Write;
+        use ustd::fmt::Write;
 
         let script = Builder::default()
             .push_num(3.into())

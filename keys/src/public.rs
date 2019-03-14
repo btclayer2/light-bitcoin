@@ -1,6 +1,6 @@
-use rstd::{fmt, ops, prelude::*};
+use ustd::{fmt, ops, prelude::*};
 
-use bitcrypto::dhash160;
+use crypto::dhash160;
 use primitives::{H264, H512, H520};
 
 use super::error::Error;

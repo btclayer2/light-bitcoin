@@ -1,8 +1,8 @@
 //! Secret with additional network identifier and format type
 
-use rstd::{fmt, prelude::*, str};
+use ustd::{fmt, prelude::*, str};
 
-use bitcrypto::checksum;
+use crypto::checksum;
 use primitives::H520;
 
 use base58::{FromBase58, ToBase58};

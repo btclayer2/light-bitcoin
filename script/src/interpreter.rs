@@ -1,7 +1,7 @@
-use rstd::{cmp, mem, prelude::*};
+use ustd::{cmp, mem, prelude::*};
 
-use bitcrypto::{dhash160, dhash256, ripemd160, sha1, sha256};
 use chain::constants::SEQUENCE_LOCKTIME_DISABLE_FLAG;
+use crypto::{dhash160, dhash256, ripemd160, sha1, sha256};
 use keys::{Message, Public, Signature};
 use primitives::{Bytes, H256};
 
@@ -1256,7 +1256,7 @@ mod tests {
     use crate::verify::{NoopSignatureChecker, TransactionSignatureChecker};
     use chain::Transaction;
     use keys::{KeyPair, Network, Private};
-    use rstd::iter;
+    use ustd::iter;
 
     #[test]
     fn tests_is_public_key() {

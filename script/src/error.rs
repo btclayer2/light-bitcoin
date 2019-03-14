@@ -1,6 +1,6 @@
 //! Interpreter errors
 
-use rstd::fmt;
+use ustd::fmt;
 
 use super::opcode::Opcode;
 

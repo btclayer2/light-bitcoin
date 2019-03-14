@@ -1,7 +1,7 @@
-use rstd::prelude::*;
+use ustd::prelude::*;
 
 use primitives::{io, H256};
-use serialization::{deserialize, Deserializable, Error, Reader, Serializable, Stream};
+use serialization::{deserialize, Deserializable, Reader, Serializable, Stream};
 
 use rustc_hex::FromHex;
 
@@ -84,7 +84,7 @@ impl Serializable for Block {
 }
 
 impl Deserializable for Block {
-    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, Error>
+    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
     where
         Self: Sized,
         T: io::Read,

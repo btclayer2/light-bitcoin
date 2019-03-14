@@ -1,10 +1,10 @@
-use rstd::{marker, prelude::*};
+use ustd::{marker, prelude::*};
 
 use primitives::io;
 
 use super::compact_integer::CompactInteger;
 
-pub fn deserialize<R, T>(buffer: R) -> Result<T, Error>
+pub fn deserialize<R, T>(buffer: R) -> Result<T, io::Error>
 where
     R: io::Read,
     T: Deserializable,
@@ -15,7 +15,7 @@ where
     if reader.is_finished() {
         Ok(result)
     } else {
-        Err(Error::UnreadData)
+        Err(io::Error::UnreadData)
     }
 }
 
@@ -30,21 +30,8 @@ where
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub enum Error {
-    MalformedData,
-    UnexpectedEnd,
-    UnreadData,
-}
-
-impl From<io::Error> for Error {
-    fn from(_: io::Error) -> Self {
-        Error::UnexpectedEnd
-    }
-}
-
 pub trait Deserializable {
-    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, Error>
+    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
     where
         Self: Sized,
         T: io::Read;
@@ -100,14 +87,14 @@ where
         }
     }
 
-    pub fn read<T>(&mut self) -> Result<T, Error>
+    pub fn read<T>(&mut self) -> Result<T, io::Error>
     where
         T: Deserializable,
     {
         T::deserialize(self)
     }
 
-    pub fn read_with_proxy<T, F>(&mut self, proxy: F) -> Result<T, Error>
+    pub fn read_with_proxy<T, F>(&mut self, proxy: F) -> Result<T, io::Error>
     where
         T: Deserializable,
         F: FnMut(&[u8]),
@@ -116,11 +103,11 @@ where
         T::deserialize(&mut reader)
     }
 
-    pub fn read_slice(&mut self, bytes: &mut [u8]) -> Result<(), Error> {
-        io::Read::read_exact(self, bytes).map_err(|_| Error::UnexpectedEnd)
+    pub fn read_slice(&mut self, bytes: &mut [u8]) -> Result<(), io::Error> {
+        io::Read::read_exact(self, bytes).map_err(|_| io::Error::UnexpectedEof)
     }
 
-    pub fn read_list<T>(&mut self) -> Result<Vec<T>, Error>
+    pub fn read_list<T>(&mut self) -> Result<Vec<T>, io::Error>
     where
         T: Deserializable,
     {
@@ -134,13 +121,13 @@ where
         Ok(result)
     }
 
-    pub fn read_list_max<T>(&mut self, max: usize) -> Result<Vec<T>, Error>
+    pub fn read_list_max<T>(&mut self, max: usize) -> Result<Vec<T>, io::Error>
     where
         T: Deserializable,
     {
         let len: usize = self.read::<CompactInteger>()?.into();
         if len > max {
-            return Err(Error::MalformedData);
+            return Err(io::Error::ReadMalformedData);
         }
 
         let mut result = Vec::with_capacity(len);
@@ -180,7 +167,7 @@ where
     R: io::Read,
     T: Deserializable,
 {
-    type Item = Result<T, Error>;
+    type Item = Result<T, io::Error>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.reader.is_finished() {

@@ -17,22 +17,22 @@ jobs:
           command: |
             apt-get update
             apt-get install -y curl wget build-essential zlib1g-dev python libcurl4-openssl-dev libelf-dev libdw-dev cmake binutils-dev libiberty-dev
-            curl https://sh.rustup.rs -sSf | sh -s -- --no-modify-path --default-toolchain nightly -y;
+            curl https://sh.rustup.rs -sSf | sh -s -- --no-modify-path --default-toolchain none -y;
             source $HOME/.cargo/env
-            rustup component add rustfmt
-            rustup component add clippy
           no_output_timeout: 1800s
 
       - run:
           name: Format
           command: |
             export PATH=~/.cargo/bin:$PATH
+            rustup component add rustfmt
             cargo fmt -- --check
 
       - run:
           name: Lint
           command: |
             export PATH=~/.cargo/bin:$PATH
+            rustup component add clippy
             cargo clippy -- -Dwarnings
 
       - run:

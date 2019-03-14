@@ -1,4 +1,4 @@
-use rstd::{ops, prelude::*};
+use ustd::{ops, prelude::*};
 
 use super::error::Error;
 

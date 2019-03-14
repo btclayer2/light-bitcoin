@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use rstd::{hash::Hasher, prelude::*};
+use ustd::{hash::Hasher, prelude::*};
 
 use primitives::{H160, H256, H32};
 

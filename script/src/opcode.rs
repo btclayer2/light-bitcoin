@@ -1,6 +1,6 @@
 //! Script opcodes.
 
-use rstd::{fmt, prelude::*};
+use ustd::{fmt, prelude::*};
 
 use super::flags::VerificationFlags;
 

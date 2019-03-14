@@ -5,7 +5,7 @@ authors = ["debris <marek.kotewicz@gmail.com> and koushiro <koushiro.cqx@gmail.c
 edition = "2018"
 
 [dependencies]
-rstd = { path = "../rstd", default-features = false }
+ustd = { path = "../ustd", default-features = false }
 byteorder = { version = "1.3", default-features = false }
 rustc-hex = { version = "2.0", default-features = false }
 fixed-hash = { version = "0.3", default-features = false }
@@ -14,7 +14,7 @@ primitive-types = { version = "0.2", default-features = false, features = ["code
 [features]
 default = ["std"]
 std = [
-    "rstd/std",
+    "ustd/std",
     "byteorder/std",
     "rustc-hex/std",
     "fixed-hash/std",

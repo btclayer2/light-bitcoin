@@ -28,34 +28,6 @@ use cfg_if::cfg_if;
 cfg_if! {
     if #[cfg(not(feature = "std"))] {
         pub extern crate alloc;
-        /*
-        extern "C" {
-            fn ext_malloc(size: usize) -> *mut u8;
-            fn ext_free(ptr: *mut u8);
-        }
-
-        /// Wasm allocator
-        pub struct WasmAllocator;
-
-        #[global_allocator]
-        static ALLOCATOR: WasmAllocator = WasmAllocator;
-
-        mod __impl {
-            use core::alloc::{GlobalAlloc, Layout};
-
-            use super::WasmAllocator;
-
-            unsafe impl GlobalAlloc for WasmAllocator {
-                unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-                    super::ext_malloc(layout.size()) as *mut u8
-                }
-
-                unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
-                    super::ext_free(ptr as *mut u8)
-                }
-            }
-        }
-        */
 
         pub use alloc::boxed;
         pub use alloc::collections;
@@ -112,8 +84,8 @@ pub mod prelude {
     #[cfg(feature = "std")]
     pub use std::prelude::v1::*;
 
-    // Re-export `vec!` macro here, but not in `std` mode, since
-    // std's prelude already brings `vec!` into the scope.
+    // Re-export `vec!` and `format!` macro here, but not in `std` mode, since
+    // std's prelude already brings `vec!` and `format!` into the scope.
     #[cfg(not(feature = "std"))]
     pub use crate::format;
     #[cfg(not(feature = "std"))]

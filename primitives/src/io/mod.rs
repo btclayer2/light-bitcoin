@@ -1,12 +1,11 @@
 mod error;
 
-use rstd::prelude::*;
-use rstd::{cmp, fmt, mem, ptr, str};
+use ustd::{cmp, fmt, mem, prelude::*, ptr, str};
 
 use byteorder::ByteOrder;
 pub use byteorder::{BigEndian, LittleEndian};
 
-pub use self::error::{Error, ErrorKind, Result};
+pub use self::error::{Error, Result};
 
 struct Guard<'a> {
     buf: &'a mut Vec<u8>,
@@ -32,7 +31,7 @@ where
         };
         let ret = f(g.buf);
         if str::from_utf8(&g.buf[g.len..]).is_err() {
-            ret.and_then(|_| Err(ErrorKind::InvalidData))
+            ret.and_then(|_| Err(Error::InvalidData))
         } else {
             g.len = g.buf.len();
             ret
@@ -72,7 +71,7 @@ fn read_to_end_with_reservation<R: Read + ?Sized>(
             }
             Ok(n) => g.len += n,
             Err(e) => match e {
-                ErrorKind::Interrupted => {}
+                Error::Interrupted => {}
                 _ => {
                     ret = Err(e);
                     break;
@@ -109,13 +108,13 @@ pub trait Read {
                     buf = &mut tmp[n..];
                 }
                 Err(e) => match e {
-                    ErrorKind::Interrupted => {}
+                    Error::Interrupted => {}
                     _ => return Err(e),
                 },
             }
         }
         if !buf.is_empty() {
-            Err(ErrorKind::UnexpectedEof)
+            Err(Error::UnexpectedEof)
         } else {
             Ok(())
         }
@@ -315,10 +314,10 @@ pub trait Write {
     fn write_all(&mut self, mut buf: &[u8]) -> Result<()> {
         while !buf.is_empty() {
             match self.write(buf) {
-                Ok(0) => return Err(ErrorKind::WriteZero),
+                Ok(0) => return Err(Error::WriteZero),
                 Ok(n) => buf = &buf[n..],
                 Err(e) => match e {
-                    ErrorKind::Interrupted => {}
+                    Error::Interrupted => {}
                     _ => return Err(e),
                 },
             }
@@ -357,7 +356,7 @@ pub trait Write {
                 if output.error.is_err() {
                     output.error
                 } else {
-                    Err(ErrorKind::Other)
+                    Err(Error::Other)
                 }
             }
         }
@@ -629,7 +628,7 @@ impl<R: Read> Iterator for Bytes<R> {
                 Ok(0) => None,
                 Ok(..) => Some(Ok(byte)),
                 Err(e) => match e {
-                    ErrorKind::Interrupted => continue,
+                    Error::Interrupted => continue,
                     _ => Some(Err(e)),
                 },
             };
@@ -712,7 +711,7 @@ impl<'a> Read for &'a [u8] {
     #[inline]
     fn read_exact(&mut self, buf: &mut [u8]) -> Result<()> {
         if buf.len() > self.len() {
-            return Err(ErrorKind::UnexpectedEof);
+            return Err(Error::UnexpectedEof);
         }
         let (a, b) = self.split_at(buf.len());
 
@@ -750,7 +749,7 @@ impl<'a> Write for &'a mut [u8] {
         if self.write(data)? == data.len() {
             Ok(())
         } else {
-            Err(ErrorKind::WriteZero)
+            Err(Error::WriteZero)
         }
     }
 }

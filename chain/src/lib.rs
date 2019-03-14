@@ -1,10 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-// TODO: Seems to be a rust nightly compiler bug, add `#[allow(unused_imports)]` to avoid complaints from the compiler.
-#[allow(unused_imports)]
-#[macro_use]
-extern crate rstd;
-
 pub mod constants;
 
 mod block;

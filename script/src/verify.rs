@@ -1,4 +1,4 @@
-use rstd::prelude::*;
+use ustd::prelude::*;
 
 use chain::constants::{
     LOCKTIME_THRESHOLD, SEQUENCE_FINAL, SEQUENCE_LOCKTIME_DISABLE_FLAG, SEQUENCE_LOCKTIME_MASK,

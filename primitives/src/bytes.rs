@@ -1,6 +1,6 @@
 //! Wrapper around `Vec<u8>`
 
-use rstd::{fmt, marker, ops, prelude::*, str};
+use ustd::{fmt, marker, ops, prelude::*, str};
 
 use rustc_hex::{FromHex, FromHexError, ToHex};
 

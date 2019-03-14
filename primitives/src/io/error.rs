@@ -1,11 +1,9 @@
-use rstd::{result, str};
+use ustd::{result, str};
 
 pub type Result<T> = result::Result<T, Error>;
 
-pub type Error = ErrorKind;
-
-#[derive(Eq, PartialEq)]
-pub enum ErrorKind {
+#[derive(Eq, PartialEq, Debug)]
+pub enum Error {
     //    NotFound,
     //    PermissionDenied,
     //    ConnectionRefused,
@@ -19,14 +17,17 @@ pub enum ErrorKind {
     //    WouldBlock,
     //    InvalidInput,
     InvalidData,
-    //    ErrorKind,
+    //    TimedOut,
     WriteZero,
     Interrupted,
     Other,
     UnexpectedEof,
+
+    ReadMalformedData,
+    UnreadData,
 }
 
-impl ErrorKind {
+impl Error {
     #[allow(dead_code)]
     pub(crate) fn as_str(&self) -> &'static str {
         match *self {
@@ -42,12 +43,15 @@ impl ErrorKind {
             //            ErrorKind::AlreadyExists => "entity already exists",
             //            ErrorKind::WouldBlock => "operation would block",
             //            ErrorKind::InvalidInput => "invalid input parameter",
-            ErrorKind::InvalidData => "invalid data",
+            Error::InvalidData => "invalid data",
             //            ErrorKind::TimedOut => "timed out",
-            ErrorKind::WriteZero => "write zero",
-            ErrorKind::Interrupted => "operation interrupted",
-            ErrorKind::Other => "other os error",
-            ErrorKind::UnexpectedEof => "unexpected end of file",
+            Error::WriteZero => "write zero",
+            Error::Interrupted => "operation interrupted",
+            Error::Other => "other os error",
+            Error::UnexpectedEof => "unexpected end of file",
+
+            Error::ReadMalformedData => "read malformed data",
+            Error::UnreadData => "unread data",
         }
     }
 }

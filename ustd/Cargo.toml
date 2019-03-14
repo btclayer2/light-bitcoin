@@ -1,7 +1,8 @@
 [package]
-name = "rstd"
+name = "ustd"
 version = "0.1.0"
 authors = ["koushiro <koushiro.cqx@gmail.com>"]
+description = "A universal standard library that supports `std` and `no_std` environment"
 edition = "2018"
 
 [dependencies]

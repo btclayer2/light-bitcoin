@@ -1,8 +1,8 @@
-use rstd::prelude::*;
+use ustd::prelude::*;
 
-use bitcrypto::{DHash256, Digest};
+use crypto::{DHash256, Digest};
 use primitives::{io, H256};
-use serialization::{Deserializable, Error as ReaderError, Reader};
+use serialization::{Deserializable, Reader};
 
 pub struct HashedData<T> {
     pub size: usize,
@@ -11,7 +11,7 @@ pub struct HashedData<T> {
 }
 
 pub trait ReadAndHash {
-    fn read_and_hash<T>(&mut self) -> Result<HashedData<T>, ReaderError>
+    fn read_and_hash<T>(&mut self) -> Result<HashedData<T>, io::Error>
     where
         T: Deserializable;
 }
@@ -20,7 +20,7 @@ impl<R> ReadAndHash for Reader<R>
 where
     R: io::Read,
 {
-    fn read_and_hash<T>(&mut self) -> Result<HashedData<T>, ReaderError>
+    fn read_and_hash<T>(&mut self) -> Result<HashedData<T>, io::Error>
     where
         T: Deserializable,
     {

@@ -1,6 +1,6 @@
 //! Script numeric
 
-use rstd::{ops, prelude::*};
+use ustd::{ops, prelude::*};
 
 use primitives::Bytes;
 

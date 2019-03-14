@@ -1,11 +1,11 @@
 [package]
-name = "bitcrypto"
+name = "crypto"
 version = "0.1.0"
 authors = ["debris <marek.kotewicz@gmail.com> and koushiro <koushiro.cqx@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-rstd = { path = "../rstd", default-features = false }
+ustd = { path = "../ustd", default-features = false }
 primitives = { path = "../primitives", default-features = false }
 digest = { version = "0.8", default-features = false }      # support `no_std`
 ripemd160 = { version = "0.8", default-features = false }   # support `no_std`
@@ -19,10 +19,10 @@ rustc-hex = { version = "2.0", default-features = false }
 [features]
 default = ["std"]
 std = [
-    "rstd/std",
+    "ustd/std",
     "primitives/std",
     "digest/std",
     "ripemd160/std",
     "sha-1/std",
-    "sha2/std"
+    "sha2/std",
 ]

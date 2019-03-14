@@ -1,6 +1,6 @@
 //! Bitcoin key pair.
 
-use rstd::{fmt, prelude::*};
+use ustd::{fmt, prelude::*};
 
 use primitives::{H264, H520};
 
@@ -86,7 +86,7 @@ impl KeyPair {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bitcrypto::dhash256;
+    use crypto::dhash256;
 
     /// Tests from:
     /// https://github.com/bitcoin/bitcoin/blob/a6a860796a44a2805a58391a009ba22752f64e32/src/test/key_tests.cpp

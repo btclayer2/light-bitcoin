@@ -1,8 +1,8 @@
-use rstd::{fmt, prelude::*};
+use ustd::{fmt, prelude::*};
 
-use bitcrypto::dhash256;
+use crypto::dhash256;
 use primitives::{io, Compact, H256};
-use serialization::{deserialize, serialize, Deserializable, Error, Reader, Serializable, Stream};
+use serialization::{deserialize, serialize, Deserializable, Reader, Serializable, Stream};
 
 use rustc_hex::FromHex;
 
@@ -63,7 +63,7 @@ impl Serializable for BlockHeader {
 }
 
 impl Deserializable for BlockHeader {
-    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, Error>
+    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
     where
         T: io::Read,
     {
@@ -80,8 +80,8 @@ impl Deserializable for BlockHeader {
 
 #[cfg(test)]
 mod tests {
-    use super::BlockHeader;
-    use serialization::{Error as ReaderError, Reader, Stream};
+    use super::*;
+    use serialization::{Reader, Stream};
 
     #[test]
     fn test_block_header_stream() {
@@ -128,7 +128,7 @@ mod tests {
 
         assert_eq!(expected, reader.read().unwrap());
         assert_eq!(
-            ReaderError::UnexpectedEnd,
+            io::Error::UnexpectedEof,
             reader.read::<BlockHeader>().unwrap_err()
         );
     }

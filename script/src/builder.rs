@@ -1,6 +1,6 @@
 //! Script builder
 
-use rstd::prelude::*;
+use ustd::prelude::*;
 
 use keys::AddressHash;
 use primitives::Bytes;

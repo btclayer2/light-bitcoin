@@ -1,10 +1,10 @@
-use rstd::prelude::*;
+use ustd::prelude::*;
 
-use primitives::io::{self, LittleEndian, Read, Write};
+use primitives::io::{self, Error, LittleEndian, Read, Write};
 use primitives::{Bytes, Compact, H160, H256, H264, H32, H48, H512, H520};
 
 use super::compact_integer::CompactInteger;
-use super::reader::{Deserializable, Error, Reader};
+use super::reader::{Deserializable, Reader};
 use super::stream::{Serializable, Stream};
 
 impl Serializable for bool {
@@ -108,7 +108,7 @@ impl Deserializable for bool {
         match value {
             0 => Ok(false),
             1 => Ok(true),
-            _ => Err(Error::MalformedData),
+            _ => Err(Error::ReadMalformedData),
         }
     }
 }
@@ -303,7 +303,7 @@ mod tests {
         assert_eq!(3u32, reader.read().unwrap());
         assert_eq!(4u64, reader.read().unwrap());
         assert!(reader.is_finished());
-        assert_eq!(Error::UnexpectedEnd, reader.read::<u8>().unwrap_err());
+        assert_eq!(Error::UnexpectedEof, reader.read::<u8>().unwrap_err());
     }
 
     #[test]

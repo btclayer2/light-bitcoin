@@ -5,12 +5,12 @@ authors = ["debris <marek.kotewicz@gmail.com> and koushiro <koushiro.cqx@gmail.c
 edition = "2018"
 
 [dependencies]
-rstd = { path = "../rstd", default-features = false }
+ustd = { path = "../ustd", default-features = false }
 primitives = { path = "../primitives", default-features = false }
 
 [features]
 default = ["std"]
 std = [
-    "rstd/std",
+    "ustd/std",
     "primitives/std",
 ]

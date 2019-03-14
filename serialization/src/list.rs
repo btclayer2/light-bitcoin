@@ -1,8 +1,8 @@
-use rstd::prelude::*;
+use ustd::prelude::*;
 
 use primitives::io;
 
-use super::reader::{Deserializable, Error, Reader};
+use super::reader::{Deserializable, Reader};
 use super::stream::{Serializable, Stream};
 
 #[derive(Debug, Clone)]
@@ -34,7 +34,7 @@ impl<D> Deserializable for List<D>
 where
     D: Deserializable,
 {
-    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, Error>
+    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
     where
         T: io::Read,
     {

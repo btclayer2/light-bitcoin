@@ -2,7 +2,7 @@
 //!
 //! http://bitcoin.stackexchange.com/q/12554/40688
 
-use rstd::{fmt, ops, prelude::*, str};
+use ustd::{fmt, ops, prelude::*, str};
 
 use primitives::H520;
 use rustc_hex::{FromHex, ToHex};

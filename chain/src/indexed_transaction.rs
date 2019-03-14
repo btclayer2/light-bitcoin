@@ -1,7 +1,7 @@
-use rstd::{fmt, prelude::*};
+use ustd::{fmt, prelude::*};
 
 use primitives::{io, H256};
-use serialization::{Deserializable, Error as ReaderError, Reader};
+use serialization::{Deserializable, Reader};
 
 use super::read_and_hash::ReadAndHash;
 use super::transaction::Transaction;
@@ -56,7 +56,7 @@ impl IndexedTransaction {
 }
 
 impl Deserializable for IndexedTransaction {
-    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, ReaderError>
+    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
     where
         T: io::Read,
     {

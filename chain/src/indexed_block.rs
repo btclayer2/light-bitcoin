@@ -1,9 +1,9 @@
-use rstd::prelude::*;
+use ustd::prelude::*;
 
 use primitives::{io, H256};
 use serialization::{
-    deserialize, serialized_list_size, serialized_list_size_with_flags, Deserializable, Error,
-    Reader, Serializable, SERIALIZE_TRANSACTION_WITNESS,
+    deserialize, serialized_list_size, serialized_list_size_with_flags, Deserializable, Reader,
+    Serializable, SERIALIZE_TRANSACTION_WITNESS,
 };
 
 use rustc_hex::FromHex;
@@ -120,7 +120,7 @@ impl IndexedBlock {
 }
 
 impl Deserializable for IndexedBlock {
-    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, Error>
+    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
     where
         Self: Sized,
         T: io::Read,

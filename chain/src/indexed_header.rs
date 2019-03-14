@@ -1,7 +1,7 @@
-use rstd::{fmt, prelude::*};
+use ustd::{fmt, prelude::*};
 
 use primitives::{io, H256};
-use serialization::{Deserializable, Error as ReaderError, Reader};
+use serialization::{Deserializable, Reader};
 
 use super::block_header::BlockHeader;
 use super::read_and_hash::ReadAndHash;
@@ -49,7 +49,7 @@ impl IndexedBlockHeader {
 }
 
 impl Deserializable for IndexedBlockHeader {
-    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, ReaderError>
+    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
     where
         T: io::Read,
     {
