@@ -6,9 +6,6 @@ jobs:
 
     working_directory: ~/light-bitcoin-ci
 
-    environment:
-      CODECOV_TOKEN: "985c836e-8c19-4470-9a56-ea6a5b6424ed"
-
     steps:
       - checkout
 
