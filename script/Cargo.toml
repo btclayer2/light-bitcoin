@@ -5,7 +5,7 @@ authors = ["debris <marek.kotewicz@gmail.com> and koushiro <koushiro.cqx@gmail.c
 edition = "2018"
 
 [dependencies]
-ustd = { path = "../ustd", default-features = false }
+ustd = { git = "https://github.com/chainx-org/chainx-common", default-features = false }
 primitives = { path = "../primitives", default-features = false }
 crypto = { path = "../crypto", default-features = false }
 serialization = { path = "../serialization", default-features = false }

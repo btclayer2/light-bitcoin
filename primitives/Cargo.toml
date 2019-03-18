@@ -5,7 +5,7 @@ authors = ["debris <marek.kotewicz@gmail.com> and koushiro <koushiro.cqx@gmail.c
 edition = "2018"
 
 [dependencies]
-ustd = { path = "../ustd", default-features = false }
+ustd = { git = "https://github.com/chainx-org/chainx-common", default-features = false }
 byteorder = { version = "1.3", default-features = false }
 rustc-hex = { version = "2.0", default-features = false }
 fixed-hash = { version = "0.3", default-features = false }
