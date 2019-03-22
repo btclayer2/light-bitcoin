@@ -9,6 +9,12 @@ use ustd::{fmt, ops, prelude::*, str};
 
 use base58::{FromBase58, ToBase58};
 use crypto::checksum;
+use primitives::io;
+use serialization::{Deserializable, Reader, Serializable, Stream};
+
+use parity_codec_derive::{Decode, Encode};
+#[cfg(feature = "std")]
+use serde_derive::{Deserialize, Serialize};
 
 use super::display::DisplayLayout;
 use super::error::Error;
@@ -16,7 +22,8 @@ use super::AddressHash;
 
 /// There are two address formats currently in use.
 /// https://bitcoin.org/en/developer-reference#address-conversion
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Encode, Decode)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum Type {
     /// Pay to PubKey Hash
     /// Common P2PKH which begin with the number 1, eg: 1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2.
@@ -34,7 +41,38 @@ impl Default for Type {
     }
 }
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug)]
+impl Type {
+    pub fn from(v: u32) -> Option<Self> {
+        match v {
+            0 => Some(Type::P2PKH),
+            1 => Some(Type::P2SH),
+            _ => None,
+        }
+    }
+}
+
+impl Serializable for Type {
+    fn serialize(&self, s: &mut Stream) {
+        let _stream = match *self {
+            Type::P2PKH => s.append(&Type::P2PKH),
+            Type::P2SH => s.append(&Type::P2SH),
+        };
+    }
+}
+
+impl Deserializable for Type {
+    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
+    where
+        Self: Sized,
+        T: io::Read,
+    {
+        let t: u32 = reader.read()?;
+        Type::from(t).ok_or(io::Error::ReadMalformedData)
+    }
+}
+
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Encode, Decode)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum Network {
     Mainnet,
     Testnet,
@@ -46,8 +84,39 @@ impl Default for Network {
     }
 }
 
+impl Network {
+    pub fn from(v: u32) -> Option<Self> {
+        match v {
+            0 => Some(Network::Mainnet),
+            1 => Some(Network::Testnet),
+            _ => None,
+        }
+    }
+}
+
+impl Serializable for Network {
+    fn serialize(&self, s: &mut Stream) {
+        let _stream = match *self {
+            Network::Mainnet => s.append(&Network::Mainnet),
+            Network::Testnet => s.append(&Network::Testnet),
+        };
+    }
+}
+
+impl Deserializable for Network {
+    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
+    where
+        Self: Sized,
+        T: io::Read,
+    {
+        let t: u32 = reader.read()?;
+        Network::from(t).ok_or(io::Error::ReadMalformedData)
+    }
+}
+
 /// `AddressHash` with network identifier and format type
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Default)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Default, Encode, Decode)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Address {
     /// The type of the address.
     pub kind: Type,
@@ -78,6 +147,28 @@ impl str::FromStr for Address {
 impl From<&'static str> for Address {
     fn from(s: &'static str) -> Self {
         s.parse().unwrap()
+    }
+}
+
+impl Serializable for Address {
+    fn serialize(&self, s: &mut Stream) {
+        s.append(&self.kind)
+            .append(&self.network)
+            .append(&self.hash);
+    }
+}
+
+impl Deserializable for Address {
+    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
+    where
+        Self: Sized,
+        T: io::Read,
+    {
+        Ok(Address {
+            kind: reader.read()?,
+            network: reader.read()?,
+            hash: reader.read()?,
+        })
     }
 }
 

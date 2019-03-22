@@ -383,13 +383,8 @@ fn compute_hash_outputs(
 mod tests {
     use super::*;
     use keys::{Address, Private};
+    use primitives::h256_from_rev_str;
     use rustc_hex::FromHex;
-
-    fn reverse_hash_hex_str(s: &str) -> Vec<u8> {
-        let mut hex: Vec<u8> = FromHex::from_hex(s).unwrap();
-        hex.reverse();
-        hex
-    }
 
     // http://www.righto.com/2014/02/bitcoins-hard-way-using-raw-bitcoin.html
     // https://blockchain.info/rawtx/81b4c832d70cb56ff957589752eb4125a4cab78a25a8fc52d6a09e5bd4404d48
@@ -397,9 +392,8 @@ mod tests {
     #[test]
     fn test_signature_hash_simple() {
         let private: Private = "5HusYj2b2x4nroApgfvaSfKYZhRbKFH41bVyPooymbC6KfgSXdD".into();
-        let previous_tx_hash = H256::from_slice(&reverse_hash_hex_str(
-            "81b4c832d70cb56ff957589752eb4125a4cab78a25a8fc52d6a09e5bd4404d48",
-        ));
+        let previous_tx_hash =
+            h256_from_rev_str("81b4c832d70cb56ff957589752eb4125a4cab78a25a8fc52d6a09e5bd4404d48");
         let previous_output_index = 0;
         let from: Address = "1MMMMSUb1piy2ufrSguNUdFmAcvqrQF8M5".into();
         let to: Address = "1KKKK6N21XKo48zWKuQKXdvSsCf95ibHFa".into();
@@ -458,7 +452,7 @@ mod tests {
         let tx: Transaction = tx.into();
         let signer: TransactionInputSigner = tx.into();
         let script: Script = script.into();
-        let expected = H256::from_slice(&reverse_hash_hex_str(result));
+        let expected = h256_from_rev_str(result);
 
         let sighash = Sighash::from_u32(SignatureVersion::Base, hash_type as u32);
         let hash = signer.signature_hash_original(input_index, &script, hash_type as u32, sighash);

@@ -6,7 +6,11 @@ use serialization::{deserialize, serialize, Deserializable, Reader, Serializable
 
 use rustc_hex::FromHex;
 
+#[cfg(feature = "std")]
+use serde_derive::{Deserialize, Serialize};
+
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct BlockHeader {
     pub version: u32,
     pub previous_header_hash: H256,
@@ -75,6 +79,28 @@ impl Deserializable for BlockHeader {
             bits: reader.read()?,
             nonce: reader.read()?,
         })
+    }
+}
+
+impl parity_codec::Encode for BlockHeader {
+    fn encode(&self) -> Vec<u8> {
+        let value = serialize::<BlockHeader>(&self);
+        value.encode()
+    }
+}
+
+impl parity_codec::Decode for BlockHeader {
+    fn decode<I: parity_codec::Input>(value: &mut I) -> Option<Self> {
+        let value: Option<Vec<u8>> = parity_codec::Decode::decode(value);
+        if let Some(value) = value {
+            if let Ok(header) = deserialize(Reader::new(&value)) {
+                Some(header)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
 }
 

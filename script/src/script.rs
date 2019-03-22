@@ -518,6 +518,110 @@ impl Script {
 
         script.sigops_count(checkdatasig_active, true)
     }
+
+    // ============================================================================================
+    // Added method
+    pub fn parse_redeem_script(&self) -> Option<(Vec<Bytes>, u32, u32)> {
+        // get Vec<public> , m , n
+        if self.data.len() < 3 {
+            return None;
+        }
+
+        let siglen = match self.get_opcode(0) {
+            Ok(Opcode::OP_0) => 0,
+            Ok(o) if o >= Opcode::OP_1 && o <= Opcode::OP_16 => o as u8 - (Opcode::OP_1 as u8 - 1),
+            _ => return None,
+        };
+
+        let keylen = match self.get_opcode(self.data.len() - 2) {
+            Ok(Opcode::OP_0) => 0,
+            Ok(o) if o >= Opcode::OP_1 && o <= Opcode::OP_16 => o as u8 - (Opcode::OP_1 as u8 - 1),
+            _ => return None,
+        };
+
+        if siglen > keylen {
+            return None;
+        }
+
+        if self.data[self.data.len() - 1] != Opcode::OP_CHECKMULTISIG as u8 {
+            return None;
+        }
+
+        let mut pc = 1;
+        let mut pubkeys: Vec<Bytes> = Vec::new();
+        while pc < self.len() - 2 {
+            let instruction = match self.get_instruction(pc) {
+                Ok(i) => i,
+                _ => return None,
+            };
+
+            match instruction.opcode {
+                Opcode::OP_PUSHBYTES_33 | Opcode::OP_PUSHBYTES_65 => {}
+                _ => return None,
+            }
+            let data = instruction
+                .data
+                .expect("this method depends on previous check in script_type()");
+            pubkeys.push(data.into());
+
+            pc += instruction.step;
+        }
+        Some((pubkeys, u32::from(siglen), u32::from(keylen)))
+    }
+
+    pub fn extract_rear(&self, key: char) -> Vec<u8> {
+        if self.data.len() <= 1 {
+            return Vec::new();
+        }
+        let key = key as u8;
+        let mut result = Vec::new();
+        let end = self.data.len() - 1;
+        let mut current = 0;
+        while current < end {
+            if self.data[current] == key {
+                break;
+            }
+            current += 1;
+        }
+        result.extend_from_slice(&self.data[current + 1..]);
+        result
+    }
+
+    pub fn extract_pre(&self, key: char) -> Vec<u8> {
+        let key = key as u8;
+        let mut result = Vec::new();
+        let end = self.data.len();
+        let mut current = 0;
+        while current < end {
+            if self.data[current] == key {
+                break;
+            }
+            current += 1;
+        }
+        result.extend_from_slice(&self.data[0..current]);
+        result
+    }
+
+    pub fn extract_multi_scriptsig(&self) -> Result<(Vec<Bytes>, Script), keys::Error> {
+        //[sig], redeem
+        let mut pc = 1;
+        let mut vec: Vec<Bytes> = Vec::new();
+        while pc < self.len() - 2 {
+            let instruction = self
+                .get_instruction(pc)
+                .expect("this method depends on previous check in script_type()");
+            let data = instruction
+                .data
+                .expect("this method depends on previous check in script_type()");
+            vec.push(data.into());
+            pc += instruction.step;
+        }
+        if let Some(script) = vec.pop() {
+            return Ok((vec, script.into()));
+        }
+        Err(keys::Error::InvalidSignature)
+    }
+    // ============================================================================================
 }
 
 pub struct Instructions<'a> {
@@ -868,4 +972,63 @@ OP_ADD
         assert_eq!(script.sigops_count(false, false), 0);
         assert_eq!(script.sigops_count(true, false), 1);
     }
+
+    // ============================================================================================
+    // Added test
+    #[test]
+    fn test_extract_pre() {
+        let script = Script::from(
+            "chainx:5HnDcuKFCvsR42s8Tz2j2zLHLZAaiHG4VNyJDa7iLRunRuhM"
+                .as_bytes()
+                .to_vec(),
+        );
+        let pre = script.extract_pre(':');
+        assert_eq!(String::from_utf8(pre).unwrap(), "chainx");
+    }
+
+    const REDEEM: &'static str = "52210257aff1270e3163aaae9d972b3d09a2385e0d4877501dbeca3ee045f8de00d21c2103fd58c689594b87bbe20a9a00091d074dc0d9f49a988a7ad4c2575adeda1b507c2102bb2a5aa53ba7c0d77bdd86bb9553f77dd0971d3a6bb6ad609787aa76eb17b6b653ae";
+    const SCRIPT_SIG1: &'static str = "00483045022100c0076941e39126f1bd0102d6df278470802ca8b694f8e39467121dc9ecc4d46802204ab7e3128bd0a93a30d1d5ea4db57cc8ba2d4c39172c2d2e536787e0b152bffe014c6952210257aff1270e3163aaae9d972b3d09a2385e0d4877501dbeca3ee045f8de00d21c2103fd58c689594b87bbe20a9a00091d074dc0d9f49a988a7ad4c2575adeda1b507c2102bb2a5aa53ba7c0d77bdd86bb9553f77dd0971d3a6bb6ad609787aa76eb17b6b653ae";
+    const SCRIPT_SIG2: &'static str = "00483045022100c0076941e39126f1bd0102d6df278470802ca8b694f8e39467121dc9ecc4d46802204ab7e3128bd0a93a30d1d5ea4db57cc8ba2d4c39172c2d2e536787e0b152bffe014730440220731394ffbf7d068393a2b6146e09f16bd9e39c16d04f38461a4c6991a725609202202633acd7cbf14883736f8e6376aa9090d0adacf73bc76ff5f95dca069caad593014c6952210257aff1270e3163aaae9d972b3d09a2385e0d4877501dbeca3ee045f8de00d21c2103fd58c689594b87bbe20a9a00091d074dc0d9f49a988a7ad4c2575adeda1b507c2102bb2a5aa53ba7c0d77bdd86bb9553f77dd0971d3a6bb6ad609787aa76eb17b6b653ae";
+    const SIG1: &'static str = "3045022100c0076941e39126f1bd0102d6df278470802ca8b694f8e39467121dc9ecc4d46802204ab7e3128bd0a93a30d1d5ea4db57cc8ba2d4c39172c2d2e536787e0b152bffe01";
+    const SIG2: &'static str = "30440220731394ffbf7d068393a2b6146e09f16bd9e39c16d04f38461a4c6991a725609202202633acd7cbf14883736f8e6376aa9090d0adacf73bc76ff5f95dca069caad59301";
+
+    #[test]
+    fn redeem_script() {
+        let script: Script = REDEEM.into();
+        assert_eq!(script.is_multisig_script(), true);
+    }
+
+    #[test]
+    fn extract_multi_scriptsig1() {
+        let script: Script = SCRIPT_SIG1.into();
+        let (sigs, dem) = script.extract_multi_scriptsig().unwrap();
+        let sig_bytes: Bytes = SIG1.into();
+        assert_eq!(sig_bytes, sigs[0]);
+        let script: Script = REDEEM.into();
+        assert_eq!(script, dem);
+        assert_eq!(sigs.len(), 1);
+    }
+
+    #[test]
+    fn extract_multi_scriptsig2() {
+        let script: Script = SCRIPT_SIG2.into();
+        let (sigs, dem) = script.extract_multi_scriptsig().unwrap();
+        let sig_bytes1: Bytes = SIG1.into();
+        assert_eq!(sig_bytes1, sigs[0]);
+        let sig_bytes2: Bytes = SIG2.into();
+        assert_eq!(sig_bytes2, sigs[1]);
+        let script: Script = REDEEM.into();
+        assert_eq!(script, dem);
+        assert_eq!(sigs.len(), 2);
+    }
+
+    #[test]
+    fn parse_redeem() {
+        let script: Script = REDEEM.into();
+        let (keys, siglen, keylen) = script.parse_redeem_script().unwrap();
+        assert_eq!(siglen, 2);
+        assert_eq!(keylen, 3);
+        assert_eq!(keys.len(), 3);
+    }
+    // ============================================================================================
 }

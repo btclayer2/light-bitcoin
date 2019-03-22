@@ -1,9 +1,13 @@
 //! Compact representation of `U256`
 
+#[cfg(feature = "std")]
+use serde_derive::{Deserialize, Serialize};
+
 use super::U256;
 
 /// Compact representation of `U256`
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy, Default, Debug)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Compact(u32);
 
 impl From<u32> for Compact {

@@ -42,26 +42,18 @@ pub fn merkle_node_hash(left: &H256, right: &H256) -> H256 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rustc_hex::FromHex;
+    use primitives::h256_from_rev_str;
 
     // block 80_000
     // https://blockchain.info/block/000000000043a8c0fd1d6f726790caa2a406010d19efd2780db27bdbbd93baf6
     #[test]
     fn test_merkle_root_with_2_hashes() {
-        let reverse_hash_hex_str = |s: &str| {
-            let mut hex: Vec<u8> = FromHex::from_hex(s).unwrap();
-            hex.reverse();
-            hex
-        };
-        let tx1 = H256::from_slice(&reverse_hash_hex_str(
-            "c06fbab289f723c6261d3030ddb6be121f7d2508d77862bb1e484f5cd7f92b25",
-        ));
-        let tx2 = H256::from_slice(&reverse_hash_hex_str(
-            "5a4ebf66822b0b2d56bd9dc64ece0bc38ee7844a23ff1d7320a88c5fdb2ad3e2",
-        ));
-        let expected = H256::from_slice(&reverse_hash_hex_str(
-            "8fb300e3fdb6f30a4c67233b997f99fdd518b968b9a3fd65857bfe78b2600719",
-        ));
+        let tx1 =
+            h256_from_rev_str("c06fbab289f723c6261d3030ddb6be121f7d2508d77862bb1e484f5cd7f92b25");
+        let tx2 =
+            h256_from_rev_str("5a4ebf66822b0b2d56bd9dc64ece0bc38ee7844a23ff1d7320a88c5fdb2ad3e2");
+        let expected =
+            h256_from_rev_str("8fb300e3fdb6f30a4c67233b997f99fdd518b968b9a3fd65857bfe78b2600719");
 
         let result = merkle_root(&[tx1, tx2]);
         assert_eq!(result, expected);

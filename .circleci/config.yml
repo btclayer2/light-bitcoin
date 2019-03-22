@@ -38,6 +38,13 @@ jobs:
             export PATH=~/.cargo/bin:$PATH
             export RUST_BACKTRACE=1
             cargo test --all
+            cd primitives && cargo test --no-default-features && cd ..
+            cd serialization && cargo test --no-default-features && cd ..
+            cd crypto && cargo test --no-default-features && cd ..
+            cd keys && cargo test --no-default-features && cd ..
+            cd chain && cargo test --no-default-features && cd ..
+            cd script && cargo test --no-default-features && cd ..
+            cd merkle && cargo test --no-default-features && cd ..
 
       - run:
           name: Coverage
