@@ -8,7 +8,7 @@ use chain::merkle_node_hash;
 use primitives::{io, H256};
 use serialization::{deserialize, serialize, Deserializable, Reader, Serializable, Stream};
 
-use bit_vec::BitVec;
+pub use bit_vec::BitVec;
 use parity_codec::{Decode, Encode, Input};
 
 #[derive(Debug)]

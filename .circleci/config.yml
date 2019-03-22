@@ -37,7 +37,12 @@ jobs:
           command: |
             export PATH=~/.cargo/bin:$PATH
             export RUST_BACKTRACE=1
-            cargo test --all
+
+            # test std
+            cargo test --all --exclude serialization_derive
+            cd serialization_derive && cargo test --test raw && cd ..
+
+            # test no_std
             cd primitives && cargo test --no-default-features && cd ..
             cd serialization && cargo test --no-default-features && cd ..
             cd crypto && cargo test --no-default-features && cd ..
@@ -60,6 +65,7 @@ jobs:
             make install DESTDIR=../../kcov-build
             cd ../..
             rm -rf kcov-master
+
             # generate and upload code coverage
             for file in target/debug/*-*; do
               [ -x "${file}" ] || continue
