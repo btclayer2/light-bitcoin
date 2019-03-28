@@ -25,7 +25,6 @@ std = [
     "ustd/std",
     "base58/std",
     "primitives/std",
-    "primitives/impl-serde",
     "serialization/std",
     "crypto/std",
     "rustc-hex/std",

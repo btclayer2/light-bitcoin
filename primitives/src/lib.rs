@@ -4,35 +4,14 @@ mod bytes;
 mod compact;
 pub mod io;
 
-use ustd::vec::Vec;
-
-use fixed_hash::construct_fixed_hash;
-pub use primitive_types::{H160, H256, H512, U128, U256, U512};
-use rustc_hex::FromHex;
+pub use primitive_types::{H160, H256, H264, H32, H48, H512, H520, U128, U256, U512};
 
 pub use self::bytes::{Bytes, TaggedBytes};
 pub use self::compact::Compact;
 
-construct_fixed_hash! {
-    /// Fixed-size uninterpreted hash type with 4 bytes (32 bits) size.
-    pub struct H32(4);
-}
-construct_fixed_hash! {
-    /// Fixed-size uninterpreted hash type with 6 bytes (48 bits) size.
-    pub struct H48(6);
-}
-construct_fixed_hash! {
-    /// Fixed-size uninterpreted hash type with 33 bytes (264 bits) size.
-    pub struct H264(33);
-}
-construct_fixed_hash! {
-    /// Fixed-size uninterpreted hash type with 65 bytes (520 bits) size.
-    pub struct H520(65);
-}
-
 /// `s` must be 64 chars, ex: c16a4a6a6cc43c67770cbec9dd0cc4bf7e956d6b4c9e7c15ff1a2dc8ef3afc63.
 pub fn h256_from_rev_str(s: &'static str) -> H256 {
-    let mut hex: Vec<u8> = FromHex::from_hex(s).unwrap();
+    let mut hex: ustd::vec::Vec<u8> = rustc_hex::FromHex::from_hex(s).unwrap();
     hex.reverse();
     H256::from_slice(&hex)
 }

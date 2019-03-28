@@ -22,7 +22,6 @@ default = ["std"]
 std = [
     "ustd/std",
     "primitives/std",
-    "primitives/impl-serde",
     "serialization/std",
     "crypto/std",
     "rustc-hex/std",
