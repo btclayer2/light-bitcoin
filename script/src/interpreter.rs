@@ -470,7 +470,7 @@ fn verify_witness_program(
 
 /// Evaluautes the script
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::match_same_arms))]
-#[cfg_attr(feature = "cargo-clippy", allow(clippy::cyclomatic_complexity))]
+#[cfg_attr(feature = "cargo-clippy", allow(clippy::cognitive_complexity))]
 pub fn eval_script(
     stack: &mut Stack<Bytes>,
     script: &Script,

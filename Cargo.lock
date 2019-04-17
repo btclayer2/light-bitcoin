@@ -16,15 +16,15 @@ dependencies = [
 [[package]]
 name = "base58"
 version = "0.1.0"
-source = "git+https://github.com/chainx-org/chainx-common#98e7397e4c8ec77b087fa25f5a830aa2e44acba9"
+source = "git+https://github.com/chainx-org/chainx-common#a5262289c36021024bf389279af95b505011e63d"
 dependencies = [
  "ustd 0.1.0 (git+https://github.com/chainx-org/chainx-common)",
 ]
 
 [[package]]
 name = "bit-vec"
-version = "0.5.0"
-source = "git+https://github.com/contain-rs/bit-vec?rev=24544d1#24544d15d113a1d2dc5eb41681c61ac79b31b9d3"
+version = "0.5.1"
+source = "git+https://github.com/koushiro/bit-vec?branch=work#720be71b4046c6c93d6d04cfb1e65d83e3f5c7ca"
 
 [[package]]
 name = "bitflags"
@@ -212,7 +212,7 @@ dependencies = [
 [[package]]
 name = "impl-codec"
 version = "0.2.0"
-source = "git+https://github.com/chainx-org/chainx-common#98e7397e4c8ec77b087fa25f5a830aa2e44acba9"
+source = "git+https://github.com/chainx-org/chainx-common#a5262289c36021024bf389279af95b505011e63d"
 dependencies = [
  "parity-codec 3.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ustd 0.1.0 (git+https://github.com/chainx-org/chainx-common)",
@@ -221,7 +221,7 @@ dependencies = [
 [[package]]
 name = "impl-serde"
 version = "0.1.1"
-source = "git+https://github.com/chainx-org/chainx-common#98e7397e4c8ec77b087fa25f5a830aa2e44acba9"
+source = "git+https://github.com/chainx-org/chainx-common#a5262289c36021024bf389279af95b505011e63d"
 dependencies = [
  "rustc-hex 2.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.89 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -270,7 +270,7 @@ version = "0.1.0"
 name = "merkle"
 version = "0.1.0"
 dependencies = [
- "bit-vec 0.5.0 (git+https://github.com/contain-rs/bit-vec?rev=24544d1)",
+ "bit-vec 0.5.1 (git+https://github.com/koushiro/bit-vec?branch=work)",
  "chain 0.1.0",
  "crypto 0.1.0",
  "parity-codec 3.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -312,7 +312,7 @@ dependencies = [
 [[package]]
 name = "primitive-types"
 version = "0.2.2"
-source = "git+https://github.com/chainx-org/chainx-common#98e7397e4c8ec77b087fa25f5a830aa2e44acba9"
+source = "git+https://github.com/chainx-org/chainx-common#a5262289c36021024bf389279af95b505011e63d"
 dependencies = [
  "fixed-hash 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "impl-codec 0.2.0 (git+https://github.com/chainx-org/chainx-common)",
@@ -575,7 +575,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "ustd"
 version = "0.1.0"
-source = "git+https://github.com/chainx-org/chainx-common#98e7397e4c8ec77b087fa25f5a830aa2e44acba9"
+source = "git+https://github.com/chainx-org/chainx-common#a5262289c36021024bf389279af95b505011e63d"
 dependencies = [
  "cfg-if 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -603,7 +603,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum arrayref 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)" = "0d382e583f07208808f6b1249e60848879ba3543f57c32277bf52d69c2f0f0ee"
 "checksum arrayvec 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)" = "92c7fb76bc8826a8b33b4ee5bb07a247a81e76764ab4d55e8f73e3a4d8808c71"
 "checksum base58 0.1.0 (git+https://github.com/chainx-org/chainx-common)" = "<none>"
-"checksum bit-vec 0.5.0 (git+https://github.com/contain-rs/bit-vec?rev=24544d1)" = "<none>"
+"checksum bit-vec 0.5.1 (git+https://github.com/koushiro/bit-vec?branch=work)" = "<none>"
 "checksum bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "228047a76f468627ca71776ecdebd732a3423081fcf5125585bcd7c49886ce12"
 "checksum block-buffer 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1339a1042f5d9f295737ad4d9a6ab6bf81c84a933dba110b9200cd6d1448b814"
 "checksum block-buffer 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "49665c62e0e700857531fa5d3763e91b539ff1abeebd56808d378b495870d60d"
