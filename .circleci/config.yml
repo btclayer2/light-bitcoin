@@ -55,19 +55,16 @@ jobs:
           name: Coverage
           command: |
             # install kcov
-            wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
-            tar xzf master.tar.gz
-            cd kcov-master
-            mkdir build
-            cd build
-            cmake ..
-            make
-            make install DESTDIR=../../kcov-build
-            cd ../..
-            rm -rf kcov-master
+            export KCOV_VERSION=36
+            wget https://github.com/SimonKagstrom/kcov/archive/v$KCOV_VERSION.tar.gz
+            tar xzf v$KCOV_VERSION.tar.gz && rm v$KCOV_VERSION.tar.gz
+            cd kcov-$KCOV_VERSION
+            mkdir build && cd build
+            cmake .. && make && make install DESTDIR=../../kcov-build
+            cd ../.. && rm -rf kcov-$KCOV_VERSION
 
             # generate and upload code coverage
-            for file in target/debug/*-*; do
+            for file in $(find target/debug -maxdepth 1 -name '*-*' -a ! -name '*.d' ! -name '.*'); do
               [ -x "${file}" ] || continue
               mkdir -p "target/cov/$(basename $file)"
               ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"
