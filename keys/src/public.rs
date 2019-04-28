@@ -3,12 +3,14 @@ use ustd::{fmt, ops, prelude::*};
 use crypto::dhash160;
 use primitives::{H264, H512, H520};
 
+use parity_codec_derive::{Decode, Encode};
+
 use super::error::Error;
 use super::signature::{CompactSignature, Signature};
 use super::{AddressHash, Message};
 
 /// Secret public key
-#[derive(Ord, PartialOrd, Eq, Copy, Clone)]
+#[derive(Ord, PartialOrd, Eq, Copy, Clone, Encode, Decode)]
 pub enum Public {
     /// Normal version of public key
     Normal(H520),

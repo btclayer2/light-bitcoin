@@ -10,7 +10,7 @@ primitives = { path = "../primitives", default-features = false }
 serialization = { path = "../serialization", default-features = false }
 chain = { path = "../chain", default-features = false }
 bit-vec = { git = "https://github.com/koushiro/bit-vec", branch = "work", default-features = false }
-parity-codec = { version = "3.2", default-features = false }
+parity-codec = { version = "3.5.1", default-features = false }
 
 [dev-dependencies]
 crypto = { path = "../crypto", default-features = false }
