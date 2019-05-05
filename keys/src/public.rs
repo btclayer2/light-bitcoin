@@ -4,6 +4,8 @@ use crypto::dhash160;
 use primitives::{H264, H512, H520};
 
 use parity_codec_derive::{Decode, Encode};
+#[cfg(feature = "std")]
+use serde_derive::{Deserialize, Serialize};
 
 use super::error::Error;
 use super::signature::{CompactSignature, Signature};
@@ -11,6 +13,7 @@ use super::{AddressHash, Message};
 
 /// Secret public key
 #[derive(Ord, PartialOrd, Eq, Copy, Clone, Encode, Decode)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum Public {
     /// Normal version of public key
     Normal(H520),

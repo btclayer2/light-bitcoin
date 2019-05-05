@@ -13,7 +13,7 @@ jobs:
           name: Setup build environment
           command: |
             apt update
-            apt install -y curl wget build-essential zlib1g-dev python libcurl4-openssl-dev libelf-dev libdw-dev cmake binutils-dev libiberty-dev
+            apt install -y sudo curl wget build-essential zlib1g-dev python libcurl4-openssl-dev libelf-dev libdw-dev cmake binutils-dev libiberty-dev
             curl https://sh.rustup.rs -sSf | sh -s -- --no-modify-path --default-toolchain none -y;
             source $HOME/.cargo/env
           no_output_timeout: 1800s
@@ -67,7 +67,7 @@ jobs:
             for file in $(find target/debug -maxdepth 1 -name '*-*' -a ! -name '*.d' ! -name '.*'); do
               [ -x "${file}" ] || continue
               mkdir -p "target/cov/$(basename $file)"
-              ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"
+              sudo ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"
             done
             bash <(curl -s https://codecov.io/bash)
             echo "Uploaded code coverage"
