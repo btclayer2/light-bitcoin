@@ -1,37 +1,31 @@
 version: 2.1
 jobs:
   build:
-    docker:
-      - image: ubuntu:18.04
+    machine: true
 
-    working_directory: ~/light-bitcoin-ci
+    working_directory: ~/light-bitcoin
 
     steps:
       - checkout
-
       - run:
           name: Setup build environment
           command: |
-            apt update
-            apt install -y sudo curl wget build-essential zlib1g-dev python libcurl4-openssl-dev libelf-dev libdw-dev cmake binutils-dev libiberty-dev
-            curl https://sh.rustup.rs -sSf | sh -s -- --no-modify-path --default-toolchain none -y;
-            source $HOME/.cargo/env
+            sudo apt-get update
+            sudo apt-get install -y cmake binutils-dev libiberty-dev libelf-dev libdw-dev
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --no-modify-path --default-toolchain none -y;
           no_output_timeout: 1800s
-
       - run:
           name: Format
           command: |
             export PATH=~/.cargo/bin:$PATH
             rustup component add rustfmt
-            cargo fmt -- --check
-
+            cargo fmt --all -- --check
       - run:
-          name: Lint
+          name: Clippy
           command: |
             export PATH=~/.cargo/bin:$PATH
             rustup component add clippy
-            cargo clippy --all
-
+            cargo clippy --all -- -D warnings
       - run:
           name: Test
           command: |
@@ -67,7 +61,7 @@ jobs:
             for file in $(find target/debug -maxdepth 1 -name '*-*' -a ! -name '*.d' ! -name '.*'); do
               [ -x "${file}" ] || continue
               mkdir -p "target/cov/$(basename $file)"
-              sudo ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"
+              ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"
             done
             bash <(curl -s https://codecov.io/bash)
             echo "Uploaded code coverage"
