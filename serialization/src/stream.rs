@@ -1,11 +1,13 @@
 //! Stream used for serialization of Bitcoin structures
 
-use ustd::{borrow::Borrow, prelude::*};
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+use core::borrow::Borrow;
 
 use primitives::io::{self, Write};
 use primitives::Bytes;
 
-use super::compact_integer::CompactInteger;
+use crate::compact_integer::CompactInteger;
 
 /// Do not serialize transaction witness data.
 pub const SERIALIZE_TRANSACTION_WITNESS: u32 = 0x4000_0000;

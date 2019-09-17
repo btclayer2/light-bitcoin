@@ -5,12 +5,8 @@ authors = ["debris <marek.kotewicz@gmail.com> and koushiro <koushiro.cqx@gmail.c
 edition = "2018"
 
 [dependencies]
-ustd = { git = "https://github.com/chainx-org/chainx-common", default-features = false }
 primitives = { path = "../primitives", default-features = false }
 
 [features]
 default = ["std"]
-std = [
-    "ustd/std",
-    "primitives/std",
-]
+std = ["primitives/std"]

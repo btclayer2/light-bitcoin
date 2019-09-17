@@ -1,8 +1,8 @@
 //! Script opcodes.
 
-use ustd::{fmt, prelude::*};
+use core::fmt;
 
-use super::flags::VerificationFlags;
+use crate::flags::VerificationFlags;
 
 /// Script opcodes.
 #[repr(u8)]

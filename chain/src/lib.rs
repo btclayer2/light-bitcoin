@@ -1,5 +1,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
 pub mod constants;
 
 mod block;
@@ -24,5 +27,3 @@ pub use self::indexed_block::IndexedBlock;
 pub use self::indexed_header::IndexedBlockHeader;
 pub use self::indexed_transaction::IndexedTransaction;
 pub use self::read_and_hash::{HashedData, ReadAndHash};
-
-pub type ShortTransactionID = H48;

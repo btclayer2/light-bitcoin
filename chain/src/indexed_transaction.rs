@@ -1,10 +1,10 @@
-use ustd::{fmt, prelude::*};
+use core::fmt;
 
 use primitives::{io, H256};
 use serialization::{Deserializable, Reader};
 
-use super::read_and_hash::ReadAndHash;
-use super::transaction::Transaction;
+use crate::read_and_hash::ReadAndHash;
+use crate::transaction::Transaction;
 
 #[derive(Ord, PartialOrd, Eq, Clone, Default)]
 pub struct IndexedTransaction {

@@ -1,6 +1,4 @@
-use ustd::{result, str};
-
-pub type Result<T> = result::Result<T, Error>;
+pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Eq, PartialEq, Debug)]
 pub enum Error {

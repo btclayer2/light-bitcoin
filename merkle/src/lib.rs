@@ -2,7 +2,11 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use ustd::{cmp, prelude::*};
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+use core::cmp;
 
 use chain::merkle_node_hash;
 use primitives::{io, H256};
@@ -346,8 +350,11 @@ impl PartialMerkleTreeBuilder {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    #[cfg(not(feature = "std"))]
+    use alloc::vec;
     use crypto::dhash256;
+
+    use super::*;
 
     #[test]
     fn test_parse_partial_merkle_tree() {

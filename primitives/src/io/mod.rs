@@ -1,6 +1,8 @@
 mod error;
 
-use ustd::{cmp, fmt, mem, prelude::*, ptr, str};
+#[cfg(not(feature = "std"))]
+use alloc::{string::String, vec::Vec};
+use core::{cmp, fmt, mem, ptr, str};
 
 use byteorder::ByteOrder;
 pub use byteorder::{BigEndian, LittleEndian};

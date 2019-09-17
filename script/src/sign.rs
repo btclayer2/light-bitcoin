@@ -1,6 +1,7 @@
 //! Transaction signer
 
-use ustd::prelude::*;
+#[cfg(not(feature = "std"))]
+use alloc::{vec, vec::Vec};
 
 use chain::{OutPoint, Transaction, TransactionInput, TransactionOutput};
 use crypto::dhash256;
@@ -8,8 +9,8 @@ use keys::KeyPair;
 use primitives::{Bytes, H256};
 use serialization::Stream;
 
-use super::builder::Builder;
-use super::script::Script;
+use crate::builder::Builder;
+use crate::script::Script;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum SignatureVersion {
@@ -381,10 +382,11 @@ fn compute_hash_outputs(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use hex_literal::hex;
     use keys::{Address, Private};
     use primitives::h256_from_rev_str;
-    use rustc_hex::FromHex;
+
+    use super::*;
 
     // http://www.righto.com/2014/02/bitcoins-hard-way-using-raw-bitcoin.html
     // https://blockchain.info/rawtx/81b4c832d70cb56ff957589752eb4125a4cab78a25a8fc52d6a09e5bd4404d48
@@ -400,12 +402,9 @@ mod tests {
         let previous_output = "76a914df3bd30160e6c6145baaf2c88a8844c13a00d1d588ac".into();
         let current_output: Bytes = "76a914c8e90996c7c6080ee06284600c684ed904d14c5c88ac".into();
         let value = 91234;
-        let expected_signature_hash = H256::from_slice(
-            &FromHex::from_hex::<Vec<u8>>(
-                "5fda68729a6312e17e641e9a49fac2a4a6a680126610af573caab270d232f850",
-            )
-            .unwrap(),
-        );
+        let expected_signature_hash = H256::from(hex![
+            "5fda68729a6312e17e641e9a49fac2a4a6a680126610af573caab270d232f850"
+        ]);
 
         // this is irrelevant
         let kp = KeyPair::from_private(private).unwrap();

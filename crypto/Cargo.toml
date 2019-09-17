@@ -5,21 +5,19 @@ authors = ["debris <marek.kotewicz@gmail.com> and koushiro <koushiro.cqx@gmail.c
 edition = "2018"
 
 [dependencies]
-ustd = { git = "https://github.com/chainx-org/chainx-common", default-features = false }
 primitives = { path = "../primitives", default-features = false }
-digest = { version = "0.8", default-features = false }      # support `no_std`
 ripemd160 = { version = "0.8", default-features = false }   # support `no_std`
 sha-1 = { version = "0.8", default-features = false }       # support `no_std`
 sha2 = { version = "0.8", default-features = false }        # support `no-std`
-siphasher = "0.3"   # support `no_std`
+siphasher = "0.3"   # support `no_std` by default
+digest = "0.8"      # support `no_std` by default
 
 [dev-dependencies]
-rustc-hex = { version = "2.0", default-features = false }
+hex-literal = "0.2"
 
 [features]
 default = ["std"]
 std = [
-    "ustd/std",
     "primitives/std",
     "digest/std",
     "ripemd160/std",

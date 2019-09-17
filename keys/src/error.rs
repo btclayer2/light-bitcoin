@@ -1,4 +1,4 @@
-use ustd::{fmt, prelude::*};
+use core::fmt;
 
 #[derive(Debug, PartialEq)]
 pub enum Error {

@@ -1,8 +1,10 @@
-use ustd::{marker, prelude::*};
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+use core::marker;
 
 use primitives::io;
 
-use super::compact_integer::CompactInteger;
+use crate::compact_integer::CompactInteger;
 
 pub fn deserialize<R, T>(buffer: R) -> Result<T, io::Error>
 where

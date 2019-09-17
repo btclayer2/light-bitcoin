@@ -1,6 +1,8 @@
 //! Wrapper around `Vec<u8>`
 
-use ustd::{fmt, marker, ops, prelude::*, str};
+#[cfg(not(feature = "std"))]
+use alloc::{string::String, vec, vec::Vec};
+use core::{fmt, marker, ops, str};
 
 use rustc_hex::{FromHex, FromHexError, ToHex};
 
@@ -203,6 +205,9 @@ impl<T> AsMut<[u8]> for TaggedBytes<T> {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(not(feature = "std"))]
+    use alloc::format;
+
     use super::*;
 
     #[test]
@@ -214,6 +219,6 @@ mod tests {
     #[test]
     fn test_bytes_debug_formatter() {
         let bytes: Bytes = "0145".into();
-        assert_eq!(format!("{:?}", bytes), "0145".to_owned());
+        assert_eq!(format!("{:?}", bytes), String::from("0145"));
     }
 }

@@ -1,8 +1,8 @@
 //! Interpreter errors
 
-use ustd::fmt;
+use core::fmt;
 
-use super::opcode::Opcode;
+use crate::opcode::Opcode;
 
 /// Interpreter errors
 #[derive(Debug, PartialEq)]

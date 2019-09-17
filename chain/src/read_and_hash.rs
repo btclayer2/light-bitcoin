@@ -1,5 +1,3 @@
-use ustd::prelude::*;
-
 use crypto::{DHash256, Digest};
 use primitives::{io, H256};
 use serialization::{Deserializable, Reader};

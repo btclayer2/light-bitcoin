@@ -1,4 +1,5 @@
-use ustd::prelude::*;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 
 use crypto::dhash256;
 use primitives::{H256, H512};
@@ -41,8 +42,9 @@ pub fn merkle_node_hash(left: &H256, right: &H256) -> H256 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use primitives::h256_from_rev_str;
+
+    use super::*;
 
     // block 80_000
     // https://blockchain.info/block/000000000043a8c0fd1d6f726790caa2a406010d19efd2780db27bdbbd93baf6

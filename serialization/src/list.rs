@@ -1,9 +1,10 @@
-use ustd::prelude::*;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 
 use primitives::io;
 
-use super::reader::{Deserializable, Reader};
-use super::stream::{Serializable, Stream};
+use crate::reader::{Deserializable, Reader};
+use crate::stream::{Serializable, Stream};
 
 #[derive(Debug, Clone)]
 pub struct List<T>(Vec<T>);

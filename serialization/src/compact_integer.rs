@@ -1,11 +1,11 @@
 //! Variable-length integer commonly used in the Bitcoin [P2P protocol](https://bitcoin.org/en/developer-reference#compactsize-unsigned-integers)
 
-use ustd::{fmt, prelude::*};
+use core::fmt;
 
 use primitives::io;
 
-use super::reader::{Deserializable, Reader};
-use super::stream::{Serializable, Stream};
+use crate::reader::{Deserializable, Reader};
+use crate::stream::{Serializable, Stream};
 
 /// A type of variable-length integer commonly used in the Bitcoin P2P protocol and Bitcoin serialized data structures.
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default, Debug)]
@@ -105,6 +105,9 @@ impl Deserializable for CompactInteger {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(not(feature = "std"))]
+    use alloc::vec;
+
     use super::*;
 
     #[test]

@@ -5,29 +5,22 @@ authors = ["debris <marek.kotewicz@gmail.com> and koushiro <koushiro.cqx@gmail.c
 edition = "2018"
 
 [dependencies]
-ustd = { git = "https://github.com/chainx-org/chainx-common", default-features = false }
-primitives = { path = "../primitives", default-features = false }
+primitives = { path = "../primitives", default-features = false, features = ["codec"] }
 serialization = { path = "../serialization", default-features = false }
 crypto = { path = "../crypto", default-features = false }
 
 rustc-hex = { version = "2.0", default-features = false }
-
-parity-codec = { version = "3.5.1", default-features = false }
-parity-codec-derive = { version = "3.3", default-features = false }
-serde = { version = "1.0", optional = true }
-serde_derive = { version = "1.0", optional = true }
+parity-codec = { version = "3.5", default-features = false, features = ["derive"] }
+serde = { version = "1.0", features = ["derive"], optional = true }
 
 [features]
 default = ["std"]
 std = [
-    "ustd/std",
     "primitives/std",
     "serialization/std",
     "crypto/std",
     "rustc-hex/std",
 
     "parity-codec/std",
-    "parity-codec-derive/std",
     "serde",
-    "serde_derive",
 ]

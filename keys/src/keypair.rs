@@ -1,14 +1,14 @@
 //! Bitcoin key pair.
 
-use ustd::{fmt, prelude::*};
+use core::fmt;
 
 use primitives::{H264, H520};
 
-use super::address::{Address, Network, Type};
-use super::error::Error;
-use super::private::Private;
-use super::public::Public;
-use super::Secret;
+use crate::address::{Address, Network, Type};
+use crate::error::Error;
+use crate::private::Private;
+use crate::public::Public;
+use crate::Secret;
 
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default)]
 pub struct KeyPair {
@@ -85,8 +85,9 @@ impl KeyPair {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crypto::dhash256;
+
+    use super::*;
 
     /// Tests from:
     /// https://github.com/bitcoin/bitcoin/blob/a6a860796a44a2805a58391a009ba22752f64e32/src/test/key_tests.cpp

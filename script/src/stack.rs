@@ -1,6 +1,8 @@
-use ustd::{ops, prelude::*};
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+use core::ops;
 
-use super::error::Error;
+use crate::error::Error;
 
 #[derive(PartialEq, Clone, Debug, Default)]
 pub struct Stack<T> {
@@ -162,6 +164,9 @@ impl<T> Stack<T> {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(not(feature = "std"))]
+    use alloc::vec;
+
     use super::*;
 
     #[test]

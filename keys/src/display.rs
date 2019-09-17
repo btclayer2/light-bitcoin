@@ -1,6 +1,6 @@
-use ustd::{ops, prelude::*};
+use core::ops;
 
-use super::error::Error;
+use crate::error::Error;
 
 pub trait DisplayLayout {
     type Target: ops::Deref<Target = [u8]>;

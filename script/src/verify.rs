@@ -1,14 +1,12 @@
-use ustd::prelude::*;
-
 use chain::constants::{
     LOCKTIME_THRESHOLD, SEQUENCE_FINAL, SEQUENCE_LOCKTIME_DISABLE_FLAG, SEQUENCE_LOCKTIME_MASK,
     SEQUENCE_LOCKTIME_TYPE_FLAG,
 };
 use keys::{Message, Public, Signature};
 
-use super::num::Num;
-use super::script::Script;
-use super::sign::{SignatureVersion, TransactionInputSigner};
+use crate::num::Num;
+use crate::script::Script;
+use crate::sign::{SignatureVersion, TransactionInputSigner};
 
 /// Checks transaction signature
 pub trait SignatureChecker {

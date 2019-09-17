@@ -1,15 +1,15 @@
-use ustd::{fmt, ops, prelude::*};
+use core::{fmt, ops};
 
 use crypto::dhash160;
 use primitives::{H264, H512, H520};
 
-use parity_codec_derive::{Decode, Encode};
+use parity_codec::{Decode, Encode};
 #[cfg(feature = "std")]
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
-use super::error::Error;
-use super::signature::{CompactSignature, Signature};
-use super::{AddressHash, Message};
+use crate::error::Error;
+use crate::signature::{CompactSignature, Signature};
+use crate::{AddressHash, Message};
 
 /// Secret public key
 #[derive(Ord, PartialOrd, Eq, Copy, Clone, Encode, Decode)]

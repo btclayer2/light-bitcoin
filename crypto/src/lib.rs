@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use ustd::{hash::Hasher, prelude::*};
+use core::hash::Hasher;
 
 use primitives::{H160, H256, H32};
 
@@ -186,57 +186,65 @@ pub fn checksum(data: &[u8]) -> H32 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
+    use hex_literal::hex;
     use primitives::Bytes;
-    use rustc_hex::FromHex;
+
+    use super::*;
 
     #[test]
     fn test_ripemd160() {
-        let expected: Vec<u8> =
-            FromHex::from_hex("108f07b8382412612c048d07d13f814118445acd").unwrap();
         let result = ripemd160(b"hello");
-        assert_eq!(result, H160::from_slice(&expected));
+        assert_eq!(
+            result,
+            H160::from(hex!["108f07b8382412612c048d07d13f814118445acd"])
+        );
     }
 
     #[test]
     fn test_sha1() {
-        let expected: Vec<u8> =
-            FromHex::from_hex("aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d").unwrap();
         let result = sha1(b"hello");
-        assert_eq!(result, H160::from_slice(&expected));
+        assert_eq!(
+            result,
+            H160::from(hex!["aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d"])
+        );
     }
 
     #[test]
     fn test_sha256() {
-        let expected: Vec<u8> =
-            FromHex::from_hex("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824")
-                .unwrap();
         let result = sha256(b"hello");
-        assert_eq!(result, H256::from_slice(&expected));
+        assert_eq!(
+            result,
+            H256::from(hex![
+                "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+            ])
+        );
     }
 
     #[test]
     fn test_dhash160() {
-        let expected: Vec<u8> =
-            FromHex::from_hex("b6a9c8c230722b7c748331a8b450f05566dc7d0f").unwrap();
         let result = dhash160(b"hello");
-        assert_eq!(result, H160::from_slice(&expected));
+        assert_eq!(
+            result,
+            H160::from(hex!["b6a9c8c230722b7c748331a8b450f05566dc7d0f"])
+        );
 
-        let expected: Vec<u8> =
-            FromHex::from_hex("865c71bfc7e314709207ab9e7e205c6f8e453d08").unwrap();
         let bytes: Bytes = "210292be03ed9475445cc24a34a115c641a67e4ff234ccb08cb4c5cea45caa526cb26ead6ead6ead6ead6eadac".into();
         let result = dhash160(bytes.as_ref());
-        assert_eq!(result, H160::from_slice(&expected));
+        assert_eq!(
+            result,
+            H160::from(hex!["865c71bfc7e314709207ab9e7e205c6f8e453d08"])
+        );
     }
 
     #[test]
     fn test_dhash256() {
-        let expected: Vec<u8> =
-            FromHex::from_hex("9595c9df90075148eb06860365df33584b75bff782a510c6cd4883a419833d50")
-                .unwrap();
         let result = dhash256(b"hello");
-        assert_eq!(result, H256::from_slice(&expected));
+        assert_eq!(
+            result,
+            H256::from(hex![
+                "9595c9df90075148eb06860365df33584b75bff782a510c6cd4883a419833d50"
+            ])
+        );
     }
 
     #[test]
@@ -248,7 +256,6 @@ mod tests {
 
     #[test]
     fn test_checksum() {
-        let expected: Vec<u8> = FromHex::from_hex("9595c9df").unwrap();
-        assert_eq!(checksum(b"hello"), H32::from_slice(&expected));
+        assert_eq!(checksum(b"hello"), H32::from(hex!["9595c9df"]));
     }
 }

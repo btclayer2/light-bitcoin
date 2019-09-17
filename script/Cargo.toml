@@ -5,20 +5,18 @@ authors = ["debris <marek.kotewicz@gmail.com> and koushiro <koushiro.cqx@gmail.c
 edition = "2018"
 
 [dependencies]
-ustd = { git = "https://github.com/chainx-org/chainx-common", default-features = false }
-primitives = { path = "../primitives", default-features = false }
+primitives = { path = "../primitives", default-features = false, features = ["codec"] }
 crypto = { path = "../crypto", default-features = false }
 serialization = { path = "../serialization", default-features = false }
 keys = { path = "../keys", default-features = false }
 chain = { path = "../chain", default-features = false }
 
 [dev-dependencies]
-rustc-hex = { version = "2.0", default-features = false }
+hex-literal = "0.2"
 
 [features]
 default = ["std"]
 std = [
-    "ustd/std",
     "primitives/std",
     "crypto/std",
     "serialization/std",

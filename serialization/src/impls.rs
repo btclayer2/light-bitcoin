@@ -1,11 +1,12 @@
-use ustd::prelude::*;
+#[cfg(not(feature = "std"))]
+use alloc::string::String;
 
 use primitives::io::{self, Error, LittleEndian, Read, Write};
-use primitives::{Bytes, Compact, H160, H256, H264, H32, H48, H512, H520};
+use primitives::{Bytes, Compact, H160, H256, H264, H32, H512, H520};
 
-use super::compact_integer::CompactInteger;
-use super::reader::{Deserializable, Reader};
-use super::stream::{Serializable, Stream};
+use crate::compact_integer::CompactInteger;
+use crate::reader::{Deserializable, Reader};
+use crate::stream::{Serializable, Stream};
 
 impl Serializable for bool {
     #[inline]
@@ -240,7 +241,6 @@ macro_rules! impl_ser_for_hash {
 }
 
 impl_ser_for_hash!(H32, 4);
-impl_ser_for_hash!(H48, 6);
 impl_ser_for_hash!(H160, 20);
 impl_ser_for_hash!(H256, 32);
 impl_ser_for_hash!(H264, 33);
@@ -289,6 +289,9 @@ impl Deserializable for Compact {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(not(feature = "std"))]
+    use alloc::{vec, vec::Vec};
+
     use super::*;
     use crate::{deserialize, deserialize_iterator, serialize};
 

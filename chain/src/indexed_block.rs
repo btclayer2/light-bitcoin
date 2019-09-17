@@ -1,4 +1,5 @@
-use ustd::prelude::*;
+#[cfg(not(feature = "std"))]
+use alloc::{vec, vec::Vec};
 
 use primitives::{io, H256};
 use serialization::{
@@ -8,11 +9,11 @@ use serialization::{
 
 use rustc_hex::FromHex;
 
-use super::block::Block;
-use super::indexed_header::IndexedBlockHeader;
-use super::indexed_transaction::IndexedTransaction;
-use super::merkle_root::merkle_root;
-use super::transaction::Transaction;
+use crate::block::Block;
+use crate::indexed_header::IndexedBlockHeader;
+use crate::indexed_transaction::IndexedTransaction;
+use crate::merkle_root::merkle_root;
+use crate::transaction::Transaction;
 
 #[derive(Ord, PartialOrd, Eq, Clone, Debug, Default)]
 pub struct IndexedBlock {

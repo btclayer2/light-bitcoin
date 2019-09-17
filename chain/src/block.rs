@@ -1,13 +1,14 @@
-use ustd::prelude::*;
+#[cfg(not(feature = "std"))]
+use alloc::{vec, vec::Vec};
 
 use primitives::{io, H256};
 use serialization::{deserialize, Deserializable, Reader, Serializable, Stream};
 
 use rustc_hex::FromHex;
 
-use super::block_header::BlockHeader;
-use super::merkle_root::merkle_root;
-use super::transaction::Transaction;
+use crate::block_header::BlockHeader;
+use crate::merkle_root::merkle_root;
+use crate::transaction::Transaction;
 
 pub trait RepresentH256 {
     fn h256(&self) -> H256;
@@ -98,8 +99,9 @@ impl Deserializable for Block {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use primitives::h256_from_rev_str;
+
+    use super::Block;
 
     // Block 80000
     // https://blockchain.info/rawblock/000000000043a8c0fd1d6f726790caa2a406010d19efd2780db27bdbbd93baf6

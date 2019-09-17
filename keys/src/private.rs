@@ -1,17 +1,17 @@
 //! Secret with additional network identifier and format type
 
-use ustd::{fmt, prelude::*, str};
+#[cfg(not(feature = "std"))]
+use alloc::{vec, vec::Vec};
+use core::{fmt, str};
 
 use crypto::checksum;
 use primitives::H520;
 
-use base58::{FromBase58, ToBase58};
-
-use super::address::Network;
-use super::display::DisplayLayout;
-use super::error::Error;
-use super::signature::{CompactSignature, Signature};
-use super::{Message, Secret};
+use crate::address::Network;
+use crate::display::DisplayLayout;
+use crate::error::Error;
+use crate::signature::{CompactSignature, Signature};
+use crate::{Message, Secret};
 
 /// Secret with additional network identifier and format type
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default)]
@@ -34,7 +34,7 @@ impl fmt::Debug for Private {
 
 impl fmt::Display for Private {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.layout().to_base58().fmt(f)
+        bs58::encode(self.layout().as_slice()).into_string().fmt(f)
     }
 }
 
@@ -45,7 +45,9 @@ impl str::FromStr for Private {
     where
         Self: Sized,
     {
-        let hex = s.from_base58().map_err(|_| Error::InvalidPrivate)?;
+        let hex = bs58::decode(s)
+            .into_vec()
+            .map_err(|_| Error::InvalidPrivate)?;
         Private::from_layout(&hex)
     }
 }
@@ -141,37 +143,36 @@ impl DisplayLayout for Private {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    #[cfg(not(feature = "std"))]
+    use alloc::string::{String, ToString};
+    use hex_literal::hex;
     use primitives::H256;
-    use rustc_hex::FromHex;
+
+    use super::*;
 
     #[test]
     fn test_private_to_string() {
-        let mut secret: Vec<u8> =
-            FromHex::from_hex("063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5")
-                .unwrap();
+        let mut secret = hex!["063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5"];
         secret.reverse();
         let private = Private {
             network: Network::Mainnet,
-            secret: H256::from_slice(&secret),
+            secret: H256::from(secret),
             compressed: false,
         };
 
         assert_eq!(
-            "5KSCKP8NUyBZPCCQusxRwgmz9sfvJQEgbGukmmHepWw5Bzp95mu".to_owned(),
-            private.to_string()
+            private.to_string(),
+            String::from("5KSCKP8NUyBZPCCQusxRwgmz9sfvJQEgbGukmmHepWw5Bzp95mu"),
         );
     }
 
     #[test]
     fn test_private_from_str() {
-        let mut secret: Vec<u8> =
-            FromHex::from_hex("063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5")
-                .unwrap();
+        let mut secret = hex!["063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5"];
         secret.reverse();
         let private = Private {
             network: Network::Mainnet,
-            secret: H256::from_slice(&secret),
+            secret: H256::from(secret),
             compressed: false,
         };
 

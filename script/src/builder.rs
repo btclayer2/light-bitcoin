@@ -1,13 +1,11 @@
 //! Script builder
 
-use ustd::prelude::*;
-
 use keys::AddressHash;
 use primitives::Bytes;
 
-use super::num::Num;
-use super::opcode::Opcode;
-use super::script::Script;
+use crate::num::Num;
+use crate::opcode::Opcode;
+use crate::script::Script;
 
 /// Script builder
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Hash, Default)]

@@ -1,7 +1,8 @@
 //! Bitcoin trainsaction.
 //! https://en.bitcoin.it/wiki/Protocol_documentation#tx
 
-use ustd::prelude::*;
+#[cfg(not(feature = "std"))]
+use alloc::{vec, vec::Vec};
 
 use crypto::dhash256;
 use primitives::{io, Bytes, H256};
@@ -11,11 +12,10 @@ use serialization::{
 };
 
 use rustc_hex::FromHex;
-
 #[cfg(feature = "std")]
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
-use super::constants::{LOCKTIME_THRESHOLD, SEQUENCE_FINAL};
+use crate::constants::{LOCKTIME_THRESHOLD, SEQUENCE_FINAL};
 
 /// Must be zero.
 const WITNESS_MARKER: u8 = 0;
@@ -322,8 +322,9 @@ impl parity_codec::Decode for Transaction {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use primitives::h256_from_rev_str;
+
+    use super::*;
 
     // real transaction from block 80000
     // https://blockchain.info/rawtx/5a4ebf66822b0b2d56bd9dc64ece0bc38ee7844a23ff1d7320a88c5fdb2ad3e2

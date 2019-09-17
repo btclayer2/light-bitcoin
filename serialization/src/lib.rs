@@ -1,12 +1,15 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
 mod compact_integer;
 mod impls;
 mod list;
 mod reader;
 mod stream;
 
-pub use primitives::{io::Error, Bytes, Compact, H160, H256, H264, H32, H48, H512, H520};
+pub use primitives::{io::Error, Bytes, Compact, H160, H256, H264, H32, H512, H520};
 
 pub use self::compact_integer::CompactInteger;
 pub use self::list::List;

@@ -1,13 +1,14 @@
-use ustd::{fmt, prelude::*};
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+use core::fmt;
 
 use crypto::dhash256;
 use primitives::{io, Compact, H256};
 use serialization::{deserialize, serialize, Deserializable, Reader, Serializable, Stream};
 
 use rustc_hex::FromHex;
-
 #[cfg(feature = "std")]
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -106,8 +107,11 @@ impl parity_codec::Decode for BlockHeader {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    #[cfg(not(feature = "std"))]
+    use alloc::vec;
     use serialization::{Reader, Stream};
+
+    use super::*;
 
     #[test]
     fn test_block_header_stream() {

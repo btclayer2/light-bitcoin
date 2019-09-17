@@ -1,10 +1,12 @@
 //! Script numeric
 
-use ustd::{ops, prelude::*};
+#[cfg(not(feature = "std"))]
+use alloc::{vec, vec::Vec};
+use core::ops;
 
 use primitives::Bytes;
 
-use super::error::Error;
+use crate::error::Error;
 
 /// Script numeric
 ///

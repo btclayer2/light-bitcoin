@@ -1,10 +1,10 @@
-use ustd::{fmt, prelude::*};
+use core::fmt;
 
 use primitives::{io, H256};
 use serialization::{Deserializable, Reader};
 
-use super::block_header::BlockHeader;
-use super::read_and_hash::ReadAndHash;
+use crate::block_header::BlockHeader;
+use crate::read_and_hash::ReadAndHash;
 
 #[derive(Ord, PartialOrd, Eq, Copy, Clone, Default)]
 pub struct IndexedBlockHeader {

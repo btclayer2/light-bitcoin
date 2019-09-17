@@ -1,19 +1,21 @@
-use ustd::{cmp, mem, prelude::*};
+#[cfg(not(feature = "std"))]
+use alloc::{vec, vec::Vec};
+use core::{cmp, mem};
 
 use chain::constants::SEQUENCE_LOCKTIME_DISABLE_FLAG;
 use crypto::{dhash160, dhash256, ripemd160, sha1, sha256};
 use keys::{Message, Public, Signature};
 use primitives::{Bytes, H256};
 
-use super::builder::Builder;
-use super::error::Error;
-use super::flags::VerificationFlags;
-use super::num::Num;
-use super::opcode::Opcode;
-use super::script::{self, Script, ScriptWitness, MAX_SCRIPT_ELEMENT_SIZE};
-use super::sign::{Sighash, SignatureVersion};
-use super::stack::Stack;
-use super::verify::SignatureChecker;
+use crate::builder::Builder;
+use crate::error::Error;
+use crate::flags::VerificationFlags;
+use crate::num::Num;
+use crate::opcode::Opcode;
+use crate::script::{self, Script, ScriptWitness, MAX_SCRIPT_ELEMENT_SIZE};
+use crate::sign::{Sighash, SignatureVersion};
+use crate::stack::Stack;
+use crate::verify::SignatureChecker;
 
 /// Helper function.
 fn check_signature(
@@ -1251,12 +1253,14 @@ pub fn eval_script(
 
 #[cfg(test)]
 mod tests {
+    use core::iter;
+
+    use chain::Transaction;
+    use keys::{KeyPair, Network, Private};
+
     use super::*;
     use crate::sign::TransactionInputSigner;
     use crate::verify::{NoopSignatureChecker, TransactionSignatureChecker};
-    use chain::Transaction;
-    use keys::{KeyPair, Network, Private};
-    use ustd::iter;
 
     #[test]
     fn tests_is_public_key() {

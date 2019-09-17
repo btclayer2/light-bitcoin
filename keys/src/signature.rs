@@ -2,12 +2,14 @@
 //!
 //! http://bitcoin.stackexchange.com/q/12554/40688
 
-use ustd::{fmt, ops, prelude::*, str};
+#[cfg(not(feature = "std"))]
+use alloc::{string::String, vec::Vec};
+use core::{fmt, ops, str};
 
 use primitives::H520;
 use rustc_hex::{FromHex, ToHex};
 
-use super::Error;
+use crate::Error;
 
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Default)]
 pub struct Signature(Vec<u8>);

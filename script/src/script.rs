@@ -1,12 +1,14 @@
 //! Serialized script, used inside transaction inputs and outputs.
 
-use ustd::{fmt, ops, prelude::*};
+#[cfg(not(feature = "std"))]
+use alloc::{vec, vec::Vec};
+use core::{fmt, ops};
 
 use keys::{self, AddressHash, Public};
 use primitives::Bytes;
 
-use super::error::Error;
-use super::opcode::Opcode;
+use crate::error::Error;
+use crate::opcode::Opcode;
 
 /// Maximum number of bytes pushable to the stack
 pub const MAX_SCRIPT_ELEMENT_SIZE: usize = 520;
@@ -707,9 +709,12 @@ pub fn is_witness_commitment_script(script: &[u8]) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::super::builder::Builder;
-    use super::*;
+    #[cfg(not(feature = "std"))]
+    use alloc::string::{String, ToString};
     use keys::{Address, Public};
+
+    use super::*;
+    use crate::builder::Builder;
 
     #[test]
     fn test_is_pay_to_script_hash() {
@@ -739,7 +744,7 @@ mod tests {
 
     #[test]
     fn test_script_debug() {
-        use ustd::fmt::Write;
+        use core::fmt::Write;
 
         let script = Builder::default()
             .push_num(3.into())
