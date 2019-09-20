@@ -6,7 +6,9 @@ edition = "2018"
 
 [dependencies]
 primitives = { path = "../primitives", default-features = false }
+serialization_derive = { path = "../serialization_derive", optional = true }
 
 [features]
 default = ["std"]
 std = ["primitives/std"]
+derive = ["serialization_derive"]

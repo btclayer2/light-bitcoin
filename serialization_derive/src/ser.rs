@@ -1,42 +1,32 @@
-use quote::{multi_zip_expr, nested_tuples_pat, pounded_var_names, quote, quote_each_token};
+use quote::{format_ident, quote};
 
-pub fn impl_serializable(ast: &syn::DeriveInput) -> quote::Tokens {
-    let body = match ast.body {
-        syn::Body::Struct(ref s) => s,
+pub fn impl_serializable(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
+    let fields = match ast.data {
+        syn::Data::Struct(ref data) => &data.fields,
         _ => panic!("#[derive(Serializable)] is only defined for structs."),
     };
 
-    let stmts: Vec<_> = match *body {
-        syn::VariantData::Struct(ref fields) => {
-            fields.iter().enumerate().map(serialize_field_map).collect()
-        }
-        syn::VariantData::Tuple(ref fields) => {
-            fields.iter().enumerate().map(serialize_field_map).collect()
-        }
-        syn::VariantData::Unit => {
-            panic!("#[derive(Serializable)] is not defined for Unit structs.")
-        }
+    let stmts = match fields {
+        syn::Fields::Named(_) | syn::Fields::Unnamed(_) => fields
+            .iter()
+            .enumerate()
+            .map(serialize_field_map)
+            .collect::<Vec<_>>(),
+        syn::Fields::Unit => panic!("#[derive(Serializable)] is not defined for Unit structs."),
     };
 
-    let size_stmts: Vec<_> = match *body {
-        syn::VariantData::Struct(ref fields) => fields
+    let size_stmts = match fields {
+        syn::Fields::Named(_) | syn::Fields::Unnamed(_) => fields
             .iter()
             .enumerate()
             .map(serialize_field_size_map)
-            .collect(),
-        syn::VariantData::Tuple(ref fields) => fields
-            .iter()
-            .enumerate()
-            .map(serialize_field_size_map)
-            .collect(),
-        syn::VariantData::Unit => {
-            panic!("#[derive(Serializable)] is not defined for Unit structs.")
-        }
+            .collect::<Vec<_>>(),
+        syn::Fields::Unit => panic!("#[derive(Serializable)] is not defined for Unit structs."),
     };
 
     let name = &ast.ident;
 
-    let dummy_const = syn::Ident::new(format!("_IMPL_SERIALIZABLE_FOR_{}", name));
+    let dummy_const = format_ident!("_IMPL_SERIALIZABLE_FOR_{}", name);
     let impl_block = quote! {
         impl serialization::Serializable for #name {
             fn serialize(&self, stream: &mut serialization::Stream) {
@@ -58,58 +48,56 @@ pub fn impl_serializable(ast: &syn::DeriveInput) -> quote::Tokens {
     }
 }
 
-fn serialize_field_size_map(tuple: (usize, &syn::Field)) -> quote::Tokens {
+fn serialize_field_size_map(tuple: (usize, &syn::Field)) -> proc_macro2::TokenStream {
     serialize_field_size(tuple.0, tuple.1)
 }
 
-fn serialize_field_size(index: usize, field: &syn::Field) -> quote::Tokens {
-    let ident = match field.ident {
-        Some(ref ident) => ident.to_string(),
-        None => index.to_string(),
+fn serialize_field_size(index: usize, field: &syn::Field) -> proc_macro2::TokenStream {
+    let id = match field.ident {
+        Some(ref ident) => format_ident!("{}", ident),
+        None => format_ident!("{}", index),
     };
 
-    let id = syn::Ident::new(format!("self.{}", ident));
-
     match field.ty {
-        syn::Ty::Path(_, ref path) => {
+        syn::Type::Path(ref path) => {
             let ident = &path
+                .path
                 .segments
                 .first()
                 .expect("there must be at least 1 segment")
                 .ident;
-            if &ident.to_string() == "Vec" {
-                quote! { serialization::serialized_list_size(&#id) }
+            if ident == "Vec" {
+                quote! { serialization::serialized_list_size(&self.#id) }
             } else {
-                quote! { #id.serialized_size() }
+                quote! { self.#id.serialized_size() }
             }
         }
         _ => panic!("serialization not supported"),
     }
 }
 
-fn serialize_field_map(tuple: (usize, &syn::Field)) -> quote::Tokens {
+fn serialize_field_map(tuple: (usize, &syn::Field)) -> proc_macro2::TokenStream {
     serialize_field(tuple.0, tuple.1)
 }
 
-fn serialize_field(index: usize, field: &syn::Field) -> quote::Tokens {
-    let ident = match field.ident {
-        Some(ref ident) => ident.to_string(),
-        None => index.to_string(),
+fn serialize_field(index: usize, field: &syn::Field) -> proc_macro2::TokenStream {
+    let id = match field.ident {
+        Some(ref ident) => format_ident!("{}", ident),
+        None => format_ident!("{}", index),
     };
 
-    let id = syn::Ident::new(format!("self.{}", ident));
-
     match field.ty {
-        syn::Ty::Path(_, ref path) => {
+        syn::Type::Path(ref path) => {
             let ident = &path
+                .path
                 .segments
                 .first()
                 .expect("there must be at least 1 segment")
                 .ident;
-            if &ident.to_string() == "Vec" {
-                quote! { stream.append_list(&#id); }
+            if ident == "Vec" {
+                quote! { stream.append_list(&self.#id); }
             } else {
-                quote! { stream.append(&#id); }
+                quote! { stream.append(&self.#id); }
             }
         }
         _ => panic!("serialization not supported"),
