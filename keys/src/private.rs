@@ -79,7 +79,7 @@ impl Private {
         } else {
             27 + recovery_id
         };
-        compact_signature[1..65].copy_from_slice(&data[0..64]);
+        compact_signature[1..65].copy_from_slice(&data);
         Ok(H520::from_slice(&compact_signature).into())
     }
 }

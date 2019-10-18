@@ -3,7 +3,7 @@ use core::{fmt, ops};
 use crypto::dhash160;
 use primitives::{H264, H512, H520};
 
-use parity_codec::{Decode, Encode};
+use codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
@@ -80,11 +80,25 @@ impl Public {
 
     pub fn verify(&self, message: &Message, signature: &Signature) -> Result<bool, Error> {
         let public = match self {
-            Public::Normal(_) => secp256k1::PublicKey::parse_slice(self, None)?,
-            Public::Compressed(_) => secp256k1::PublicKey::parse_slice(self, None)?,
+            Public::Normal(pubkey) => secp256k1::PublicKey::parse(pubkey.as_fixed_bytes())?,
+            Public::Compressed(pubkey) => {
+                secp256k1::PublicKey::parse_compressed(pubkey.as_fixed_bytes())?
+            }
         };
         let mut signature = secp256k1::Signature::parse_der_lax(&**signature)?;
         signature.normalize_s();
+        let message = secp256k1::Message::parse(message.as_fixed_bytes());
+        Ok(secp256k1::verify(&message, &signature, &public))
+    }
+
+    pub fn verify_compact(&self, message: &Message, signature: &[u8; 64]) -> Result<bool, Error> {
+        let public = match self {
+            Public::Normal(pubkey) => secp256k1::PublicKey::parse(pubkey.as_fixed_bytes())?,
+            Public::Compressed(pubkey) => {
+                secp256k1::PublicKey::parse_compressed(pubkey.as_fixed_bytes())?
+            }
+        };
+        let signature = secp256k1::Signature::parse(signature);
         let message = secp256k1::Message::parse(message.as_fixed_bytes());
         Ok(secp256k1::verify(&message, &signature, &public))
     }

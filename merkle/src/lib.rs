@@ -13,7 +13,6 @@ use primitives::{io, H256};
 use serialization::{deserialize, serialize, Deserializable, Reader, Serializable, Stream};
 
 pub use bit_vec::BitVec;
-use parity_codec::{Decode, Encode, Input};
 
 #[derive(Debug)]
 pub enum Error {
@@ -115,21 +114,17 @@ impl Deserializable for PartialMerkleTree {
     }
 }
 
-impl Encode for PartialMerkleTree {
+impl codec::Encode for PartialMerkleTree {
     fn encode(&self) -> Vec<u8> {
         let value = serialize::<PartialMerkleTree>(&self);
         value.encode()
     }
 }
 
-impl Decode for PartialMerkleTree {
-    fn decode<I: Input>(input: &mut I) -> Option<Self> {
-        let value: Vec<u8> = Decode::decode(input).unwrap();
-        if let Ok(tree) = deserialize(Reader::new(&value)) {
-            Some(tree)
-        } else {
-            None
-        }
+impl codec::Decode for PartialMerkleTree {
+    fn decode<I: codec::Input>(input: &mut I) -> Option<Self> {
+        let value: Vec<u8> = codec::Decode::decode(input).unwrap();
+        deserialize(Reader::new(&value)).ok()
     }
 }
 

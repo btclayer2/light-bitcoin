@@ -9,6 +9,9 @@ mod list;
 mod reader;
 mod stream;
 
+#[cfg(feature = "derive")]
+pub use serialization_derive::*;
+
 pub use primitives;
 pub use primitives::{io::Error, Bytes, Compact, H160, H256, H264, H32, H512, H520};
 

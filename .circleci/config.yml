@@ -49,6 +49,7 @@ jobs:
           name: Coverage
           command: |
             export PATH=~/.cargo/bin:$PATH
+            pyenv global 3.5.2
             # install kcov
             cargo install cargo-kcov
             cargo kcov --print-install-kcov-sh | sh

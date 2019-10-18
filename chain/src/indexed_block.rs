@@ -1,9 +1,9 @@
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
 
-use primitives::{io, H256};
+use primitives::H256;
 use serialization::{
-    deserialize, serialized_list_size, serialized_list_size_with_flags, Deserializable, Reader,
+    deserialize, serialized_list_size, serialized_list_size_with_flags, Deserializable,
     Serializable, SERIALIZE_TRANSACTION_WITNESS,
 };
 
@@ -15,7 +15,7 @@ use crate::indexed_transaction::IndexedTransaction;
 use crate::merkle_root::merkle_root;
 use crate::transaction::Transaction;
 
-#[derive(Ord, PartialOrd, Eq, Clone, Debug, Default)]
+#[derive(Ord, PartialOrd, Eq, Clone, Debug, Default, Deserializable)]
 pub struct IndexedBlock {
     pub header: IndexedBlockHeader,
     pub transactions: Vec<IndexedTransaction>,
@@ -117,19 +117,6 @@ impl IndexedBlock {
         self.transactions
             .iter()
             .all(|tx| tx.raw.is_final_in_block(height, self.header.raw.time))
-    }
-}
-
-impl Deserializable for IndexedBlock {
-    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
-    where
-        Self: Sized,
-        T: io::Read,
-    {
-        Ok(IndexedBlock {
-            header: reader.read()?,
-            transactions: reader.read_list()?,
-        })
     }
 }
 

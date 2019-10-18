@@ -88,6 +88,7 @@ mod tests {
     use crypto::dhash256;
 
     use super::*;
+    use crate::CompactSignature;
 
     /// Tests from:
     /// https://github.com/bitcoin/bitcoin/blob/a6a860796a44a2805a58391a009ba22752f64e32/src/test/key_tests.cpp
@@ -138,6 +139,21 @@ mod tests {
         let message = dhash256(raw_message);
         let kp: KeyPair = KeyPair::from_private(secret.into()).unwrap();
         kp.private().sign_compact(&message).unwrap() == signature.into()
+    }
+
+    fn check_verify_compact(
+        secret: &'static str,
+        raw_message: &[u8],
+        signature: &'static str,
+    ) -> bool {
+        let message = dhash256(raw_message);
+        let signature: CompactSignature = signature.into();
+        let mut raw_signature = [0u8; 64];
+        raw_signature.copy_from_slice(&signature[1..65]);
+        let kp = KeyPair::from_private(secret.into()).unwrap();
+        kp.public()
+            .verify_compact(&message, &raw_signature)
+            .unwrap()
     }
 
     fn check_recover_compact(secret: &'static str, raw_message: &[u8]) -> bool {
@@ -194,6 +210,16 @@ mod tests {
         assert!(check_sign_compact(SECRET_2, message, SIGN_COMPACT_2));
         assert!(check_sign_compact(SECRET_2C, message, SIGN_COMPACT_2C));
         assert!(!check_sign_compact(SECRET_2C, b"", SIGN_COMPACT_2C));
+    }
+
+    #[test]
+    fn test_verify_compact() {
+        let message = b"Very deterministic message";
+        assert!(check_verify_compact(SECRET_1, message, SIGN_COMPACT_1));
+        assert!(check_verify_compact(SECRET_1C, message, SIGN_COMPACT_1C));
+        assert!(check_verify_compact(SECRET_2, message, SIGN_COMPACT_2));
+        assert!(check_verify_compact(SECRET_2C, message, SIGN_COMPACT_2C));
+        assert!(!check_verify_compact(SECRET_2C, b"", SIGN_COMPACT_2C));
     }
 
     #[test]

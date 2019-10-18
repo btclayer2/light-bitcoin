@@ -73,6 +73,7 @@ impl<'a> From<&'a [u8]> for Signature {
     }
 }
 
+/// Recovery ID (1 byte) + Compact signature (64 bytes)
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default)]
 pub struct CompactSignature(H520);
 

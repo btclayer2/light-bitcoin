@@ -1,8 +1,8 @@
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
 
-use primitives::{io, H256};
-use serialization::{deserialize, Deserializable, Reader, Serializable, Stream};
+use primitives::H256;
+use serialization::{deserialize, Deserializable, Serializable};
 
 use rustc_hex::FromHex;
 
@@ -10,11 +10,7 @@ use crate::block_header::BlockHeader;
 use crate::merkle_root::merkle_root;
 use crate::transaction::Transaction;
 
-pub trait RepresentH256 {
-    fn h256(&self) -> H256;
-}
-
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Default)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Default, Serializable, Deserializable)]
 pub struct Block {
     pub block_header: BlockHeader,
     pub transactions: Vec<Transaction>,
@@ -70,30 +66,13 @@ impl Block {
     }
 }
 
+pub trait RepresentH256 {
+    fn h256(&self) -> H256;
+}
+
 impl RepresentH256 for Block {
     fn h256(&self) -> H256 {
         self.hash()
-    }
-}
-
-impl Serializable for Block {
-    fn serialize(&self, stream: &mut Stream) {
-        stream
-            .append(&self.block_header)
-            .append_list(&self.transactions);
-    }
-}
-
-impl Deserializable for Block {
-    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
-    where
-        Self: Sized,
-        T: io::Read,
-    {
-        Ok(Block {
-            block_header: reader.read()?,
-            transactions: reader.read_list()?,
-        })
     }
 }
 

@@ -17,7 +17,7 @@ pub use self::compact::Compact;
 pub use self::hash::{H160, H256, H264, H32, H512, H520};
 
 /// `s` must be 64 chars, ex: c16a4a6a6cc43c67770cbec9dd0cc4bf7e956d6b4c9e7c15ff1a2dc8ef3afc63.
-pub fn h256_from_rev_str(s: &'static str) -> H256 {
+pub fn h256_from_rev_str(s: &str) -> H256 {
     let mut hex: Vec<u8> = rustc_hex::FromHex::from_hex(s).unwrap();
     hex.reverse();
     H256::from_slice(&hex)

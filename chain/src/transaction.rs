@@ -22,7 +22,9 @@ const WITNESS_MARKER: u8 = 0;
 /// Must be nonzero.
 const WITNESS_FLAG: u8 = 1;
 
-#[derive(Ord, PartialOrd, PartialEq, Eq, Copy, Clone, Debug, Default)]
+#[derive(
+    Ord, PartialOrd, PartialEq, Eq, Copy, Clone, Debug, Default, Serializable, Deserializable,
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct OutPoint {
     pub hash: H256,
@@ -39,25 +41,6 @@ impl OutPoint {
 
     pub fn is_null(&self) -> bool {
         self.hash.is_zero() && self.index == u32::max_value()
-    }
-}
-
-impl Serializable for OutPoint {
-    fn serialize(&self, stream: &mut Stream) {
-        stream.append(&self.hash).append(&self.index);
-    }
-}
-
-impl Deserializable for OutPoint {
-    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
-    where
-        Self: Sized,
-        T: io::Read,
-    {
-        Ok(OutPoint {
-            hash: reader.read()?,
-            index: reader.read()?,
-        })
     }
 }
 
@@ -113,7 +96,7 @@ impl Deserializable for TransactionInput {
     }
 }
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Serializable, Deserializable)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct TransactionOutput {
     pub value: u64,
@@ -126,25 +109,6 @@ impl Default for TransactionOutput {
             value: 0xffff_ffff_ffff_ffffu64,
             script_pubkey: Bytes::default(),
         }
-    }
-}
-
-impl Serializable for TransactionOutput {
-    fn serialize(&self, stream: &mut Stream) {
-        stream.append(&self.value).append(&self.script_pubkey);
-    }
-}
-
-impl Deserializable for TransactionOutput {
-    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
-    where
-        Self: Sized,
-        T: io::Read,
-    {
-        Ok(TransactionOutput {
-            value: reader.read()?,
-            script_pubkey: reader.read()?,
-        })
     }
 }
 
@@ -298,22 +262,18 @@ impl Deserializable for Transaction {
     }
 }
 
-impl parity_codec::Encode for Transaction {
+impl codec::Encode for Transaction {
     fn encode(&self) -> Vec<u8> {
         let value = serialize::<Transaction>(&self);
         value.encode()
     }
 }
 
-impl parity_codec::Decode for Transaction {
-    fn decode<I: parity_codec::Input>(value: &mut I) -> Option<Self> {
-        let value: Option<Vec<u8>> = parity_codec::Decode::decode(value);
+impl codec::Decode for Transaction {
+    fn decode<I: codec::Input>(value: &mut I) -> Option<Self> {
+        let value: Option<Vec<u8>> = codec::Decode::decode(value);
         if let Some(value) = value {
-            if let Ok(tx) = deserialize(Reader::new(&value)) {
-                Some(tx)
-            } else {
-                None
-            }
+            deserialize(Reader::new(&value)).ok()
         } else {
             None
         }
