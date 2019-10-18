@@ -1,18 +1,19 @@
 [package]
 name = "merkle"
-version = "0.1.0"
-authors = ["Chainpool <http://chainx.org>"]
+version = "0.2.0"
+authors = ["ChainX <https://chainx.org>"]
 edition = "2018"
 
 [dependencies]
 primitives = { path = "../primitives", default-features = false, features = ["codec"] }
-serialization = { path = "../serialization", default-features = false }
+serialization = { path = "../serialization", default-features = false, features = ["derive"] }
 chain = { path = "../chain", default-features = false }
-bit-vec = { git = "https://github.com/koushiro/bit-vec", branch = "work", default-features = false }
-codec = { package = "parity-codec", version = "3.5", default-features = false, features = ["derive"] }
+codec = { package = "parity-codec", version = "3.5", default-features = false }
 
 [dev-dependencies]
 crypto = { path = "../crypto", default-features = false }
+hex = { version = "0.4", default-features = false }
+rand = "0.7"
 
 [features]
 default = ["std"]
@@ -20,6 +21,5 @@ std = [
      "primitives/std",
      "serialization/std",
      "chain/std",
-     "bit-vec/std",
      "codec/std",
 ]

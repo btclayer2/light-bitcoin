@@ -43,7 +43,7 @@ jobs:
             cd keys && cargo test --no-default-features && cd ..
             cd chain && cargo test --no-default-features && cd ..
             cd script && cargo test --no-default-features && cd ..
-            cd merkle && cargo test --no-default-features && cd ..
+            cd merkle && cargo build --no-default-features && cd ..
 
       - run:
           name: Coverage
