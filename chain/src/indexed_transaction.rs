@@ -1,10 +1,10 @@
 use core::fmt;
 
-use primitives::{io, H256};
+use primitives::{h256_reverse, io, H256};
 use serialization::{Deserializable, Reader};
 
 use crate::read_and_hash::ReadAndHash;
-use crate::transaction::Transaction;
+use crate::transaction::{transaction_hash, Transaction};
 
 #[derive(Ord, PartialOrd, Eq, Clone, Default)]
 pub struct IndexedTransaction {
@@ -20,14 +20,8 @@ impl PartialEq for IndexedTransaction {
 
 impl fmt::Debug for IndexedTransaction {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let reverse_hash = |hash: &H256| {
-            let mut res = H256::from_slice(hash.as_bytes());
-            let bytes = res.as_bytes_mut();
-            bytes.reverse();
-            res
-        };
         f.debug_struct("IndexedTransaction")
-            .field("hash", &reverse_hash(&self.hash))
+            .field("hash", &h256_reverse(self.hash))
             .field("raw", &self.raw)
             .finish()
     }
@@ -38,11 +32,7 @@ where
     Transaction: From<T>,
 {
     fn from(other: T) -> Self {
-        let tx = Transaction::from(other);
-        IndexedTransaction {
-            hash: tx.hash(),
-            raw: tx,
-        }
+        Self::from_raw(other)
     }
 }
 
@@ -52,6 +42,17 @@ impl IndexedTransaction {
             hash,
             raw: transaction,
         }
+    }
+
+    /// Explicit conversion of the raw Transaction into IndexedTransaction.
+    ///
+    /// Hashes transaction contents.
+    pub fn from_raw<T>(transaction: T) -> Self
+    where
+        Transaction: From<T>,
+    {
+        let transaction = Transaction::from(transaction);
+        Self::new(transaction_hash(&transaction), transaction)
     }
 }
 

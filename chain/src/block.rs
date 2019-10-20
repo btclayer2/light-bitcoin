@@ -10,7 +10,9 @@ use crate::block_header::BlockHeader;
 use crate::merkle_root::merkle_root;
 use crate::transaction::Transaction;
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Default, Serializable, Deserializable)]
+#[rustfmt::skip]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Default)]
+#[derive(Serializable, Deserializable)]
 pub struct Block {
     pub block_header: BlockHeader,
     pub transactions: Vec<Transaction>,
@@ -63,16 +65,6 @@ impl Block {
 
     pub fn hash(&self) -> H256 {
         self.block_header.hash()
-    }
-}
-
-pub trait RepresentH256 {
-    fn h256(&self) -> H256;
-}
-
-impl RepresentH256 for Block {
-    fn h256(&self) -> H256 {
-        self.hash()
     }
 }
 

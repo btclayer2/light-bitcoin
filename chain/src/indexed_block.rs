@@ -29,15 +29,7 @@ impl PartialEq for IndexedBlock {
 
 impl From<Block> for IndexedBlock {
     fn from(block: Block) -> Self {
-        let Block {
-            block_header,
-            transactions,
-        } = block;
-
-        IndexedBlock {
-            header: block_header.into(),
-            transactions: transactions.into_iter().map(Into::into).collect(),
-        }
+        Self::from_raw(block)
     }
 }
 
@@ -55,14 +47,31 @@ impl IndexedBlock {
         }
     }
 
+    /// Explicit conversion of the raw Block into IndexedBlock.
+    ///
+    /// Hashes block header + transactions.
+    pub fn from_raw(block: Block) -> Self {
+        let Block {
+            block_header,
+            transactions,
+        } = block;
+        Self::new(
+            IndexedBlockHeader::from_raw(block_header),
+            transactions
+                .into_iter()
+                .map(IndexedTransaction::from_raw)
+                .collect(),
+        )
+    }
+
     pub fn hash(&self) -> &H256 {
         &self.header.hash
     }
 
-    pub fn to_raw_block(&self) -> Block {
+    pub fn raw_block(self) -> Block {
         Block::new(
             self.header.raw,
-            self.transactions.iter().map(|tx| tx.raw.clone()).collect(),
+            self.transactions.into_iter().map(|tx| tx.raw).collect(),
         )
     }
 

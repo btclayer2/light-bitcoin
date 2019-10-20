@@ -9,7 +9,7 @@ use core::{fmt, ops, str};
 use primitives::H520;
 use rustc_hex::{FromHex, ToHex};
 
-use crate::Error;
+use crate::error::Error;
 
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Default)]
 pub struct Signature(Vec<u8>);
@@ -117,5 +117,11 @@ impl From<&'static str> for CompactSignature {
 impl From<H520> for CompactSignature {
     fn from(h: H520) -> Self {
         CompactSignature(h)
+    }
+}
+
+impl From<CompactSignature> for H520 {
+    fn from(s: CompactSignature) -> Self {
+        s.0
     }
 }

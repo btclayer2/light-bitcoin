@@ -105,6 +105,24 @@ where
         T::deserialize(&mut reader)
     }
 
+    pub fn skip_while(&mut self, predicate: &dyn Fn(u8) -> bool) -> Result<(), io::Error> {
+        let mut next_buffer = [0u8];
+        loop {
+            let next = match self.peeked.take() {
+                Some(peeked) => peeked,
+                None => match self.buffer.read(&mut next_buffer)? {
+                    0 => return Ok(()),
+                    _ => next_buffer[0],
+                },
+            };
+
+            if !predicate(next) {
+                self.peeked = Some(next);
+                return Ok(());
+            }
+        }
+    }
+
     pub fn read_slice(&mut self, bytes: &mut [u8]) -> Result<(), io::Error> {
         io::Read::read_exact(self, bytes).map_err(|_| io::Error::UnexpectedEof)
     }

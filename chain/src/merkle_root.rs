@@ -60,4 +60,30 @@ mod tests {
         let result = merkle_root(&[tx1, tx2]);
         assert_eq!(result, expected);
     }
+
+    // Test with 5 hashes
+    #[test]
+    fn test_merkle_root_with_5_hashes() {
+        let mut vec = Vec::new();
+        vec.push(h256_from_rev_str(
+            "1da63abbc8cc611334a753c4c31de14d19839c65b2b284202eaf3165861fb58d",
+        ));
+        vec.push(h256_from_rev_str(
+            "26c6a6f18d13d2f0787c1c0f3c5e23cf5bc8b3de685dd1923ae99f44c5341c0c",
+        ));
+        vec.push(h256_from_rev_str(
+            "513507fa209db823541caf7b9742bb9999b4a399cf604ba8da7037f3acced649",
+        ));
+        vec.push(h256_from_rev_str(
+            "6bf5d2e02b8432d825c5dff692d435b6c5f685d94efa6b3d8fb818f2ecdcfb66",
+        ));
+        vec.push(h256_from_rev_str(
+            "8a5ad423bc54fb7c76718371fd5a73b8c42bf27beaf2ad448761b13bcafb8895",
+        ));
+        let result = merkle_root(&vec);
+
+        let expected =
+            h256_from_rev_str("3a432cd416ea05b1be4ec1e72d7952d08670eaa5505b6794a186ddb253aa62e6");
+        assert_eq!(result, expected);
+    }
 }

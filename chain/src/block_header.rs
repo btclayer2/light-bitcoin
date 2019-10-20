@@ -3,14 +3,16 @@ use alloc::vec::Vec;
 use core::fmt;
 
 use crypto::dhash256;
-use primitives::{Compact, H256};
+use primitives::{h256_reverse, Compact, H256};
 use serialization::{deserialize, serialize, Deserializable, Reader, Serializable};
 
 use rustc_hex::FromHex;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default, Serializable, Deserializable)]
+#[rustfmt::skip]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default)]
+#[derive(Serializable, Deserializable)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct BlockHeader {
     pub version: u32,
@@ -23,19 +25,13 @@ pub struct BlockHeader {
 
 impl fmt::Debug for BlockHeader {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let reverse_hash = |hash: &H256| {
-            let mut res = H256::from_slice(hash.as_bytes());
-            let bytes = res.as_bytes_mut();
-            bytes.reverse();
-            res
-        };
         f.debug_struct("BlockHeader")
             .field("version", &self.version)
             .field(
                 "previous_header_hash",
-                &reverse_hash(&self.previous_header_hash),
+                &h256_reverse(self.previous_header_hash),
             )
-            .field("merkle_root_hash", &reverse_hash(&self.merkle_root_hash))
+            .field("merkle_root_hash", &h256_reverse(self.merkle_root_hash))
             .field("time", &self.time)
             .field("bits", &self.bits)
             .field("nonce", &self.nonce)
@@ -50,9 +46,15 @@ impl From<&'static str> for BlockHeader {
 }
 
 impl BlockHeader {
+    /// Compute hash of the block header.
     pub fn hash(&self) -> H256 {
-        dhash256(&serialize(self))
+        block_header_hash(self)
     }
+}
+
+/// Compute hash of the block header.
+pub(crate) fn block_header_hash(block_header: &BlockHeader) -> H256 {
+    dhash256(&serialize(block_header))
 }
 
 impl codec::Encode for BlockHeader {
@@ -95,22 +97,29 @@ mod tests {
         let mut stream = Stream::default();
         stream.append(&block_header);
 
+        #[rustfmt::skip]
         let expected = vec![
-            1, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-            2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 0, 0, 0, 5, 0, 0, 0, 6, 0, 0, 0,
-        ]
-        .into();
+            1, 0, 0, 0,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            4, 0, 0, 0,
+            5, 0, 0, 0,
+            6, 0, 0, 0,
+        ].into();
 
         assert_eq!(stream.out(), expected);
     }
 
     #[test]
     fn test_block_header_reader() {
+        #[rustfmt::skip]
         let buffer = vec![
-            1, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-            2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 0, 0, 0, 5, 0, 0, 0, 6, 0, 0, 0,
+            1, 0, 0, 0,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            4, 0, 0, 0,
+            5, 0, 0, 0,
+            6, 0, 0, 0,
         ];
 
         let mut reader = Reader::new(&buffer);

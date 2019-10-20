@@ -13,12 +13,13 @@ mod transaction;
 mod indexed_block;
 mod indexed_header;
 mod indexed_transaction;
+
 /// `IndexedBlock` extension
 mod read_and_hash;
 
 pub use primitives::*;
 
-pub use self::block::{Block, RepresentH256};
+pub use self::block::Block;
 pub use self::block_header::BlockHeader;
 pub use self::merkle_root::{merkle_node_hash, merkle_root};
 pub use self::transaction::{OutPoint, Transaction, TransactionInput, TransactionOutput};
@@ -26,4 +27,5 @@ pub use self::transaction::{OutPoint, Transaction, TransactionInput, Transaction
 pub use self::indexed_block::IndexedBlock;
 pub use self::indexed_header::IndexedBlockHeader;
 pub use self::indexed_transaction::IndexedTransaction;
+
 pub use self::read_and_hash::{HashedData, ReadAndHash};

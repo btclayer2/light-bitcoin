@@ -80,7 +80,7 @@ impl Private {
             27 + recovery_id
         };
         compact_signature[1..65].copy_from_slice(&data);
-        Ok(H520::from_slice(&compact_signature).into())
+        Ok(H520::from(compact_signature).into())
     }
 }
 
@@ -131,48 +131,45 @@ impl DisplayLayout for Private {
 
         let secret = Secret::from_slice(&data[1..33]);
 
-        let private = Private {
+        Ok(Private {
             network,
             secret,
             compressed,
-        };
-
-        Ok(private)
+        })
     }
 }
 
 #[cfg(test)]
 mod tests {
     #[cfg(not(feature = "std"))]
-    use alloc::string::{String, ToString};
-    use hex_literal::hex;
-    use primitives::H256;
+    use alloc::string::ToString;
+    use primitives::h256_from_rev_str;
 
     use super::*;
 
     #[test]
     fn test_private_to_string() {
-        let mut secret = hex!["063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5"];
-        secret.reverse();
         let private = Private {
             network: Network::Mainnet,
-            secret: H256::from(secret),
+            secret: h256_from_rev_str(
+                "063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5",
+            ),
             compressed: false,
         };
 
         assert_eq!(
             private.to_string(),
-            String::from("5KSCKP8NUyBZPCCQusxRwgmz9sfvJQEgbGukmmHepWw5Bzp95mu"),
+            "5KSCKP8NUyBZPCCQusxRwgmz9sfvJQEgbGukmmHepWw5Bzp95mu".to_string(),
         );
     }
 
     #[test]
     fn test_private_from_str() {
-        let mut secret = hex!["063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5"];
-        secret.reverse();
         let private = Private {
             network: Network::Mainnet,
-            secret: H256::from(secret),
+            secret: h256_from_rev_str(
+                "063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5",
+            ),
             compressed: false,
         };
 

@@ -116,7 +116,8 @@ impl Deserializable for Network {
 /// `AddressHash` with network identifier and format type
 #[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Default)]
-#[derive(Encode, Decode, Serializable, Deserializable)]
+#[derive(Serializable, Deserializable)]
+#[derive(Encode, Decode)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Address {
     /// The type of the address.
@@ -216,7 +217,7 @@ impl DisplayLayout for Address {
 #[cfg(test)]
 mod tests {
     #[cfg(not(feature = "std"))]
-    use alloc::string::{String, ToString};
+    use alloc::string::ToString;
     use hex_literal::hex;
 
     use super::*;
@@ -231,7 +232,7 @@ mod tests {
 
         assert_eq!(
             address.to_string(),
-            String::from("16meyfSoQV6twkAAxPe51RtMVz7PGRmWna"),
+            "16meyfSoQV6twkAAxPe51RtMVz7PGRmWna".to_string(),
         );
     }
 

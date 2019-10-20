@@ -1,9 +1,9 @@
 use core::fmt;
 
-use primitives::{io, H256};
+use primitives::{h256_reverse, io, H256};
 use serialization::{Deserializable, Reader};
 
-use crate::block_header::BlockHeader;
+use crate::block_header::{block_header_hash, BlockHeader};
 use crate::read_and_hash::ReadAndHash;
 
 #[derive(Ord, PartialOrd, Eq, Copy, Clone, Default)]
@@ -20,14 +20,8 @@ impl PartialEq for IndexedBlockHeader {
 
 impl fmt::Debug for IndexedBlockHeader {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let reverse_hash = |hash: &H256| {
-            let mut res = H256::from_slice(hash.as_bytes());
-            let bytes = res.as_bytes_mut();
-            bytes.reverse();
-            res
-        };
         f.debug_struct("IndexedBlockHeader")
-            .field("hash", &reverse_hash(&self.hash))
+            .field("hash", &h256_reverse(self.hash))
             .field("raw", &self.raw)
             .finish()
     }
@@ -35,16 +29,20 @@ impl fmt::Debug for IndexedBlockHeader {
 
 impl From<BlockHeader> for IndexedBlockHeader {
     fn from(header: BlockHeader) -> Self {
-        IndexedBlockHeader {
-            hash: header.hash(),
-            raw: header,
-        }
+        Self::from_raw(header)
     }
 }
 
 impl IndexedBlockHeader {
     pub fn new(hash: H256, header: BlockHeader) -> Self {
         IndexedBlockHeader { hash, raw: header }
+    }
+
+    /// Explicit conversion of the raw BlockHeader into IndexedBlockHeader.
+    ///
+    /// Hashes the contents of block header.
+    pub fn from_raw(header: BlockHeader) -> Self {
+        IndexedBlockHeader::new(block_header_hash(&header), header)
     }
 }
 

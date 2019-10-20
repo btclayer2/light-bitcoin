@@ -22,9 +22,9 @@ const WITNESS_MARKER: u8 = 0;
 /// Must be nonzero.
 const WITNESS_FLAG: u8 = 1;
 
-#[derive(
-    Ord, PartialOrd, PartialEq, Eq, Copy, Clone, Debug, Default, Serializable, Deserializable,
-)]
+#[rustfmt::skip]
+#[derive(Ord, PartialOrd, PartialEq, Eq, Copy, Clone, Debug, Default)]
+#[derive(Serializable, Deserializable)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct OutPoint {
     pub hash: H256,
@@ -96,7 +96,9 @@ impl Deserializable for TransactionInput {
     }
 }
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Serializable, Deserializable)]
+#[rustfmt::skip]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug)]
+#[derive(Serializable, Deserializable)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct TransactionOutput {
     pub value: u64,
@@ -129,7 +131,7 @@ impl From<&'static str> for Transaction {
 
 impl Transaction {
     pub fn hash(&self) -> H256 {
-        dhash256(&serialize(self))
+        transaction_hash(self)
     }
 
     pub fn witness_hash(&self) -> H256 {
@@ -200,6 +202,10 @@ impl Transaction {
         }
         result
     }
+}
+
+pub(crate) fn transaction_hash(transaction: &Transaction) -> H256 {
+    dhash256(&serialize(transaction))
 }
 
 impl Serializable for Transaction {

@@ -74,8 +74,7 @@ impl Public {
     }
 
     pub fn address_hash(&self) -> AddressHash {
-        let public_key: &[u8] = self;
-        dhash160(public_key)
+        dhash160(self)
     }
 
     pub fn verify(&self, message: &Message, signature: &Signature) -> Result<bool, Error> {
