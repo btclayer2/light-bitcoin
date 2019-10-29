@@ -38,7 +38,7 @@ impl From<&'static str> for Error {
 pub type Result<T> = core::result::Result<T, Error>;
 
 /// Partial merkle tree
-#[derive(PartialEq, Eq, Clone)]
+#[derive(PartialEq, Eq, Clone, Default)]
 #[cfg_attr(feature = "std", derive(Debug))]
 pub struct PartialMerkleTree {
     /// The total number of transactions in the block
