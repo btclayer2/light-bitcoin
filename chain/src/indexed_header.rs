@@ -1,6 +1,6 @@
 use core::fmt;
 
-use primitives::{h256_reverse, io, H256};
+use primitives::{h256_conv_endian, io, H256};
 use serialization::{Deserializable, Reader};
 
 use crate::block_header::{block_header_hash, BlockHeader};
@@ -21,7 +21,7 @@ impl PartialEq for IndexedBlockHeader {
 impl fmt::Debug for IndexedBlockHeader {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("IndexedBlockHeader")
-            .field("hash", &h256_reverse(self.hash))
+            .field("hash", &h256_conv_endian(self.hash))
             .field("raw", &self.raw)
             .finish()
     }

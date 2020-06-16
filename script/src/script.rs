@@ -68,6 +68,7 @@ pub struct Script {
     data: Bytes,
 }
 
+// Only for test
 impl From<&'static str> for Script {
     fn from(s: &'static str) -> Self {
         Script::new(s.into())
@@ -898,7 +899,10 @@ OP_ADD
 
     #[test]
     fn test_extract_destinations_pub_key_hash() {
-        let address = Address::from("13NMTpfNVVJQTNH4spP4UeqBGqLdqDo27S").hash;
+        let address = "13NMTpfNVVJQTNH4spP4UeqBGqLdqDo27S"
+            .parse::<Address>()
+            .unwrap()
+            .hash;
         let script = Builder::build_p2pkh(&address);
         assert_eq!(script.script_type(), ScriptType::PubKeyHash);
         assert_eq!(
@@ -909,7 +913,10 @@ OP_ADD
 
     #[test]
     fn test_extract_destinations_script_hash() {
-        let address = Address::from("13NMTpfNVVJQTNH4spP4UeqBGqLdqDo27S").hash;
+        let address = "13NMTpfNVVJQTNH4spP4UeqBGqLdqDo27S"
+            .parse::<Address>()
+            .unwrap()
+            .hash;
         let script = Builder::build_p2sh(&address);
         assert_eq!(script.script_type(), ScriptType::ScriptHash);
         assert_eq!(
@@ -991,11 +998,11 @@ OP_ADD
         assert_eq!(String::from_utf8(pre).unwrap(), "chainx");
     }
 
-    const REDEEM: &'static str = "52210257aff1270e3163aaae9d972b3d09a2385e0d4877501dbeca3ee045f8de00d21c2103fd58c689594b87bbe20a9a00091d074dc0d9f49a988a7ad4c2575adeda1b507c2102bb2a5aa53ba7c0d77bdd86bb9553f77dd0971d3a6bb6ad609787aa76eb17b6b653ae";
-    const SCRIPT_SIG1: &'static str = "00483045022100c0076941e39126f1bd0102d6df278470802ca8b694f8e39467121dc9ecc4d46802204ab7e3128bd0a93a30d1d5ea4db57cc8ba2d4c39172c2d2e536787e0b152bffe014c6952210257aff1270e3163aaae9d972b3d09a2385e0d4877501dbeca3ee045f8de00d21c2103fd58c689594b87bbe20a9a00091d074dc0d9f49a988a7ad4c2575adeda1b507c2102bb2a5aa53ba7c0d77bdd86bb9553f77dd0971d3a6bb6ad609787aa76eb17b6b653ae";
-    const SCRIPT_SIG2: &'static str = "00483045022100c0076941e39126f1bd0102d6df278470802ca8b694f8e39467121dc9ecc4d46802204ab7e3128bd0a93a30d1d5ea4db57cc8ba2d4c39172c2d2e536787e0b152bffe014730440220731394ffbf7d068393a2b6146e09f16bd9e39c16d04f38461a4c6991a725609202202633acd7cbf14883736f8e6376aa9090d0adacf73bc76ff5f95dca069caad593014c6952210257aff1270e3163aaae9d972b3d09a2385e0d4877501dbeca3ee045f8de00d21c2103fd58c689594b87bbe20a9a00091d074dc0d9f49a988a7ad4c2575adeda1b507c2102bb2a5aa53ba7c0d77bdd86bb9553f77dd0971d3a6bb6ad609787aa76eb17b6b653ae";
-    const SIG1: &'static str = "3045022100c0076941e39126f1bd0102d6df278470802ca8b694f8e39467121dc9ecc4d46802204ab7e3128bd0a93a30d1d5ea4db57cc8ba2d4c39172c2d2e536787e0b152bffe01";
-    const SIG2: &'static str = "30440220731394ffbf7d068393a2b6146e09f16bd9e39c16d04f38461a4c6991a725609202202633acd7cbf14883736f8e6376aa9090d0adacf73bc76ff5f95dca069caad59301";
+    const REDEEM: &str = "52210257aff1270e3163aaae9d972b3d09a2385e0d4877501dbeca3ee045f8de00d21c2103fd58c689594b87bbe20a9a00091d074dc0d9f49a988a7ad4c2575adeda1b507c2102bb2a5aa53ba7c0d77bdd86bb9553f77dd0971d3a6bb6ad609787aa76eb17b6b653ae";
+    const SCRIPT_SIG1: &str = "00483045022100c0076941e39126f1bd0102d6df278470802ca8b694f8e39467121dc9ecc4d46802204ab7e3128bd0a93a30d1d5ea4db57cc8ba2d4c39172c2d2e536787e0b152bffe014c6952210257aff1270e3163aaae9d972b3d09a2385e0d4877501dbeca3ee045f8de00d21c2103fd58c689594b87bbe20a9a00091d074dc0d9f49a988a7ad4c2575adeda1b507c2102bb2a5aa53ba7c0d77bdd86bb9553f77dd0971d3a6bb6ad609787aa76eb17b6b653ae";
+    const SCRIPT_SIG2: &str = "00483045022100c0076941e39126f1bd0102d6df278470802ca8b694f8e39467121dc9ecc4d46802204ab7e3128bd0a93a30d1d5ea4db57cc8ba2d4c39172c2d2e536787e0b152bffe014730440220731394ffbf7d068393a2b6146e09f16bd9e39c16d04f38461a4c6991a725609202202633acd7cbf14883736f8e6376aa9090d0adacf73bc76ff5f95dca069caad593014c6952210257aff1270e3163aaae9d972b3d09a2385e0d4877501dbeca3ee045f8de00d21c2103fd58c689594b87bbe20a9a00091d074dc0d9f49a988a7ad4c2575adeda1b507c2102bb2a5aa53ba7c0d77bdd86bb9553f77dd0971d3a6bb6ad609787aa76eb17b6b653ae";
+    const SIG1: &str = "3045022100c0076941e39126f1bd0102d6df278470802ca8b694f8e39467121dc9ecc4d46802204ab7e3128bd0a93a30d1d5ea4db57cc8ba2d4c39172c2d2e536787e0b152bffe01";
+    const SIG2: &str = "30440220731394ffbf7d068393a2b6146e09f16bd9e39c16d04f38461a4c6991a725609202202633acd7cbf14883736f8e6376aa9090d0adacf73bc76ff5f95dca069caad59301";
 
     #[test]
     fn redeem_script() {

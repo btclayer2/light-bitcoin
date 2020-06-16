@@ -42,7 +42,7 @@ pub fn merkle_node_hash(left: &H256, right: &H256) -> H256 {
 
 #[cfg(test)]
 mod tests {
-    use primitives::h256_from_rev_str;
+    use primitives::h256_conv_endian_from_str;
 
     use super::*;
 
@@ -50,12 +50,15 @@ mod tests {
     // https://blockchain.info/block/000000000043a8c0fd1d6f726790caa2a406010d19efd2780db27bdbbd93baf6
     #[test]
     fn test_merkle_root_with_2_hashes() {
-        let tx1 =
-            h256_from_rev_str("c06fbab289f723c6261d3030ddb6be121f7d2508d77862bb1e484f5cd7f92b25");
-        let tx2 =
-            h256_from_rev_str("5a4ebf66822b0b2d56bd9dc64ece0bc38ee7844a23ff1d7320a88c5fdb2ad3e2");
-        let expected =
-            h256_from_rev_str("8fb300e3fdb6f30a4c67233b997f99fdd518b968b9a3fd65857bfe78b2600719");
+        let tx1 = h256_conv_endian_from_str(
+            "c06fbab289f723c6261d3030ddb6be121f7d2508d77862bb1e484f5cd7f92b25",
+        );
+        let tx2 = h256_conv_endian_from_str(
+            "5a4ebf66822b0b2d56bd9dc64ece0bc38ee7844a23ff1d7320a88c5fdb2ad3e2",
+        );
+        let expected = h256_conv_endian_from_str(
+            "8fb300e3fdb6f30a4c67233b997f99fdd518b968b9a3fd65857bfe78b2600719",
+        );
 
         let result = merkle_root(&[tx1, tx2]);
         assert_eq!(result, expected);
@@ -65,25 +68,26 @@ mod tests {
     #[test]
     fn test_merkle_root_with_5_hashes() {
         let mut vec = Vec::new();
-        vec.push(h256_from_rev_str(
+        vec.push(h256_conv_endian_from_str(
             "1da63abbc8cc611334a753c4c31de14d19839c65b2b284202eaf3165861fb58d",
         ));
-        vec.push(h256_from_rev_str(
+        vec.push(h256_conv_endian_from_str(
             "26c6a6f18d13d2f0787c1c0f3c5e23cf5bc8b3de685dd1923ae99f44c5341c0c",
         ));
-        vec.push(h256_from_rev_str(
+        vec.push(h256_conv_endian_from_str(
             "513507fa209db823541caf7b9742bb9999b4a399cf604ba8da7037f3acced649",
         ));
-        vec.push(h256_from_rev_str(
+        vec.push(h256_conv_endian_from_str(
             "6bf5d2e02b8432d825c5dff692d435b6c5f685d94efa6b3d8fb818f2ecdcfb66",
         ));
-        vec.push(h256_from_rev_str(
+        vec.push(h256_conv_endian_from_str(
             "8a5ad423bc54fb7c76718371fd5a73b8c42bf27beaf2ad448761b13bcafb8895",
         ));
         let result = merkle_root(&vec);
 
-        let expected =
-            h256_from_rev_str("3a432cd416ea05b1be4ec1e72d7952d08670eaa5505b6794a186ddb253aa62e6");
+        let expected = h256_conv_endian_from_str(
+            "3a432cd416ea05b1be4ec1e72d7952d08670eaa5505b6794a186ddb253aa62e6",
+        );
         assert_eq!(result, expected);
     }
 }

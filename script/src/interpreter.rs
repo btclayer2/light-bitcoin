@@ -20,8 +20,8 @@ use crate::verify::SignatureChecker;
 /// Helper function.
 fn check_signature(
     checker: &dyn SignatureChecker,
-    mut script_sig: Vec<u8>,
-    public: Vec<u8>,
+    script_sig: &[u8],
+    public: &[u8],
     script_code: &Script,
     version: SignatureVersion,
 ) -> bool {
@@ -30,14 +30,17 @@ fn check_signature(
         _ => return false,
     };
 
-    if script_sig.is_empty() {
-        return false;
+    if let Some((hash_type, sig)) = script_sig.split_last() {
+        checker.check_signature(
+            &sig.into(),
+            &public,
+            script_code,
+            u32::from(*hash_type),
+            version,
+        )
+    } else {
+        false
     }
-
-    let hash_type = u32::from(script_sig.pop().unwrap());
-    let signature = script_sig.into();
-
-    checker.check_signature(&signature, &public, script_code, hash_type, version)
 }
 
 /// Helper function.
@@ -1099,13 +1102,7 @@ pub fn eval_script(
                 check_signature_encoding(&signature, flags, version)?;
                 check_pubkey_encoding(&pubkey, flags)?;
 
-                let success = check_signature(
-                    checker,
-                    signature.into(),
-                    pubkey.into(),
-                    &subscript,
-                    version,
-                );
+                let success = check_signature(checker, &signature, &pubkey, &subscript, version);
                 match opcode {
                     Opcode::OP_CHECKSIG => {
                         if success {
@@ -1160,14 +1157,13 @@ pub fn eval_script(
                 let mut k = 0;
                 let mut s = 0;
                 while s < sigs.len() && success {
-                    // TODO: remove redundant copying
-                    let key = keys[k].clone();
-                    let sig = sigs[s].clone();
+                    let key = &keys[k];
+                    let sig = &sigs[s];
 
-                    check_signature_encoding(&sig, flags, version)?;
-                    check_pubkey_encoding(&key, flags)?;
+                    check_signature_encoding(sig, flags, version)?;
+                    check_pubkey_encoding(key, flags)?;
 
-                    let ok = check_signature(checker, sig.into(), key.into(), &subscript, version);
+                    let ok = check_signature(checker, sig, key, &subscript, version);
                     if ok {
                         s += 1;
                     }
@@ -4737,7 +4733,7 @@ mod tests {
                 .push_opcode(Opcode::OP_RIGHT)
                 .into_script();
             let stack = if result.is_ok() {
-                vec![output.into()].into()
+                vec![output.into()]
             } else {
                 vec![]
             }
@@ -4797,7 +4793,7 @@ mod tests {
                 .push_opcode(Opcode::OP_LEFT)
                 .into_script();
             let stack = if result.is_ok() {
-                vec![output.into()].into()
+                vec![output.into()]
             } else {
                 vec![]
             }
@@ -4859,13 +4855,13 @@ mod tests {
         test_num2bin_num((-42).into(), (-3).into(), Err(Error::PushSize), vec![]);
 
         test_num2bin(
-            &vec![0xab, 0xcd, 0xef, 0x42, 0x80],
-            &vec![0x04],
+            &[0xab, 0xcd, 0xef, 0x42, 0x80],
+            &[0x04],
             Ok(true),
             vec![0xab, 0xcd, 0xef, 0xc2],
         );
-        test_num2bin(&vec![0x80], &vec![0x00], Ok(false), vec![]);
-        test_num2bin(&vec![0x80], &vec![0x03], Ok(false), vec![0x00, 0x00, 0x00]);
+        test_num2bin(&[0x80], &[0x00], Ok(false), vec![]);
+        test_num2bin(&[0x80], &[0x03], Ok(false), vec![0x00, 0x00, 0x00]);
     }
 
     #[test]
@@ -4892,13 +4888,13 @@ mod tests {
     fn test_split_cat_are_reverse_ops() {
         let script = Builder::default()
             // split array
-            .push_data(&vec![0x01, 0x02, 0x03, 0x04, 0x05])
+            .push_data(&[0x01, 0x02, 0x03, 0x04, 0x05])
             .push_num(2.into())
             .push_opcode(Opcode::OP_SUBSTR)
             // and then concat again
             .push_opcode(Opcode::OP_CAT)
             // check that numbers are the same
-            .push_data(&vec![0x01, 0x02, 0x03, 0x04, 0x05])
+            .push_data(&[0x01, 0x02, 0x03, 0x04, 0x05])
             .push_opcode(Opcode::OP_EQUAL)
             .into_script();
 
@@ -4924,9 +4920,9 @@ mod tests {
         })
         .unwrap();
 
-        let pubkey = kp.public().clone();
+        let pubkey = kp.public();
         let message = vec![42u8; 32];
-        let correct_signature = kp.private().sign(&Message::from(sha256(&message))).unwrap();
+        let correct_signature = kp.private().sign(&sha256(&message)).unwrap();
         let correct_signature_for_other_message = kp.private().sign(&[43u8; 32].into()).unwrap();
         let mut correct_signature = correct_signature.to_vec();
         let mut correct_signature_for_other_message = correct_signature_for_other_message.to_vec();
@@ -5050,9 +5046,9 @@ mod tests {
         })
         .unwrap();
 
-        let pubkey = kp.public().clone();
+        let pubkey = kp.public();
         let message = vec![42u8; 32];
-        let correct_signature = kp.private().sign(&Message::from(sha256(&message))).unwrap();
+        let correct_signature = kp.private().sign(&sha256(&message)).unwrap();
         let correct_signature_for_other_message = kp.private().sign(&[43u8; 32].into()).unwrap();
         let mut correct_signature = correct_signature.to_vec();
         let mut correct_signature_for_other_message = correct_signature_for_other_message.to_vec();

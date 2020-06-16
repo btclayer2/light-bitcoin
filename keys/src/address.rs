@@ -12,7 +12,6 @@ use primitives::io;
 use serialization::{Deserializable, Reader, Serializable, Stream};
 
 use codec::{Decode, Encode};
-#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
 use crate::display::DisplayLayout;
@@ -21,8 +20,10 @@ use crate::AddressHash;
 
 /// There are two address formats currently in use.
 /// https://bitcoin.org/en/developer-reference#address-conversion
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Encode, Decode)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[rustfmt::skip]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug)]
+#[derive(Serialize, Deserialize)]
+#[derive(Encode, Decode)]
 pub enum Type {
     /// Pay to PubKey Hash
     /// Common P2PKH which begin with the number 1, eg: 1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2.
@@ -70,8 +71,10 @@ impl Deserializable for Type {
     }
 }
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Encode, Decode)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[rustfmt::skip]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug)]
+#[derive(Serialize, Deserialize)]
+#[derive(Encode, Decode)]
 pub enum Network {
     Mainnet,
     Testnet,
@@ -116,9 +119,9 @@ impl Deserializable for Network {
 /// `AddressHash` with network identifier and format type
 #[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize)]
 #[derive(Serializable, Deserializable)]
 #[derive(Encode, Decode)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Address {
     /// The type of the address.
     pub kind: Type,
@@ -148,6 +151,7 @@ impl str::FromStr for Address {
     }
 }
 
+// Only for test
 impl From<&'static str> for Address {
     fn from(s: &'static str) -> Self {
         s.parse().unwrap()
@@ -244,6 +248,9 @@ mod tests {
             hash: AddressHash::from(hex!["3f4aa1fedf1f54eeb03b759deadb36676b184911"]),
         };
 
-        assert_eq!(address, "16meyfSoQV6twkAAxPe51RtMVz7PGRmWna".into());
+        assert_eq!(
+            address,
+            "16meyfSoQV6twkAAxPe51RtMVz7PGRmWna".parse().unwrap()
+        );
     }
 }

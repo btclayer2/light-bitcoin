@@ -12,7 +12,6 @@ use serialization::{
 };
 
 use rustc_hex::FromHex;
-#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
 use crate::constants::{LOCKTIME_THRESHOLD, SEQUENCE_FINAL};
@@ -24,8 +23,8 @@ const WITNESS_FLAG: u8 = 1;
 
 #[rustfmt::skip]
 #[derive(Ord, PartialOrd, PartialEq, Eq, Copy, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize)]
 #[derive(Serializable, Deserializable)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct OutPoint {
     pub hash: H256,
     pub index: u32,
@@ -44,8 +43,9 @@ impl OutPoint {
     }
 }
 
+#[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Default)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub struct TransactionInput {
     pub previous_output: OutPoint,
     pub script_sig: Bytes,
@@ -98,8 +98,8 @@ impl Deserializable for TransactionInput {
 
 #[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug)]
+#[derive(Serialize, Deserialize)]
 #[derive(Serializable, Deserializable)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct TransactionOutput {
     pub value: u64,
     pub script_pubkey: Bytes,
@@ -114,8 +114,9 @@ impl Default for TransactionOutput {
     }
 }
 
+#[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Default)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub struct Transaction {
     pub version: i32,
     pub inputs: Vec<TransactionInput>,
@@ -123,6 +124,7 @@ pub struct Transaction {
     pub lock_time: u32,
 }
 
+// Only for test
 impl From<&'static str> for Transaction {
     fn from(s: &'static str) -> Self {
         deserialize(&s.from_hex::<Vec<u8>>().unwrap() as &[u8]).unwrap()
@@ -276,19 +278,15 @@ impl codec::Encode for Transaction {
 }
 
 impl codec::Decode for Transaction {
-    fn decode<I: codec::Input>(value: &mut I) -> Option<Self> {
-        let value: Option<Vec<u8>> = codec::Decode::decode(value);
-        if let Some(value) = value {
-            deserialize(Reader::new(&value)).ok()
-        } else {
-            None
-        }
+    fn decode<I: codec::Input>(value: &mut I) -> Result<Self, codec::Error> {
+        let value: Vec<u8> = codec::Decode::decode(value)?;
+        deserialize(Reader::new(&value)).map_err(|_| "deserialize Transaction error".into())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use primitives::h256_from_rev_str;
+    use primitives::h256_conv_endian_from_str;
 
     use super::*;
 
@@ -317,8 +315,9 @@ mod tests {
     #[test]
     fn test_transaction_hash() {
         let t: Transaction = "0100000001a6b97044d03da79c005b20ea9c0e1a6d9dc12d9f7b91a5911c9030a439eed8f5000000004948304502206e21798a42fae0e854281abd38bacd1aeed3ee3738d9e1446618c4571d1090db022100e2ac980643b0b82c0e88ffdfec6b64e3e6ba35e7ba5fdd7d5d6cc8d25c6b241501ffffffff0100f2052a010000001976a914404371705fa9bd789a2fcd52d2c580b65d35549d88ac00000000".into();
-        let hash =
-            h256_from_rev_str("5a4ebf66822b0b2d56bd9dc64ece0bc38ee7844a23ff1d7320a88c5fdb2ad3e2");
+        let hash = h256_conv_endian_from_str(
+            "5a4ebf66822b0b2d56bd9dc64ece0bc38ee7844a23ff1d7320a88c5fdb2ad3e2",
+        );
         assert_eq!(t.hash(), hash);
     }
 

@@ -92,73 +92,67 @@ mod tests {
 
     /// Tests from:
     /// https://github.com/bitcoin/bitcoin/blob/a6a860796a44a2805a58391a009ba22752f64e32/src/test/key_tests.cpp
-    const SECRET_0: &'static str = "5KSCKP8NUyBZPCCQusxRwgmz9sfvJQEgbGukmmHepWw5Bzp95mu";
-    const SECRET_1: &'static str = "5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHfmFiWtmAbrj";
-    const SECRET_2: &'static str = "5KC4ejrDjv152FGwP386VD1i2NYc5KkfSMyv1nGy1VGDxGHqVY3";
-    const SECRET_1C: &'static str = "Kwr371tjA9u2rFSMZjTNun2PXXP3WPZu2afRHTcta6KxEUdm1vEw";
-    const SECRET_2C: &'static str = "L3Hq7a8FEQwJkW1M2GNKDW28546Vp5miewcCzSqUD9kCAXrJdS3g";
-    const ADDRESS_0: &'static str = "16meyfSoQV6twkAAxPe51RtMVz7PGRmWna";
-    const ADDRESS_1: &'static str = "1QFqqMUD55ZV3PJEJZtaKCsQmjLT6JkjvJ";
-    const ADDRESS_2: &'static str = "1F5y5E5FMc5YzdJtB9hLaUe43GDxEKXENJ";
-    const ADDRESS_1C: &'static str = "1NoJrossxPBKfCHuJXT4HadJrXRE9Fxiqs";
-    const ADDRESS_2C: &'static str = "1CRj2HyM1CXWzHAXLQtiGLyggNT9WQqsDs";
-    const SIGN_1: &'static str = "304402205dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d31d022014ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6";
-    const SIGN_2: &'static str = "3044022052d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd5022061d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d";
-    const SIGN_COMPACT_1: &'static str = "1c5dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d31d14ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6";
-    const SIGN_COMPACT_1C: &'static str = "205dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d31d14ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6";
-    const SIGN_COMPACT_2: &'static str = "1c52d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd561d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d";
-    const SIGN_COMPACT_2C: &'static str = "2052d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd561d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d";
+    const SECRET_0: &str = "5KSCKP8NUyBZPCCQusxRwgmz9sfvJQEgbGukmmHepWw5Bzp95mu";
+    const SECRET_1: &str = "5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHfmFiWtmAbrj";
+    const SECRET_2: &str = "5KC4ejrDjv152FGwP386VD1i2NYc5KkfSMyv1nGy1VGDxGHqVY3";
+    const SECRET_1C: &str = "Kwr371tjA9u2rFSMZjTNun2PXXP3WPZu2afRHTcta6KxEUdm1vEw";
+    const SECRET_2C: &str = "L3Hq7a8FEQwJkW1M2GNKDW28546Vp5miewcCzSqUD9kCAXrJdS3g";
+    const ADDRESS_0: &str = "16meyfSoQV6twkAAxPe51RtMVz7PGRmWna";
+    const ADDRESS_1: &str = "1QFqqMUD55ZV3PJEJZtaKCsQmjLT6JkjvJ";
+    const ADDRESS_2: &str = "1F5y5E5FMc5YzdJtB9hLaUe43GDxEKXENJ";
+    const ADDRESS_1C: &str = "1NoJrossxPBKfCHuJXT4HadJrXRE9Fxiqs";
+    const ADDRESS_2C: &str = "1CRj2HyM1CXWzHAXLQtiGLyggNT9WQqsDs";
+    const SIGN_1: &str = "304402205dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d31d022014ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6";
+    const SIGN_2: &str = "3044022052d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd5022061d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d";
+    const SIGN_COMPACT_1: &str = "1c5dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d31d14ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6";
+    const SIGN_COMPACT_1C: &str = "205dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d31d14ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6";
+    const SIGN_COMPACT_2: &str = "1c52d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd561d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d";
+    const SIGN_COMPACT_2C: &str = "2052d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd561d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d";
 
-    fn check_addresses(secret: &'static str, address: &'static str) -> bool {
-        let kp = KeyPair::from_private(secret.into()).unwrap();
-        kp.address() == address.into()
+    fn check_addresses(secret: &str, address: &str) -> bool {
+        let kp = KeyPair::from_private(secret.parse().unwrap()).unwrap();
+        kp.address() == address.parse().unwrap()
     }
 
-    fn check_compressed(secret: &'static str, compressed: bool) -> bool {
-        let kp = KeyPair::from_private(secret.into()).unwrap();
+    fn check_compressed(secret: &str, compressed: bool) -> bool {
+        let kp = KeyPair::from_private(secret.parse().unwrap()).unwrap();
         kp.private().compressed == compressed
     }
 
-    fn check_sign(secret: &'static str, raw_message: &[u8], signature: &'static str) -> bool {
+    fn check_sign(secret: &str, raw_message: &[u8], signature: &str) -> bool {
         let message = dhash256(raw_message);
-        let kp = KeyPair::from_private(secret.into()).unwrap();
-        kp.private().sign(&message).unwrap() == signature.into()
+        let kp = KeyPair::from_private(secret.parse().unwrap()).unwrap();
+        kp.private().sign(&message).unwrap() == signature.parse().unwrap()
     }
 
-    fn check_verify(secret: &'static str, raw_message: &[u8], signature: &'static str) -> bool {
+    fn check_verify(secret: &str, raw_message: &[u8], signature: &str) -> bool {
         let message = dhash256(raw_message);
-        let kp = KeyPair::from_private(secret.into()).unwrap();
-        kp.public().verify(&message, &signature.into()).unwrap()
+        let kp = KeyPair::from_private(secret.parse().unwrap()).unwrap();
+        kp.public()
+            .verify(&message, &signature.parse().unwrap())
+            .unwrap()
     }
 
-    fn check_sign_compact(
-        secret: &'static str,
-        raw_message: &[u8],
-        signature: &'static str,
-    ) -> bool {
+    fn check_sign_compact(secret: &str, raw_message: &[u8], signature: &str) -> bool {
         let message = dhash256(raw_message);
-        let kp: KeyPair = KeyPair::from_private(secret.into()).unwrap();
-        kp.private().sign_compact(&message).unwrap() == signature.into()
+        let kp: KeyPair = KeyPair::from_private(secret.parse().unwrap()).unwrap();
+        kp.private().sign_compact(&message).unwrap() == signature.parse().unwrap()
     }
 
-    fn check_verify_compact(
-        secret: &'static str,
-        raw_message: &[u8],
-        signature: &'static str,
-    ) -> bool {
+    fn check_verify_compact(secret: &str, raw_message: &[u8], signature: &str) -> bool {
         let message = dhash256(raw_message);
-        let signature: CompactSignature = signature.into();
+        let signature: CompactSignature = signature.parse().unwrap();
         let mut raw_signature = [0u8; 64];
         raw_signature.copy_from_slice(&signature[1..65]);
-        let kp = KeyPair::from_private(secret.into()).unwrap();
+        let kp = KeyPair::from_private(secret.parse().unwrap()).unwrap();
         kp.public()
             .verify_compact(&message, &raw_signature)
             .unwrap()
     }
 
-    fn check_recover_compact(secret: &'static str, raw_message: &[u8]) -> bool {
+    fn check_recover_compact(secret: &str, raw_message: &[u8]) -> bool {
         let message = dhash256(raw_message);
-        let kp: KeyPair = KeyPair::from_private(secret.into()).unwrap();
+        let kp: KeyPair = KeyPair::from_private(secret.parse().unwrap()).unwrap();
         let signature = kp.private().sign_compact(&message).unwrap();
         let recovered = Public::recover_compact(&message, &signature).unwrap();
         kp.public() == &recovered

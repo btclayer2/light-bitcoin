@@ -1,14 +1,15 @@
 [package]
 name = "serialization"
-version = "0.1.0"
-authors = ["debris <marek.kotewicz@gmail.com> and koushiro <koushiro.cqx@gmail.com>"]
+version = "0.2.0"
+authors = ["ChainX <https://github.com/chainx-org>"]
 edition = "2018"
+license = "GPL-3.0"
 
 [dependencies]
 primitives = { path = "../primitives", default-features = false }
 serialization_derive = { path = "../serialization_derive", optional = true }
 
 [features]
-default = ["std"]
+default = []
 std = ["primitives/std"]
 derive = ["serialization_derive"]

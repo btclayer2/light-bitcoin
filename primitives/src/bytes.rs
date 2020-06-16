@@ -28,6 +28,7 @@ impl From<Bytes> for Vec<u8> {
     }
 }
 
+// Only for test
 impl From<&'static str> for Bytes {
     fn from(s: &'static str) -> Self {
         s.parse().unwrap()
@@ -104,18 +105,16 @@ impl Bytes {
     }
 }
 
-#[cfg(feature = "std")]
 impl serde::Serialize for Bytes {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
         let hex = self.0.to_hex::<String>();
-        serializer.serialize_str(&format!("0x{}", hex))
+        serializer.serialize_str(&hex)
     }
 }
 
-#[cfg(feature = "std")]
 impl<'de> serde::Deserialize<'de> for Bytes {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -125,10 +124,8 @@ impl<'de> serde::Deserialize<'de> for Bytes {
     }
 }
 
-#[cfg(feature = "std")]
 struct BytesVisitor;
 
-#[cfg(feature = "std")]
 impl<'de> serde::de::Visitor<'de> for BytesVisitor {
     type Value = Bytes;
 
@@ -140,9 +137,9 @@ impl<'de> serde::de::Visitor<'de> for BytesVisitor {
     where
         E: serde::de::Error,
     {
-        if v.len() >= 2 && &v[0..2] == "0x" && v.len() & 1 == 0 {
+        if v.len() >= 2 {
             Ok(Bytes(
-                FromHex::from_hex(&v[2..]).map_err(|_| serde::de::Error::custom("invalid hex"))?,
+                FromHex::from_hex(&v[..]).map_err(|_| serde::de::Error::custom("invalid hex"))?,
             ))
         } else {
             Err(serde::de::Error::custom("invalid format"))

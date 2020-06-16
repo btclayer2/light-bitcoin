@@ -1,27 +1,30 @@
 [package]
 name = "primitives"
-version = "0.1.0"
-authors = ["debris <marek.kotewicz@gmail.com> and koushiro <koushiro.cqx@gmail.com>"]
+version = "0.2.0"
+authors = ["ChainX <https://github.com/chainx-org>"]
 edition = "2018"
+license = "GPL-3.0"
+
+[features]
+default = []
+std = [
+  "byteorder/std",
+  "rustc-hex/std",
+  "hex/std",
+  "fixed-hash/std",
+  "primitive-types/std",
+  "serde/std",
+  "impl-serde/std",
+  "impl-codec/std",
+  "primitive-types/std",
+]
 
 [dependencies]
 byteorder = { version = "1.3", default-features = false }
 rustc-hex = { version = "2.0", default-features = false }
-fixed-hash = { version = "0.4", default-features = false }
-serde = { version = "1.0", features = ["derive"], optional = true }
-impl-serde = { git = "https://github.com/chainx-org/chainx-common", optional = true }
-impl-codec = { git = "https://github.com/chainx-org/chainx-common", default-features = false, optional = true }
-primitive-types = { git = "https://github.com/chainx-org/chainx-common", default-features = false }
-
-[features]
-default = ["std"]
-std = [
-    "byteorder/std",
-    "rustc-hex/std",
-    "fixed-hash/std",
-    "primitive-types/std",
-    "serialization",
-    "codec",
-]
-serialization = ["std", "serde", "impl-serde", "primitive-types/serde"]
-codec = ["impl-codec", "primitive-types/codec"]
+hex = { version = "0.4", default-features = false }
+fixed-hash = { version = "0.6", default-features = false }
+serde = { version = "1.0", default-features = false, features = ["alloc", "derive"] }
+impl-serde = { version = "0.3", default-features = false }
+impl-codec = { version = "0.4", default-features = false }
+primitive-types = { version = "0.7", default-features = false, features = ["serde_no_std", "codec"] }

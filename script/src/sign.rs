@@ -86,7 +86,7 @@ impl Sighash {
         let base = match u & 0x1f {
             2 => SighashBase::None,
             3 => SighashBase::Single,
-            1 | _ => SighashBase::All,
+            _ => SighashBase::All,
         };
 
         Sighash::new(base, anyone_can_pay, fork_id)
@@ -384,7 +384,7 @@ fn compute_hash_outputs(
 mod tests {
     use hex_literal::hex;
     use keys::{Address, Private};
-    use primitives::h256_from_rev_str;
+    use primitives::h256_conv_endian_from_str;
 
     use super::*;
 
@@ -393,12 +393,15 @@ mod tests {
     // https://blockchain.info/rawtx/3f285f083de7c0acabd9f106a43ec42687ab0bebe2e6f0d529db696794540fea
     #[test]
     fn test_signature_hash_simple() {
-        let private: Private = "5HusYj2b2x4nroApgfvaSfKYZhRbKFH41bVyPooymbC6KfgSXdD".into();
-        let previous_tx_hash =
-            h256_from_rev_str("81b4c832d70cb56ff957589752eb4125a4cab78a25a8fc52d6a09e5bd4404d48");
+        let private: Private = "5HusYj2b2x4nroApgfvaSfKYZhRbKFH41bVyPooymbC6KfgSXdD"
+            .parse()
+            .unwrap();
+        let previous_tx_hash = h256_conv_endian_from_str(
+            "81b4c832d70cb56ff957589752eb4125a4cab78a25a8fc52d6a09e5bd4404d48",
+        );
         let previous_output_index = 0;
-        let from: Address = "1MMMMSUb1piy2ufrSguNUdFmAcvqrQF8M5".into();
-        let to: Address = "1KKKK6N21XKo48zWKuQKXdvSsCf95ibHFa".into();
+        let from: Address = "1MMMMSUb1piy2ufrSguNUdFmAcvqrQF8M5".parse().unwrap();
+        let to: Address = "1KKKK6N21XKo48zWKuQKXdvSsCf95ibHFa".parse().unwrap();
         let previous_output = "76a914df3bd30160e6c6145baaf2c88a8844c13a00d1d588ac".into();
         let current_output: Bytes = "76a914c8e90996c7c6080ee06284600c684ed904d14c5c88ac".into();
         let value = 91234;
@@ -451,7 +454,7 @@ mod tests {
         let tx: Transaction = tx.into();
         let signer: TransactionInputSigner = tx.into();
         let script: Script = script.into();
-        let expected = h256_from_rev_str(result);
+        let expected = h256_conv_endian_from_str(result);
 
         let sighash = Sighash::from_u32(SignatureVersion::Base, hash_type as u32);
         let hash = signer.signature_hash_original(input_index, &script, hash_type as u32, sighash);

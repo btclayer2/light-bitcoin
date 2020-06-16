@@ -43,6 +43,7 @@ impl str::FromStr for Signature {
     }
 }
 
+// Only for test
 impl From<&'static str> for Signature {
     fn from(s: &'static str) -> Self {
         s.parse().unwrap()
@@ -108,6 +109,7 @@ impl str::FromStr for CompactSignature {
     }
 }
 
+// Only for test
 impl From<&'static str> for CompactSignature {
     fn from(s: &'static str) -> Self {
         s.parse().unwrap()

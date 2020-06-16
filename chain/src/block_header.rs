@@ -3,17 +3,16 @@ use alloc::vec::Vec;
 use core::fmt;
 
 use crypto::dhash256;
-use primitives::{h256_reverse, Compact, H256};
+use primitives::{h256_conv_endian, Compact, H256};
 use serialization::{deserialize, serialize, Deserializable, Reader, Serializable};
 
 use rustc_hex::FromHex;
-#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
 #[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default)]
+#[derive(Serialize, Deserialize)]
 #[derive(Serializable, Deserializable)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct BlockHeader {
     pub version: u32,
     pub previous_header_hash: H256,
@@ -29,9 +28,9 @@ impl fmt::Debug for BlockHeader {
             .field("version", &self.version)
             .field(
                 "previous_header_hash",
-                &h256_reverse(self.previous_header_hash),
+                &h256_conv_endian(self.previous_header_hash),
             )
-            .field("merkle_root_hash", &h256_reverse(self.merkle_root_hash))
+            .field("merkle_root_hash", &h256_conv_endian(self.merkle_root_hash))
             .field("time", &self.time)
             .field("bits", &self.bits)
             .field("nonce", &self.nonce)
@@ -39,6 +38,7 @@ impl fmt::Debug for BlockHeader {
     }
 }
 
+// Only for test
 impl From<&'static str> for BlockHeader {
     fn from(s: &'static str) -> Self {
         deserialize(&s.from_hex::<Vec<u8>>().unwrap() as &[u8]).unwrap()
@@ -65,13 +65,9 @@ impl codec::Encode for BlockHeader {
 }
 
 impl codec::Decode for BlockHeader {
-    fn decode<I: codec::Input>(value: &mut I) -> Option<Self> {
-        let value: Option<Vec<u8>> = codec::Decode::decode(value);
-        if let Some(value) = value {
-            deserialize(Reader::new(&value)).ok()
-        } else {
-            None
-        }
+    fn decode<I: codec::Input>(value: &mut I) -> Result<Self, codec::Error> {
+        let value: Vec<u8> = codec::Decode::decode(value)?;
+        deserialize(Reader::new(&value)).map_err(|_| "deserialize BlockHeader error".into())
     }
 }
 

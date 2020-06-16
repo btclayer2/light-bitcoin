@@ -16,7 +16,7 @@ struct Bar {
 
 #[test]
 fn test_foo_serialize() {
-    let foo = Foo {
+    let test_foo = Foo {
         a: 1,
         b: 2,
         c: 3,
@@ -25,23 +25,23 @@ fn test_foo_serialize() {
 
     let expected = vec![1u8, 2, 0, 3, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0].into();
 
-    let result = serialize(&foo);
+    let result = serialize(&test_foo);
     assert_eq!(result, expected);
 
     let d = deserialize(expected.as_ref()).unwrap();
-    assert_eq!(foo, d);
+    assert_eq!(test_foo, d);
 }
 
 #[test]
 fn test_bar_serialize() {
-    let foo = Foo {
+    let test_foo = Foo {
         a: 1,
         b: 2,
         c: 3,
         d: 4,
     };
 
-    let foo2 = Foo {
+    let test_foo2 = Foo {
         a: 5,
         b: 6,
         c: 7,
@@ -56,11 +56,13 @@ fn test_bar_serialize() {
     ]
     .into();
 
-    let bar = Bar { a: vec![foo, foo2] };
+    let test_bar = Bar {
+        a: vec![test_foo, test_foo2],
+    };
 
-    let result = serialize(&bar);
+    let result = serialize(&test_bar);
     assert_eq!(result, expected);
 
-    let d = deserialize(expected.as_ref()).unwrap();
-    assert_eq!(bar, d);
+    let de = deserialize(expected.as_ref()).unwrap();
+    assert_eq!(test_bar, de);
 }

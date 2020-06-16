@@ -33,6 +33,7 @@ impl From<Block> for IndexedBlock {
     }
 }
 
+// Only for test
 impl From<&'static str> for IndexedBlock {
     fn from(s: &'static str) -> Self {
         deserialize(&s.from_hex::<Vec<u8>>().unwrap() as &[u8]).unwrap()

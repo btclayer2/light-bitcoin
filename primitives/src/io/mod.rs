@@ -88,6 +88,12 @@ fn read_to_end_with_reservation<R: Read + ?Sized>(
 pub trait Read {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize>;
 
+    /// Determines if this `Read`er can work with buffers of uninitialized memory
+    ///
+    /// # Safety
+    ///
+    /// This method is unsafe because a `Read`er could otherwise return a non-zeroing
+    /// `Initializer` from another `Read` type without an `unsafe` block.
     #[inline]
     unsafe fn initializer(&self) -> Initializer {
         Initializer::zeroing()

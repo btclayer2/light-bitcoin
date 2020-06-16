@@ -1,6 +1,6 @@
 use core::fmt;
 
-use primitives::{h256_reverse, io, H256};
+use primitives::{h256_conv_endian, io, H256};
 use serialization::{Deserializable, Reader};
 
 use crate::read_and_hash::ReadAndHash;
@@ -21,7 +21,7 @@ impl PartialEq for IndexedTransaction {
 impl fmt::Debug for IndexedTransaction {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("IndexedTransaction")
-            .field("hash", &h256_reverse(self.hash))
+            .field("hash", &h256_conv_endian(self.hash))
             .field("raw", &self.raw)
             .finish()
     }

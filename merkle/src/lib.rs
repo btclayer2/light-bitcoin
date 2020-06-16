@@ -29,17 +29,14 @@ pub enum Error {
     BadFormat(String),
 }
 
-impl From<&'static str> for Error {
-    fn from(err: &'static str) -> Self {
+impl From<&str> for Error {
+    fn from(err: &str) -> Self {
         Error::BadFormat(err.into())
     }
 }
 
-pub type Result<T> = core::result::Result<T, Error>;
-
 /// Partial merkle tree
-#[derive(PartialEq, Eq, Clone, Default)]
-#[cfg_attr(feature = "std", derive(Debug))]
+#[derive(PartialEq, Eq, Clone, Debug, Default)]
 pub struct PartialMerkleTree {
     /// The total number of transactions in the block
     pub tx_count: u32,
@@ -100,7 +97,11 @@ impl PartialMerkleTree {
 
     /// Extract the matching txid's represented by this partial merkle tree and their respective indices within the partial tree.
     /// returns the merkle root, or error in case of failure
-    pub fn extract_matches(&self, matches: &mut Vec<H256>, indexes: &mut Vec<u32>) -> Result<H256> {
+    pub fn extract_matches(
+        &self,
+        matches: &mut Vec<H256>,
+        indexes: &mut Vec<u32>,
+    ) -> Result<H256, Error> {
         matches.clear();
         indexes.clear();
 
@@ -148,7 +149,7 @@ impl PartialMerkleTree {
         hash_used: &mut u32,
         matches: &mut Vec<H256>,
         indexes: &mut Vec<u32>,
-    ) -> Result<H256> {
+    ) -> Result<H256, Error> {
         if *bits_used as usize >= self.bits.len() {
             return Err("Overflowed the bits array".into());
         }
@@ -260,7 +261,7 @@ impl Serializable for PartialMerkleTree {
 }
 
 impl Deserializable for PartialMerkleTree {
-    fn deserialize<T>(reader: &mut Reader<T>) -> core::result::Result<Self, io::Error>
+    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
     where
         Self: Sized,
         T: io::Read,
@@ -288,22 +289,21 @@ impl codec::Encode for PartialMerkleTree {
 }
 
 impl codec::Decode for PartialMerkleTree {
-    fn decode<I: codec::Input>(input: &mut I) -> Option<Self> {
-        let value: Option<Vec<u8>> = codec::Decode::decode(input);
-        if let Some(value) = value {
-            deserialize(Reader::new(&value)).ok()
-        } else {
-            None
-        }
+    fn decode<I: codec::Input>(value: &mut I) -> Result<Self, codec::Error> {
+        let value: Vec<u8> = codec::Decode::decode(value)?;
+        deserialize(Reader::new(&value)).map_err(|_| "deserialize PartialMerkleTree error".into())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashSet;
+    #[cfg(not(feature = "std"))]
+    use alloc::{format, vec, vec::Vec};
+
+    use hashbrown::HashSet;
 
     use chain::{merkle_root, Block, BlockHeader};
-    use primitives::{h256_from_rev_str, H256};
+    use primitives::{h256_conv_endian_from_str, H256};
     use rand::prelude::*;
     use serialization::{deserialize, serialize, Deserializable, Serializable};
 
@@ -350,7 +350,7 @@ mod tests {
         for tx_count in tx_counts {
             // Create some fake tx ids
             let txids = (1..=tx_count)
-                .map(|i| h256_from_rev_str(&format!("{:064x}", i)))
+                .map(|i| h256_conv_endian_from_str(&format!("{:064x}", i)))
                 .collect::<Vec<_>>();
 
             // Calculate the merkle root and height
@@ -425,7 +425,7 @@ mod tests {
         // Create some fake tx ids with the last 2 hashes repeating
         let txids: Vec<H256> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 10]
             .iter()
-            .map(|i| h256_from_rev_str(&format!("{:064x}", i)))
+            .map(|i| h256_conv_endian_from_str(&format!("{:064x}", i)))
             .collect();
 
         let matches = vec![
@@ -469,7 +469,7 @@ mod tests {
             "f9fc751cb7dc372406a9f8d738d5e6f8f63bab71986a39cf36ee70ee17036d07",
         ]
         .iter()
-        .map(|data| h256_from_rev_str(data))
+        .map(|data| h256_conv_endian_from_str(data))
         .collect();
 
         let txid1 = txids[0];
@@ -477,7 +477,7 @@ mod tests {
         let txids = txids.into_iter().collect();
 
         let merkle_block = MerkleBlock::from_block(&block, &txids);
-        println!("{:#?}", merkle_block.pmt);
+        // println!("{:#?}", merkle_block.pmt);
         assert_eq!(merkle_block.header.hash(), block.hash());
 
         let mut matches: Vec<H256> = vec![];
@@ -487,8 +487,8 @@ mod tests {
             .extract_matches(&mut matches, &mut indexes)
             .unwrap();
 
-        println!("{:#?}", matches);
-        println!("{:#?}", indexes);
+        // println!("{:#?}", matches);
+        // println!("{:#?}", indexes);
         assert_eq!(merkle_root, block.block_header.merkle_root_hash);
         assert_eq!(matches.len(), 2);
 
@@ -505,7 +505,7 @@ mod tests {
         let block = get_block_13b8a();
         let txids = ["c0ffee00003bafa802c8aa084379aa98d9fcd632ddc2ed9782b586ec87451f20"]
             .iter()
-            .map(|data| h256_from_rev_str(data))
+            .map(|data| h256_conv_endian_from_str(data))
             .collect();
 
         let merkle_block = MerkleBlock::from_block(&block, &txids);

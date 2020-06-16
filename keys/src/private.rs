@@ -52,6 +52,7 @@ impl str::FromStr for Private {
     }
 }
 
+// Only for test
 impl From<&'static str> for Private {
     fn from(s: &'static str) -> Self {
         s.parse().unwrap()
@@ -62,16 +63,14 @@ impl Private {
     pub fn sign(&self, message: &Message) -> Result<Signature, Error> {
         let secret = secp256k1::SecretKey::parse(self.secret.as_fixed_bytes())?;
         let message = secp256k1::Message::parse(message.as_fixed_bytes());
-        let (signature, _recovery_id) = secp256k1::sign(&message, &secret)?;
-        // let (signature, _recovery_id) = secp256k1::sign(&message, &secret);
+        let (signature, _recovery_id) = secp256k1::sign(&message, &secret);
         Ok(signature.serialize_der().as_ref().to_vec().into())
     }
 
     pub fn sign_compact(&self, message: &Message) -> Result<CompactSignature, Error> {
         let secret = secp256k1::SecretKey::parse(self.secret.as_fixed_bytes())?;
         let message = secp256k1::Message::parse(message.as_fixed_bytes());
-        let (signature, recovery_id) = secp256k1::sign(&message, &secret)?;
-        // let (signature, recovery_id) = secp256k1::sign(&message, &secret);
+        let (signature, recovery_id) = secp256k1::sign(&message, &secret);
         let recovery_id = recovery_id.serialize();
         let data = signature.serialize();
 
@@ -145,7 +144,7 @@ impl DisplayLayout for Private {
 mod tests {
     #[cfg(not(feature = "std"))]
     use alloc::string::ToString;
-    use primitives::h256_from_rev_str;
+    use primitives::h256_conv_endian_from_str;
 
     use super::*;
 
@@ -153,7 +152,7 @@ mod tests {
     fn test_private_to_string() {
         let private = Private {
             network: Network::Mainnet,
-            secret: h256_from_rev_str(
+            secret: h256_conv_endian_from_str(
                 "063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5",
             ),
             compressed: false,
@@ -169,7 +168,7 @@ mod tests {
     fn test_private_from_str() {
         let private = Private {
             network: Network::Mainnet,
-            secret: h256_from_rev_str(
+            secret: h256_conv_endian_from_str(
                 "063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5",
             ),
             compressed: false,
@@ -177,7 +176,9 @@ mod tests {
 
         assert_eq!(
             private,
-            "5KSCKP8NUyBZPCCQusxRwgmz9sfvJQEgbGukmmHepWw5Bzp95mu".into()
+            "5KSCKP8NUyBZPCCQusxRwgmz9sfvJQEgbGukmmHepWw5Bzp95mu"
+                .parse()
+                .unwrap()
         );
     }
 }

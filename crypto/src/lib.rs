@@ -45,7 +45,7 @@ impl Digest for DHash160 {
 
     fn result(self) -> GenericArray<u8, Self::OutputSize> {
         let tmp = self.sha256.result();
-        let mut ripemd = self.ripemd.clone();
+        let mut ripemd = self.ripemd;
         ripemd.input(tmp);
         ripemd.result()
     }
