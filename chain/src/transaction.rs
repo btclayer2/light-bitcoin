@@ -277,6 +277,8 @@ impl codec::Encode for Transaction {
     }
 }
 
+impl codec::EncodeLike for Transaction {}
+
 impl codec::Decode for Transaction {
     fn decode<I: codec::Input>(value: &mut I) -> Result<Self, codec::Error> {
         let value: Vec<u8> = codec::Decode::decode(value)?;

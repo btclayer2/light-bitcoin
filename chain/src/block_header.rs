@@ -64,6 +64,8 @@ impl codec::Encode for BlockHeader {
     }
 }
 
+impl codec::EncodeLike for BlockHeader {}
+
 impl codec::Decode for BlockHeader {
     fn decode<I: codec::Input>(value: &mut I) -> Result<Self, codec::Error> {
         let value: Vec<u8> = codec::Decode::decode(value)?;

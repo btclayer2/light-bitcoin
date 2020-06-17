@@ -288,6 +288,8 @@ impl codec::Encode for PartialMerkleTree {
     }
 }
 
+impl codec::EncodeLike for PartialMerkleTree {}
+
 impl codec::Decode for PartialMerkleTree {
     fn decode<I: codec::Input>(value: &mut I) -> Result<Self, codec::Error> {
         let value: Vec<u8> = codec::Decode::decode(value)?;
