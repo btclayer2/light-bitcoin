@@ -12,6 +12,7 @@ use serialization::{
 };
 
 use rustc_hex::FromHex;
+#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
 use crate::constants::{LOCKTIME_THRESHOLD, SEQUENCE_FINAL};
@@ -23,7 +24,7 @@ const WITNESS_FLAG: u8 = 1;
 
 #[rustfmt::skip]
 #[derive(Ord, PartialOrd, PartialEq, Eq, Copy, Clone, Debug, Default)]
-#[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Serializable, Deserializable)]
 pub struct OutPoint {
     pub hash: H256,
@@ -45,7 +46,7 @@ impl OutPoint {
 
 #[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Default)]
-#[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct TransactionInput {
     pub previous_output: OutPoint,
     pub script_sig: Bytes,
@@ -98,7 +99,7 @@ impl Deserializable for TransactionInput {
 
 #[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug)]
-#[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Serializable, Deserializable)]
 pub struct TransactionOutput {
     pub value: u64,
@@ -116,7 +117,7 @@ impl Default for TransactionOutput {
 
 #[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Default)]
-#[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Transaction {
     pub version: i32,
     pub inputs: Vec<TransactionInput>,

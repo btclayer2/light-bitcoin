@@ -54,17 +54,17 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           override: true
 
-      - name: Run cargo test with no_std
+      - name: Run cargo test with std
         uses: actions-rs/cargo@v1
         with:
           command: test
           args: --all
 
-      - name: Run cargo test with std
+      - name: Run cargo test with no_std
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all --features std
+          args: --all --no-default-features
 
   coverage:
     name: Code Coverage

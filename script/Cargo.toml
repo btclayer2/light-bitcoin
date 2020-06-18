@@ -6,21 +6,21 @@ edition = "2018"
 license = "GPL-3.0"
 
 [features]
-default = []
+default = ["std"]
 std = [
-  "primitives/std",
-  "crypto/std",
-  "serialization/std",
-  "keys/std",
   "chain/std",
+  "crypto/std",
+  "keys/std",
+  "primitives/std",
+  "serialization/std",
 ]
 
 [dependencies]
-primitives = { path = "../primitives", default-features = false }
-crypto = { path = "../crypto", default-features = false }
-serialization = { path = "../serialization", default-features = false }
-keys = { path = "../keys", default-features = false }
 chain = { path = "../chain", default-features = false }
+crypto = { path = "../crypto", default-features = false }
+keys = { path = "../keys", default-features = false }
+primitives = { path = "../primitives", default-features = false }
+serialization = { path = "../serialization", default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.2"

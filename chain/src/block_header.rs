@@ -7,11 +7,12 @@ use primitives::{h256_conv_endian, Compact, H256};
 use serialization::{deserialize, serialize, Deserializable, Reader, Serializable};
 
 use rustc_hex::FromHex;
+#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
 #[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default)]
-#[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Serializable, Deserializable)]
 pub struct BlockHeader {
     pub version: u32,

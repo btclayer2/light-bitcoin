@@ -12,6 +12,7 @@ use primitives::io;
 use serialization::{Deserializable, Reader, Serializable, Stream};
 
 use codec::{Decode, Encode};
+#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
 use crate::display::DisplayLayout;
@@ -22,7 +23,7 @@ use crate::AddressHash;
 /// https://bitcoin.org/en/developer-reference#address-conversion
 #[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug)]
-#[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode)]
 pub enum Type {
     /// Pay to PubKey Hash
@@ -73,7 +74,7 @@ impl Deserializable for Type {
 
 #[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug)]
-#[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode)]
 pub enum Network {
     Mainnet,
@@ -119,7 +120,7 @@ impl Deserializable for Network {
 /// `AddressHash` with network identifier and format type
 #[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Default)]
-#[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Serializable, Deserializable)]
 #[derive(Encode, Decode)]
 pub struct Address {

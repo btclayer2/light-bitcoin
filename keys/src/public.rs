@@ -4,6 +4,7 @@ use crypto::dhash160;
 use primitives::{H264, H512, H520};
 
 use codec::{Decode, Encode};
+#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
@@ -13,7 +14,7 @@ use crate::{AddressHash, Message};
 /// Secret public key
 #[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, Copy, Clone)]
-#[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode)]
 pub enum Public {
     /// Normal version of public key
