@@ -29,6 +29,20 @@ pub enum Error {
     BadFormat(String),
 }
 
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
+
+impl core::fmt::Display for Error {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Error::MerkleRootMismatch => f.write_str("header merkle root don't match to the root calculated from the partial merkle tree"),
+            Error::NoTransactions => f.write_str("partial merkle tree contains no transactions"),
+            Error::TooManyTransactions => f.write_str("there are too many transactions"),
+            Error::BadFormat(err) => f.write_str(err)
+        }
+    }
+}
+
 impl From<&str> for Error {
     fn from(err: &str) -> Self {
         Error::BadFormat(err.into())

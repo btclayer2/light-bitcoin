@@ -25,6 +25,15 @@ pub enum Error {
     UnreadData,
 }
 
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
+
+impl core::fmt::Display for Error {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
 impl Error {
     #[allow(dead_code)]
     pub(crate) fn as_str(&self) -> &'static str {

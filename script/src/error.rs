@@ -1,7 +1,5 @@
 //! Interpreter errors
 
-use core::fmt;
-
 use crate::opcode::Opcode;
 
 /// Interpreter errors
@@ -69,8 +67,11 @@ pub enum Error {
     WitnessPubKeyType,
 }
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
+
+impl core::fmt::Display for Error {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match *self {
             Error::Unknown => "Unknown error".fmt(f),
             Error::EvalFalse => "Script evaluated to false".fmt(f),

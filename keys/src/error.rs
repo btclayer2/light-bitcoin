@@ -1,5 +1,3 @@
-use core::fmt;
-
 #[derive(Debug, PartialEq)]
 pub enum Error {
     InvalidPublic,
@@ -13,8 +11,11 @@ pub enum Error {
     FailedKeyGeneration,
 }
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
+
+impl core::fmt::Display for Error {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         let msg = match *self {
             Error::InvalidPublic => "Invalid Public",
             Error::InvalidSecret => "Invalid Secret",

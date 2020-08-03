@@ -1,4 +1,7 @@
-on: [push, pull_request]
+on:
+  push:
+    branches: [master]
+  pull_request:
 
 name: build
 
@@ -83,8 +86,8 @@ jobs:
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1
         with:
-          version: '0.13.3'
+          version: '0.14.2'
           args: '--workspace'
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v1.0.7
+        uses: codecov/codecov-action@v1.0.12
