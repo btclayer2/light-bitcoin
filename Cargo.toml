@@ -9,23 +9,23 @@ license = "GPL-3.0"
 [features]
 default = ["std"]
 std = [
-  "chain/std",
-  "crypto/std",
-  "keys/std",
-  "merkle/std",
-  "primitives/std",
-  "script/std",
-  "serialization/std",
+  "light-bitcoin-chain/std",
+  "light-bitcoin-crypto/std",
+  "light-bitcoin-keys/std",
+  "light-bitcoin-merkle/std",
+  "light-bitcoin-primitives/std",
+  "light-bitcoin-script/std",
+  "light-bitcoin-serialization/std",
 ]
 
 [dependencies]
-chain = { path = "chain", default-features = false }
-crypto = { path = "crypto", default-features = false }
-keys = { path = "keys", default-features = false }
-merkle = { path = "merkle", default-features = false }
-primitives = { path = "primitives", default-features = false }
-script = { path = "script", default-features = false }
-serialization = { path = "serialization", default-features = false, features = ["derive"] }
+light-bitcoin-chain = { path = "chain", default-features = false }
+light-bitcoin-crypto = { path = "crypto", default-features = false }
+light-bitcoin-keys = { path = "keys", default-features = false }
+light-bitcoin-merkle = { path = "merkle", default-features = false }
+light-bitcoin-primitives = { path = "primitives", default-features = false }
+light-bitcoin-script = { path = "script", default-features = false }
+light-bitcoin-serialization = { path = "serialization", default-features = false, features = ["derive"] }
 
 [workspace]
 members = [
@@ -36,5 +36,5 @@ members = [
   "primitives",
   "script",
   "serialization",
-  "serialization_derive",
+  "serialization-derive",
 ]

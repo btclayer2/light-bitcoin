@@ -1,12 +1,11 @@
 [package]
-name = "serialization_derive"
+name = "light-bitcoin-serialization-derive"
 version = "0.2.0"
 authors = ["ChainX <https://github.com/chainx-org>"]
 edition = "2018"
 license = "GPL-3.0"
 
 [lib]
-name = "serialization_derive"
 proc-macro = true
 
 [dependencies]
@@ -15,4 +14,4 @@ syn = "1.0"
 quote = "1.0"
 
 [dev-dependencies]
-serialization = { path = "../serialization" }
+light-bitcoin-serialization = { path = "../serialization" }

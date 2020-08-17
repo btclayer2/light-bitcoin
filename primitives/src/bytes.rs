@@ -206,9 +206,6 @@ impl<T> AsMut<[u8]> for TaggedBytes<T> {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(not(feature = "std"))]
-    use alloc::format;
-
     use super::*;
 
     #[test]

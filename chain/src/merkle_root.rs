@@ -1,8 +1,8 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
-use crypto::dhash256;
-use primitives::{H256, H512};
+use light_bitcoin_crypto::dhash256;
+use light_bitcoin_primitives::{H256, H512};
 
 #[inline]
 fn concat(a: &H256, b: &H256) -> H512 {
@@ -42,7 +42,7 @@ pub fn merkle_node_hash(left: &H256, right: &H256) -> H256 {
 
 #[cfg(test)]
 mod tests {
-    use primitives::h256_conv_endian_from_str;
+    use light_bitcoin_primitives::h256_conv_endian_from_str;
 
     use super::*;
 

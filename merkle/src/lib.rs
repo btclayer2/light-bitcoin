@@ -8,9 +8,11 @@ extern crate alloc;
 #[cfg(not(feature = "std"))]
 use alloc::{string::String, vec, vec::Vec};
 
-use chain::merkle_node_hash;
-use primitives::{io, H256};
-use serialization::{deserialize, serialize, Deserializable, Reader, Serializable, Stream};
+use light_bitcoin_chain::merkle_node_hash;
+use light_bitcoin_primitives::{io, H256};
+use light_bitcoin_serialization::{
+    deserialize, serialize, Deserializable, Reader, Serializable, Stream,
+};
 
 /// The maximum allowed weight for a block, see BIP 141 (network rule)
 const MAX_BLOCK_WEIGHT: u32 = 4_000_000;
@@ -313,15 +315,12 @@ impl codec::Decode for PartialMerkleTree {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(not(feature = "std"))]
-    use alloc::{format, vec, vec::Vec};
-
     use hashbrown::HashSet;
 
-    use chain::{merkle_root, Block, BlockHeader};
-    use primitives::{h256_conv_endian_from_str, H256};
+    use light_bitcoin_chain::{merkle_root, Block, BlockHeader};
+    use light_bitcoin_primitives::{h256_conv_endian_from_str, H256};
+    use light_bitcoin_serialization::{deserialize, serialize, Deserializable, Serializable};
     use rand::prelude::*;
-    use serialization::{deserialize, serialize, Deserializable, Serializable};
 
     use super::PartialMerkleTree;
 

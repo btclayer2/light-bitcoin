@@ -1,7 +1,7 @@
 use core::{fmt, ops};
 
-use crypto::dhash160;
-use primitives::{H264, H512, H520};
+use light_bitcoin_crypto::dhash160;
+use light_bitcoin_primitives::{H264, H512, H520};
 
 use codec::{Decode, Encode};
 #[cfg(feature = "std")]

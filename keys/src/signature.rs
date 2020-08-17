@@ -6,7 +6,7 @@
 use alloc::{string::String, vec::Vec};
 use core::{fmt, ops, str};
 
-use primitives::H520;
+use light_bitcoin_primitives::H520;
 use rustc_hex::{FromHex, ToHex};
 
 use crate::error::Error;

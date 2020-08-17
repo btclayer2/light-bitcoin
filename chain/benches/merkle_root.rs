@@ -1,7 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
-use chain::merkle_root;
-use primitives::{h256_conv_endian_from_str, H256};
+use light_bitcoin_chain::merkle_root;
+use light_bitcoin_primitives::{h256_conv_endian_from_str, H256};
 
 fn prepare_hashes(num: u32) -> Vec<H256> {
     let mut vec = Vec::new();

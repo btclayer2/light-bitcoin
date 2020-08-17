@@ -1,6 +1,6 @@
-use crypto::{DHash256, Digest};
-use primitives::{io, H256};
-use serialization::{Deserializable, Reader};
+use light_bitcoin_crypto::{DHash256, Digest};
+use light_bitcoin_primitives::{io, H256};
+use light_bitcoin_serialization::{Deserializable, Reader};
 
 pub struct HashedData<T> {
     pub size: usize,

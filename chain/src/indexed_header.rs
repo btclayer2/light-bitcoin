@@ -1,7 +1,7 @@
 use core::fmt;
 
-use primitives::{h256_conv_endian, io, H256};
-use serialization::{Deserializable, Reader};
+use light_bitcoin_primitives::{h256_conv_endian, io, H256};
+use light_bitcoin_serialization::{Deserializable, Reader};
 
 use crate::block_header::{block_header_hash, BlockHeader};
 use crate::read_and_hash::ReadAndHash;

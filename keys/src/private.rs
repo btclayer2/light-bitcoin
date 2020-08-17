@@ -4,8 +4,8 @@
 use alloc::{vec, vec::Vec};
 use core::{fmt, str};
 
-use crypto::checksum;
-use primitives::H520;
+use light_bitcoin_crypto::checksum;
+use light_bitcoin_primitives::H520;
 
 use crate::address::Network;
 use crate::display::DisplayLayout;
@@ -41,10 +41,7 @@ impl fmt::Display for Private {
 impl str::FromStr for Private {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self, Error>
-    where
-        Self: Sized,
-    {
+    fn from_str(s: &str) -> Result<Self, Error> {
         let hex = bs58::decode(s)
             .into_vec()
             .map_err(|_| Error::InvalidPrivate)?;
@@ -142,9 +139,7 @@ impl DisplayLayout for Private {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(not(feature = "std"))]
-    use alloc::string::ToString;
-    use primitives::h256_conv_endian_from_str;
+    use light_bitcoin_primitives::h256_conv_endian_from_str;
 
     use super::*;
 

@@ -14,7 +14,7 @@ mod sign;
 mod stack;
 mod verify;
 
-pub use primitives::*;
+pub use light_bitcoin_primitives::*;
 
 pub use self::builder::Builder;
 pub use self::error::Error;

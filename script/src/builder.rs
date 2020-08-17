@@ -1,7 +1,7 @@
 //! Script builder
 
-use keys::AddressHash;
-use primitives::Bytes;
+use light_bitcoin_keys::AddressHash;
+use light_bitcoin_primitives::Bytes;
 
 use crate::num::Num;
 use crate::opcode::Opcode;

@@ -13,7 +13,7 @@ mod private;
 mod public;
 mod signature;
 
-use primitives::*;
+use light_bitcoin_primitives::*;
 
 pub use self::address::{Address, Network, Type};
 pub use self::display::DisplayLayout;

@@ -2,10 +2,10 @@
 use alloc::{vec, vec::Vec};
 use core::{cmp, mem};
 
-use chain::constants::SEQUENCE_LOCKTIME_DISABLE_FLAG;
-use crypto::{dhash160, dhash256, ripemd160, sha1, sha256};
-use keys::{Message, Public, Signature};
-use primitives::{Bytes, H256};
+use light_bitcoin_chain::constants::SEQUENCE_LOCKTIME_DISABLE_FLAG;
+use light_bitcoin_crypto::{dhash160, dhash256, ripemd160, sha1, sha256};
+use light_bitcoin_keys::{Message, Public, Signature};
+use light_bitcoin_primitives::{Bytes, H256};
 
 use crate::builder::Builder;
 use crate::error::Error;
@@ -1249,8 +1249,8 @@ pub fn eval_script(
 
 #[cfg(test)]
 mod tests {
-    use chain::Transaction;
-    use keys::{KeyPair, Network, Private};
+    use light_bitcoin_chain::Transaction;
+    use light_bitcoin_keys::{KeyPair, Network, Private};
 
     use super::*;
     use crate::sign::TransactionInputSigner;
@@ -2432,7 +2432,7 @@ mod tests {
     #[test]
     fn test_script_with_forkid_signature() {
         use crate::sign::UnsignedTransactionInput;
-        use chain::{OutPoint, TransactionOutput};
+        use light_bitcoin_chain::{OutPoint, TransactionOutput};
 
         let key_pair = KeyPair::from_private(Private {
             network: Network::Mainnet,
@@ -2582,7 +2582,7 @@ mod tests {
         flags: VerificationFlags,
         amount: u64,
     ) -> Result<(), Error> {
-        use chain::{OutPoint, TransactionInput, TransactionOutput};
+        use light_bitcoin_chain::{OutPoint, TransactionInput, TransactionOutput};
 
         let tx1 = Transaction {
             version: 1,

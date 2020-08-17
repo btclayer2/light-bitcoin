@@ -4,9 +4,9 @@
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
 
-use crypto::dhash256;
-use primitives::{io, Bytes, H256};
-use serialization::{
+use light_bitcoin_crypto::dhash256;
+use light_bitcoin_primitives::{io, Bytes, H256};
+use light_bitcoin_serialization::{
     deserialize, serialize, serialize_with_flags, Deserializable, Reader, Serializable, Stream,
     SERIALIZE_TRANSACTION_WITNESS,
 };
@@ -289,7 +289,7 @@ impl codec::Decode for Transaction {
 
 #[cfg(test)]
 mod tests {
-    use primitives::h256_conv_endian_from_str;
+    use light_bitcoin_primitives::h256_conv_endian_from_str;
 
     use super::*;
 

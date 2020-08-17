@@ -1,8 +1,8 @@
 #[cfg(not(feature = "std"))]
 use alloc::string::String;
 
-use primitives::io::{self, Error, LittleEndian, Read, Write};
-use primitives::{Bytes, Compact, H160, H256, H264, H32, H512, H520};
+use light_bitcoin_primitives::io::{self, Error, LittleEndian, Read, Write};
+use light_bitcoin_primitives::{Bytes, Compact, H160, H256, H264, H32, H512, H520};
 
 use crate::compact_integer::CompactInteger;
 use crate::reader::{Deserializable, Reader};
@@ -289,9 +289,6 @@ impl Deserializable for Compact {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(not(feature = "std"))]
-    use alloc::{vec, vec::Vec};
-
     use super::*;
     use crate::{deserialize, deserialize_iterator, serialize};
 

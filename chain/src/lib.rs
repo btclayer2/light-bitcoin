@@ -17,7 +17,7 @@ mod indexed_transaction;
 /// `IndexedBlock` extension
 mod read_and_hash;
 
-pub use primitives::*;
+pub use light_bitcoin_primitives::*;
 
 pub use self::block::Block;
 pub use self::block_header::BlockHeader;

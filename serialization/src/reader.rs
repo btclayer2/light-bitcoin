@@ -2,7 +2,7 @@
 use alloc::vec::Vec;
 use core::marker;
 
-use primitives::io;
+use light_bitcoin_primitives::io;
 
 use crate::compact_integer::CompactInteger;
 

@@ -1,7 +1,7 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
-use primitives::io;
+use light_bitcoin_primitives::io;
 
 use crate::reader::{Deserializable, Reader};
 use crate::stream::{Serializable, Stream};

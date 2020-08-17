@@ -2,7 +2,7 @@
 
 use core::fmt;
 
-use primitives::io;
+use light_bitcoin_primitives::io;
 
 use crate::reader::{Deserializable, Reader};
 use crate::stream::{Serializable, Stream};
@@ -105,9 +105,6 @@ impl Deserializable for CompactInteger {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(not(feature = "std"))]
-    use alloc::vec;
-
     use super::*;
 
     #[test]

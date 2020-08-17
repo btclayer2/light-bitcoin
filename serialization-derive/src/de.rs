@@ -36,7 +36,7 @@ pub fn impl_deserializable(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     quote! {
         #[allow(non_upper_case_globals, unused_attributes, unused_qualifications)]
         const #dummy_const: () = {
-            extern crate serialization;
+            extern crate light_bitcoin_serialization as serialization;
             use serialization::primitives::io;
             #impl_block
         };

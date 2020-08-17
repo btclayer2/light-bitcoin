@@ -1,5 +1,5 @@
 [package]
-name = "primitives"
+name = "light-bitcoin-primitives"
 version = "0.2.0"
 authors = ["ChainX <https://github.com/chainx-org>"]
 edition = "2018"

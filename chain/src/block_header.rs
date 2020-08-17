@@ -2,9 +2,9 @@
 use alloc::vec::Vec;
 use core::fmt;
 
-use crypto::dhash256;
-use primitives::{h256_conv_endian, Compact, H256};
-use serialization::{deserialize, serialize, Deserializable, Reader, Serializable};
+use light_bitcoin_crypto::dhash256;
+use light_bitcoin_primitives::{h256_conv_endian, Compact, H256};
+use light_bitcoin_serialization::{deserialize, serialize, Deserializable, Reader, Serializable};
 
 use rustc_hex::FromHex;
 #[cfg(feature = "std")]
@@ -76,9 +76,7 @@ impl codec::Decode for BlockHeader {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(not(feature = "std"))]
-    use alloc::vec;
-    use serialization::{Reader, Stream};
+    use light_bitcoin_serialization::{primitives, Reader, Stream};
 
     use super::*;
 

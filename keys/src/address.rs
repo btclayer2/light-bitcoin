@@ -7,9 +7,9 @@
 
 use core::{fmt, ops, str};
 
-use crypto::checksum;
-use primitives::io;
-use serialization::{Deserializable, Reader, Serializable, Stream};
+use light_bitcoin_crypto::checksum;
+use light_bitcoin_primitives::io;
+use light_bitcoin_serialization::{Deserializable, Reader, Serializable, Stream};
 
 use codec::{Decode, Encode};
 #[cfg(feature = "std")]
@@ -141,10 +141,7 @@ impl fmt::Display for Address {
 impl str::FromStr for Address {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self, Error>
-    where
-        Self: Sized,
-    {
+    fn from_str(s: &str) -> Result<Self, Error> {
         let hex = bs58::decode(s)
             .into_vec()
             .map_err(|_| Error::InvalidAddress)?;
@@ -221,8 +218,6 @@ impl DisplayLayout for Address {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(not(feature = "std"))]
-    use alloc::string::ToString;
     use hex_literal::hex;
 
     use super::*;

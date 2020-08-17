@@ -4,7 +4,7 @@
 use alloc::{vec, vec::Vec};
 use core::ops;
 
-use primitives::Bytes;
+use light_bitcoin_primitives::Bytes;
 
 use crate::error::Error;
 

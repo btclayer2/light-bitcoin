@@ -1,5 +1,5 @@
 [package]
-name = "script"
+name = "light-bitcoin-script"
 version = "0.2.0"
 authors = ["ChainX <https://github.com/chainx-org>"]
 edition = "2018"
@@ -8,19 +8,19 @@ license = "GPL-3.0"
 [features]
 default = ["std"]
 std = [
-  "chain/std",
-  "crypto/std",
-  "keys/std",
-  "primitives/std",
-  "serialization/std",
+  "light-bitcoin-chain/std",
+  "light-bitcoin-crypto/std",
+  "light-bitcoin-keys/std",
+  "light-bitcoin-primitives/std",
+  "light-bitcoin-serialization/std",
 ]
 
 [dependencies]
-chain = { path = "../chain", default-features = false }
-crypto = { path = "../crypto", default-features = false }
-keys = { path = "../keys", default-features = false }
-primitives = { path = "../primitives", default-features = false }
-serialization = { path = "../serialization", default-features = false }
+light-bitcoin-chain = { path = "../chain", default-features = false }
+light-bitcoin-crypto = { path = "../crypto", default-features = false }
+light-bitcoin-keys = { path = "../keys", default-features = false }
+light-bitcoin-primitives = { path = "../primitives", default-features = false }
+light-bitcoin-serialization = { path = "../serialization", default-features = false }
 
 [dev-dependencies]
-hex-literal = "0.2"
+hex-literal = "0.3"

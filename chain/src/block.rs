@@ -1,8 +1,8 @@
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
 
-use primitives::H256;
-use serialization::{deserialize, Deserializable, Serializable};
+use light_bitcoin_primitives::H256;
+use light_bitcoin_serialization::{deserialize, Deserializable, Serializable};
 
 use rustc_hex::FromHex;
 
@@ -71,7 +71,7 @@ impl Block {
 
 #[cfg(test)]
 mod tests {
-    use primitives::h256_conv_endian_from_str;
+    use light_bitcoin_primitives::h256_conv_endian_from_str;
 
     use super::Block;
 

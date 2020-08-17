@@ -1,8 +1,8 @@
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
 
-use primitives::H256;
-use serialization::{
+use light_bitcoin_primitives::H256;
+use light_bitcoin_serialization::{
     deserialize, serialized_list_size, serialized_list_size_with_flags, Deserializable,
     Serializable, SERIALIZE_TRANSACTION_WITNESS,
 };

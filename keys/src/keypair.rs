@@ -2,7 +2,7 @@
 
 use core::fmt;
 
-use primitives::{H264, H520};
+use light_bitcoin_primitives::{H264, H520};
 
 use crate::address::{Address, Network, Type};
 use crate::error::Error;
@@ -85,7 +85,7 @@ impl KeyPair {
 
 #[cfg(test)]
 mod tests {
-    use crypto::dhash256;
+    use light_bitcoin_crypto::dhash256;
 
     use super::*;
     use crate::CompactSignature;

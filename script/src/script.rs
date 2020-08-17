@@ -4,8 +4,8 @@
 use alloc::{vec, vec::Vec};
 use core::{fmt, ops};
 
-use keys::{self, AddressHash, Public};
-use primitives::Bytes;
+use light_bitcoin_keys::{self as keys, AddressHash, Public};
+use light_bitcoin_primitives::Bytes;
 
 use crate::error::Error;
 use crate::opcode::Opcode;
@@ -710,9 +710,7 @@ pub fn is_witness_commitment_script(script: &[u8]) -> bool {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(not(feature = "std"))]
-    use alloc::string::{String, ToString};
-    use keys::{Address, Public};
+    use light_bitcoin_keys::{Address, Public};
 
     use super::*;
     use crate::builder::Builder;

@@ -1,5 +1,5 @@
-use serialization::{deserialize, serialize};
-use serialization_derive::{Deserializable, Serializable};
+use light_bitcoin_serialization::{deserialize, serialize};
+use light_bitcoin_serialization_derive::{Deserializable, Serializable};
 
 #[derive(Debug, PartialEq, Serializable, Deserializable)]
 struct Foo {

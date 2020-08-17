@@ -164,9 +164,6 @@ impl<T> Stack<T> {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(not(feature = "std"))]
-    use alloc::vec;
-
     use super::*;
 
     #[test]

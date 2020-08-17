@@ -2,7 +2,7 @@
 
 use core::hash::Hasher;
 
-use primitives::{H160, H256, H32};
+use light_bitcoin_primitives::{H160, H256, H32};
 
 pub use digest::Digest;
 use digest::{
@@ -187,7 +187,7 @@ pub fn checksum(data: &[u8]) -> H32 {
 #[cfg(test)]
 mod tests {
     use hex_literal::hex;
-    use primitives::Bytes;
+    use light_bitcoin_primitives::Bytes;
 
     use super::*;
 

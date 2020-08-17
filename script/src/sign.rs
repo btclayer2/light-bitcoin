@@ -3,11 +3,11 @@
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
 
-use chain::{OutPoint, Transaction, TransactionInput, TransactionOutput};
-use crypto::dhash256;
-use keys::KeyPair;
-use primitives::{Bytes, H256};
-use serialization::Stream;
+use light_bitcoin_chain::{OutPoint, Transaction, TransactionInput, TransactionOutput};
+use light_bitcoin_crypto::dhash256;
+use light_bitcoin_keys::KeyPair;
+use light_bitcoin_primitives::{Bytes, H256};
+use light_bitcoin_serialization::Stream;
 
 use crate::builder::Builder;
 use crate::script::Script;
@@ -383,8 +383,8 @@ fn compute_hash_outputs(
 #[cfg(test)]
 mod tests {
     use hex_literal::hex;
-    use keys::{Address, Private};
-    use primitives::h256_conv_endian_from_str;
+    use light_bitcoin_keys::{Address, Private};
+    use light_bitcoin_primitives::h256_conv_endian_from_str;
 
     use super::*;
 

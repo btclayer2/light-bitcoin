@@ -38,8 +38,34 @@ jobs:
           command: clippy
           args: --all --all-targets -- -D warnings
 
-  test:
-    name: Test
+  wasm:
+    name: Build Wasm
+    strategy:
+      matrix:
+        platform: [ubuntu-latest, macos-latest]
+        toolchain: [stable]
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.toolchain }}
+          target: wasm32-unknown-unknown
+          override: true
+
+      - name: Build Wasm
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --all --no-default-features
+
+  native:
+    name: Test Native
     strategy:
       matrix:
         platform: [ubuntu-latest, macos-latest]
@@ -57,17 +83,11 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           override: true
 
-      - name: Run cargo test with std
+      - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
           command: test
           args: --all
-
-      - name: Run cargo test with no_std
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all --no-default-features
 
   coverage:
     name: Code Coverage

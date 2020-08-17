@@ -1,8 +1,8 @@
-use chain::constants::{
+use light_bitcoin_chain::constants::{
     LOCKTIME_THRESHOLD, SEQUENCE_FINAL, SEQUENCE_LOCKTIME_DISABLE_FLAG, SEQUENCE_LOCKTIME_MASK,
     SEQUENCE_LOCKTIME_TYPE_FLAG,
 };
-use keys::{Message, Public, Signature};
+use light_bitcoin_keys::{Message, Public, Signature};
 
 use crate::num::Num;
 use crate::script::Script;

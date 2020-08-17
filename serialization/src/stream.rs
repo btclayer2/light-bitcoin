@@ -4,8 +4,8 @@
 use alloc::vec::Vec;
 use core::borrow::Borrow;
 
-use primitives::io::{self, Write};
-use primitives::Bytes;
+use light_bitcoin_primitives::io::{self, Write};
+use light_bitcoin_primitives::Bytes;
 
 use crate::compact_integer::CompactInteger;
 

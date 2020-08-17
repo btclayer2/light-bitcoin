@@ -10,10 +10,10 @@ mod reader;
 mod stream;
 
 #[cfg(feature = "derive")]
-pub use serialization_derive::*;
+pub use light_bitcoin_serialization_derive::*;
 
-pub use primitives;
-pub use primitives::{io::Error, Bytes, Compact, H160, H256, H264, H32, H512, H520};
+pub use light_bitcoin_primitives as primitives;
+pub use light_bitcoin_primitives::{io::Error, Bytes, Compact, H160, H256, H264, H32, H512, H520};
 
 pub use self::compact_integer::CompactInteger;
 pub use self::list::List;
