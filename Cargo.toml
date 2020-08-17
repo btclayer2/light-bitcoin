@@ -17,6 +17,7 @@ std = [
   "light-bitcoin-script/std",
   "light-bitcoin-serialization/std",
 ]
+derive = ["light-bitcoin-serialization/derive"]
 
 [dependencies]
 light-bitcoin-chain = { path = "chain", default-features = false }
@@ -25,7 +26,7 @@ light-bitcoin-keys = { path = "keys", default-features = false }
 light-bitcoin-merkle = { path = "merkle", default-features = false }
 light-bitcoin-primitives = { path = "primitives", default-features = false }
 light-bitcoin-script = { path = "script", default-features = false }
-light-bitcoin-serialization = { path = "serialization", default-features = false, features = ["derive"] }
+light-bitcoin-serialization = { path = "serialization", default-features = false }
 
 [workspace]
 members = [
@@ -37,4 +38,5 @@ members = [
   "script",
   "serialization",
   "serialization-derive",
+  "wasm-test",
 ]

@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 pub use light_bitcoin_chain as chain;
 pub use light_bitcoin_crypto as crypto;
 pub use light_bitcoin_keys as keys;
