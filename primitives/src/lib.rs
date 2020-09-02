@@ -16,7 +16,8 @@ pub use self::bytes::{Bytes, TaggedBytes};
 pub use self::compact::Compact;
 pub use self::hash::{H160, H256, H264, H32, H512, H520};
 
-/// `s` must be 64 chars, ex: c16a4a6a6cc43c67770cbec9dd0cc4bf7e956d6b4c9e7c15ff1a2dc8ef3afc63.
+/// `s` must be 64 chars, e.g. c16a4a6a6cc43c67770cbec9dd0cc4bf7e956d6b4c9e7c15ff1a2dc8ef3afc63.
+/// only used in the test code
 pub fn h256_conv_endian_from_str(s: &str) -> H256 {
     let hex = hex::decode(s).unwrap();
     let h256 = H256::from_slice(&hex);

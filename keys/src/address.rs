@@ -229,10 +229,19 @@ mod tests {
             network: Network::Mainnet,
             hash: AddressHash::from(hex!["3f4aa1fedf1f54eeb03b759deadb36676b184911"]),
         };
-
         assert_eq!(
             address.to_string(),
             "16meyfSoQV6twkAAxPe51RtMVz7PGRmWna".to_string(),
+        );
+
+        let address = Address {
+            kind: Type::P2SH,
+            network: Network::Mainnet,
+            hash: AddressHash::from(hex!["d246f700f4969106291a75ba85ad863cae68d667"]),
+        };
+        assert_eq!(
+            address.to_string(),
+            "3LrrqZ2LtZxAcroVaYKgM6yDeRszV2sY1r".to_string(),
         );
     }
 
@@ -243,10 +252,19 @@ mod tests {
             network: Network::Mainnet,
             hash: AddressHash::from(hex!["3f4aa1fedf1f54eeb03b759deadb36676b184911"]),
         };
-
         assert_eq!(
             address,
             "16meyfSoQV6twkAAxPe51RtMVz7PGRmWna".parse().unwrap()
+        );
+
+        let address = Address {
+            kind: Type::P2SH,
+            network: Network::Mainnet,
+            hash: AddressHash::from(hex!["d246f700f4969106291a75ba85ad863cae68d667"]),
+        };
+        assert_eq!(
+            address,
+            "3LrrqZ2LtZxAcroVaYKgM6yDeRszV2sY1r".parse().unwrap()
         );
     }
 }

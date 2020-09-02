@@ -3,9 +3,10 @@
 
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
+use core::fmt;
 
 use light_bitcoin_crypto::dhash256;
-use light_bitcoin_primitives::{io, Bytes, H256};
+use light_bitcoin_primitives::{h256_conv_endian, io, Bytes, H256};
 use light_bitcoin_serialization::{
     deserialize, serialize, serialize_with_flags, Deserializable, Reader, Serializable, Stream,
     SERIALIZE_TRANSACTION_WITNESS,
@@ -23,12 +24,21 @@ const WITNESS_MARKER: u8 = 0;
 const WITNESS_FLAG: u8 = 1;
 
 #[rustfmt::skip]
-#[derive(Ord, PartialOrd, PartialEq, Eq, Copy, Clone, Debug, Default)]
+#[derive(Ord, PartialOrd, PartialEq, Eq, Copy, Clone, Default)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Serializable, Deserializable)]
 pub struct OutPoint {
     pub hash: H256,
     pub index: u32,
+}
+
+impl fmt::Debug for OutPoint {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("OutPoint")
+            .field("hash", &h256_conv_endian(self.hash))
+            .field("index", &self.index)
+            .finish()
+    }
 }
 
 impl OutPoint {

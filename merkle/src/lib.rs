@@ -7,9 +7,10 @@ extern crate alloc;
 
 #[cfg(not(feature = "std"))]
 use alloc::{string::String, vec, vec::Vec};
+use core::fmt;
 
 use light_bitcoin_chain::merkle_node_hash;
-use light_bitcoin_primitives::{io, H256};
+use light_bitcoin_primitives::{h256_conv_endian, io, H256};
 use light_bitcoin_serialization::{
     deserialize, serialize, Deserializable, Reader, Serializable, Stream,
 };
@@ -52,7 +53,7 @@ impl From<&str> for Error {
 }
 
 /// Partial merkle tree
-#[derive(PartialEq, Eq, Clone, Debug, Default)]
+#[derive(PartialEq, Eq, Clone, Default)]
 pub struct PartialMerkleTree {
     /// The total number of transactions in the block
     pub tx_count: u32,
@@ -60,6 +61,23 @@ pub struct PartialMerkleTree {
     pub hashes: Vec<H256>,
     /// node-is-parent-of-matched-txid bits
     pub bits: Vec<bool>,
+}
+
+impl fmt::Debug for PartialMerkleTree {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PartialMerkleTree")
+            .field("tx_count", &self.tx_count)
+            .field(
+                "hashes",
+                &self
+                    .hashes
+                    .iter()
+                    .map(|hash| h256_conv_endian(*hash))
+                    .collect::<Vec<_>>(),
+            )
+            .field("bits", &self.bits)
+            .finish()
+    }
 }
 
 impl PartialMerkleTree {
