@@ -233,7 +233,7 @@ macro_rules! impl_ser_for_hash {
                 T: io::Read,
             {
                 let mut result = Self::default();
-                reader.read_slice(result.as_fixed_bytes_mut())?;
+                reader.read_slice(result.as_bytes_mut())?;
                 Ok(result)
             }
         }
@@ -333,34 +333,34 @@ mod tests {
 
     #[test]
     fn test_bytes_deserialize() {
-        let raw: Bytes = "020145".into();
-        let expected: Bytes = "0145".into();
+        let raw: Bytes = "020145".parse().unwrap();
+        let expected: Bytes = "0145".parse().unwrap();
         assert_eq!(expected, deserialize(raw.as_ref()).unwrap());
     }
 
     #[test]
     fn test_bytes_serialize() {
-        let expected: Bytes = "020145".into();
-        let bytes: Bytes = "0145".into();
+        let expected: Bytes = "020145".parse().unwrap();
+        let bytes: Bytes = "0145".parse().unwrap();
         assert_eq!(expected, serialize(&bytes));
     }
 
     #[test]
     fn test_string_serialize() {
-        let expected: Bytes = "0776657273696f6e".into();
+        let expected: Bytes = "0776657273696f6e".parse().unwrap();
         let s: String = "version".into();
         assert_eq!(serialize(&s), expected);
-        let expected: Bytes = "00".into();
+        let expected: Bytes = "00".parse().unwrap();
         let s: String = "".into();
         assert_eq!(serialize(&s), expected);
     }
 
     #[test]
     fn test_string_deserialize() {
-        let raw: Bytes = "0776657273696f6e".into();
+        let raw: Bytes = "0776657273696f6e".parse().unwrap();
         let expected: String = "version".into();
         assert_eq!(expected, deserialize::<_, String>(raw.as_ref()).unwrap());
-        let raw: Bytes = "00".into();
+        let raw: Bytes = "00".parse().unwrap();
         let expected: String = "".into();
         assert_eq!(expected, deserialize::<_, String>(raw.as_ref()).unwrap());
     }
@@ -371,6 +371,6 @@ mod tests {
         slice[0] = 0x64;
         let mut stream = Stream::default();
         stream.append_slice(&slice);
-        assert_eq!(stream.out(), "64000000".into());
+        assert_eq!(stream.out(), "64000000".parse::<Bytes>().unwrap());
     }
 }

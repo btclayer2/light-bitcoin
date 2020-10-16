@@ -30,28 +30,28 @@ impl Digest for DHash160 {
         Self::default()
     }
 
-    fn input<B: AsRef<[u8]>>(&mut self, data: B) {
-        self.sha256.input(data);
+    fn update(&mut self, data: impl AsRef<[u8]>) {
+        self.sha256.update(data);
     }
 
-    fn chain<B: AsRef<[u8]>>(self, data: B) -> Self
+    fn chain(self, data: impl AsRef<[u8]>) -> Self
     where
         Self: Sized,
     {
         let mut tmp = self;
-        tmp.input(data);
+        tmp.update(data);
         tmp
     }
 
-    fn result(self) -> GenericArray<u8, Self::OutputSize> {
-        let tmp = self.sha256.result();
+    fn finalize(self) -> GenericArray<u8, Self::OutputSize> {
+        let tmp = self.sha256.finalize();
         let mut ripemd = self.ripemd;
-        ripemd.input(tmp);
-        ripemd.result()
+        ripemd.update(tmp);
+        ripemd.finalize()
     }
 
-    fn result_reset(&mut self) -> GenericArray<u8, Self::OutputSize> {
-        let res = self.clone().result();
+    fn finalize_reset(&mut self) -> GenericArray<u8, Self::OutputSize> {
+        let res = self.clone().finalize();
         self.reset();
         res
     }
@@ -66,8 +66,8 @@ impl Digest for DHash160 {
 
     fn digest(data: &[u8]) -> GenericArray<u8, Self::OutputSize> {
         let mut hasher = Self::default();
-        Self::input(&mut hasher, data);
-        hasher.result()
+        Self::update(&mut hasher, data);
+        hasher.finalize()
     }
 }
 
@@ -78,7 +78,7 @@ pub struct DHash256 {
 
 impl DHash256 {
     pub fn finish(self) -> H256 {
-        H256::from_slice(&self.result())
+        H256::from_slice(&self.finalize())
     }
 }
 
@@ -89,28 +89,28 @@ impl Digest for DHash256 {
         Self::default()
     }
 
-    fn input<B: AsRef<[u8]>>(&mut self, data: B) {
-        self.hasher.input(data);
+    fn update(&mut self, data: impl AsRef<[u8]>) {
+        self.hasher.update(data);
     }
 
-    fn chain<B: AsRef<[u8]>>(self, data: B) -> Self
+    fn chain(self, data: impl AsRef<[u8]>) -> Self
     where
         Self: Sized,
     {
         let mut tmp = self;
-        tmp.input(data);
+        tmp.update(data);
         tmp
     }
 
-    fn result(self) -> GenericArray<u8, Self::OutputSize> {
+    fn finalize(self) -> GenericArray<u8, Self::OutputSize> {
         let mut tmp = self.hasher;
-        let out = tmp.result_reset();
-        tmp.input(&out);
-        tmp.result()
+        let out = tmp.finalize_reset();
+        tmp.update(&out);
+        tmp.finalize()
     }
 
-    fn result_reset(&mut self) -> GenericArray<u8, Self::OutputSize> {
-        let res = self.clone().result();
+    fn finalize_reset(&mut self) -> GenericArray<u8, Self::OutputSize> {
+        let res = self.clone().finalize();
         self.reset();
         res
     }
@@ -125,8 +125,8 @@ impl Digest for DHash256 {
 
     fn digest(data: &[u8]) -> GenericArray<u8, Self::OutputSize> {
         let mut hasher = Self::default();
-        Self::input(&mut hasher, data);
-        hasher.result()
+        Self::update(&mut hasher, data);
+        hasher.finalize()
     }
 }
 
@@ -134,40 +134,40 @@ impl Digest for DHash256 {
 #[inline]
 pub fn ripemd160(input: &[u8]) -> H160 {
     let mut hasher = Ripemd160::new();
-    hasher.input(input);
-    H160::from_slice(&hasher.result())
+    hasher.update(input);
+    H160::from_slice(&hasher.finalize())
 }
 
 /// SHA-1
 #[inline]
 pub fn sha1(input: &[u8]) -> H160 {
     let mut hasher = Sha1::new();
-    hasher.input(input);
-    H160::from_slice(&hasher.result())
+    hasher.update(input);
+    H160::from_slice(&hasher.finalize())
 }
 
 /// SHA-256
 #[inline]
 pub fn sha256(input: &[u8]) -> H256 {
     let mut hasher = Sha256::new();
-    hasher.input(input);
-    H256::from_slice(&hasher.result())
+    hasher.update(input);
+    H256::from_slice(&hasher.finalize())
 }
 
 /// SHA-256 and RIPEMD160
 #[inline]
 pub fn dhash160(input: &[u8]) -> H160 {
     let mut hasher = DHash160::new();
-    hasher.input(input);
-    H160::from_slice(&hasher.result())
+    hasher.update(input);
+    H160::from_slice(&hasher.finalize())
 }
 
 /// Double SHA-256
 #[inline]
 pub fn dhash256(input: &[u8]) -> H256 {
     let mut hasher = DHash256::new();
-    hasher.input(input);
-    H256::from_slice(&hasher.result())
+    hasher.update(input);
+    H256::from_slice(&hasher.finalize())
 }
 
 /// SipHash-2-4
@@ -186,27 +186,20 @@ pub fn checksum(data: &[u8]) -> H32 {
 
 #[cfg(test)]
 mod tests {
-    use hex_literal::hex;
-    use light_bitcoin_primitives::Bytes;
+    use light_bitcoin_primitives::{h160, h256, h32, Bytes};
 
     use super::*;
 
     #[test]
     fn test_ripemd160() {
         let result = ripemd160(b"hello");
-        assert_eq!(
-            result,
-            H160::from(hex!["108f07b8382412612c048d07d13f814118445acd"])
-        );
+        assert_eq!(result, h160("108f07b8382412612c048d07d13f814118445acd"));
     }
 
     #[test]
     fn test_sha1() {
         let result = sha1(b"hello");
-        assert_eq!(
-            result,
-            H160::from(hex!["aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d"])
-        );
+        assert_eq!(result, h160("aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d"));
     }
 
     #[test]
@@ -214,26 +207,18 @@ mod tests {
         let result = sha256(b"hello");
         assert_eq!(
             result,
-            H256::from(hex![
-                "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
-            ])
+            h256("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824")
         );
     }
 
     #[test]
     fn test_dhash160() {
         let result = dhash160(b"hello");
-        assert_eq!(
-            result,
-            H160::from(hex!["b6a9c8c230722b7c748331a8b450f05566dc7d0f"])
-        );
+        assert_eq!(result, h160("b6a9c8c230722b7c748331a8b450f05566dc7d0f"));
 
-        let bytes: Bytes = "210292be03ed9475445cc24a34a115c641a67e4ff234ccb08cb4c5cea45caa526cb26ead6ead6ead6ead6eadac".into();
+        let bytes: Bytes = "210292be03ed9475445cc24a34a115c641a67e4ff234ccb08cb4c5cea45caa526cb26ead6ead6ead6ead6eadac".parse().unwrap();
         let result = dhash160(bytes.as_ref());
-        assert_eq!(
-            result,
-            H160::from(hex!["865c71bfc7e314709207ab9e7e205c6f8e453d08"])
-        );
+        assert_eq!(result, h160("865c71bfc7e314709207ab9e7e205c6f8e453d08"));
     }
 
     #[test]
@@ -241,9 +226,7 @@ mod tests {
         let result = dhash256(b"hello");
         assert_eq!(
             result,
-            H256::from(hex![
-                "9595c9df90075148eb06860365df33584b75bff782a510c6cd4883a419833d50"
-            ])
+            h256("9595c9df90075148eb06860365df33584b75bff782a510c6cd4883a419833d50")
         );
     }
 
@@ -256,6 +239,6 @@ mod tests {
 
     #[test]
     fn test_checksum() {
-        assert_eq!(checksum(b"hello"), H32::from(hex!["9595c9df"]));
+        assert_eq!(checksum(b"hello"), h32("9595c9df"));
     }
 }

@@ -12,7 +12,6 @@ use crate::signature::{CompactSignature, Signature};
 use crate::{AddressHash, Message};
 
 /// Secret public key
-#[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, Copy, Clone)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode)]
@@ -32,7 +31,7 @@ impl PartialEq for Public {
 }
 
 impl fmt::Debug for Public {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             Public::Normal(ref hash) => writeln!(f, "normal: {}", hash),
             Public::Compressed(ref hash) => writeln!(f, "compressed: {}", hash),
@@ -41,7 +40,7 @@ impl fmt::Debug for Public {
 }
 
 impl fmt::Display for Public {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             Public::Normal(ref hash) => writeln!(f, "normal: {}", hash),
             Public::Compressed(ref hash) => writeln!(f, "compressed: {}", hash),

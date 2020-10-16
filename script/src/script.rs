@@ -2,7 +2,7 @@
 
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
-use core::{fmt, ops};
+use core::{fmt, ops, str};
 
 use light_bitcoin_keys::{self as keys, AddressHash, Public};
 use light_bitcoin_primitives::Bytes;
@@ -68,10 +68,12 @@ pub struct Script {
     data: Bytes,
 }
 
-// Only for test
-impl From<&'static str> for Script {
-    fn from(s: &'static str) -> Self {
-        Script::new(s.into())
+impl str::FromStr for Script {
+    type Err = hex::FromHexError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let bytes = s.parse()?;
+        Ok(Script::new(bytes))
     }
 }
 
@@ -94,7 +96,7 @@ impl From<Script> for Bytes {
 }
 
 impl fmt::Display for Script {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut pc = 0;
 
         while pc < self.len() {
@@ -717,43 +719,49 @@ mod tests {
 
     #[test]
     fn test_is_pay_to_script_hash() {
-        let script: Script = "a9143b80842f4ea32806ce5e723a255ddd6490cfd28d87".into();
-        let script2: Script = "a9143b80842f4ea32806ce5e723a255ddd6490cfd28d88".into();
+        let script: Script = "a9143b80842f4ea32806ce5e723a255ddd6490cfd28d87"
+            .parse()
+            .unwrap();
+        let script2: Script = "a9143b80842f4ea32806ce5e723a255ddd6490cfd28d88"
+            .parse()
+            .unwrap();
         assert!(script.is_pay_to_script_hash());
         assert!(!script2.is_pay_to_script_hash());
     }
 
     #[test]
     fn test_is_pay_to_witness_key_hash() {
-        let script: Script = "00140000000000000000000000000000000000000000".into();
-        let script2: Script = "01140000000000000000000000000000000000000000".into();
+        let script: Script = "00140000000000000000000000000000000000000000"
+            .parse()
+            .unwrap();
+        let script2: Script = "01140000000000000000000000000000000000000000"
+            .parse()
+            .unwrap();
         assert!(script.is_pay_to_witness_key_hash());
         assert!(!script2.is_pay_to_witness_key_hash());
     }
 
     #[test]
     fn test_is_pay_to_witness_script_hash() {
-        let script: Script =
-            "00203b80842f4ea32806ce5e723a255ddd6490cfd28dac38c58bf9254c0577330693".into();
+        let script: Script = "00203b80842f4ea32806ce5e723a255ddd6490cfd28dac38c58bf9254c0577330693"
+            .parse()
+            .unwrap();
         let script2: Script =
-            "01203b80842f4ea32806ce5e723a255ddd6490cfd28dac38c58bf9254c0577330693".into();
+            "01203b80842f4ea32806ce5e723a255ddd6490cfd28dac38c58bf9254c0577330693"
+                .parse()
+                .unwrap();
         assert!(script.is_pay_to_witness_script_hash());
         assert!(!script2.is_pay_to_witness_script_hash());
     }
 
     #[test]
     fn test_script_debug() {
-        use core::fmt::Write;
-
         let script = Builder::default()
             .push_num(3.into())
             .push_num(2.into())
             .push_opcode(Opcode::OP_ADD)
             .into_script();
-        let s = "Script { data: 0103010293 }";
-        let mut res = String::new();
-        write!(&mut res, "{:?}", script).unwrap();
-        assert_eq!(s.to_string(), res);
+        assert_eq!(format!("{:?}", script), "Script { data: 0103010293 }");
     }
 
     #[test]
@@ -774,19 +782,22 @@ OP_ADD
     fn test_script_without_op_codeseparator() {
         let script: Script =
             "ab00270025512102e485fdaa062387c0bbb5ab711a093b6635299ec155b7b852fce6b992d5adbfec51ae"
-                .into();
+                .parse()
+                .unwrap();
         let scr_goal: Script =
             "00270025512102e485fdaa062387c0bbb5ab711a093b6635299ec155b7b852fce6b992d5adbfec51ae"
-                .into();
+                .parse()
+                .unwrap();
         assert_eq!(script.without_separators(), scr_goal);
     }
 
     #[test]
     fn test_script_is_multisig() {
-        let script: Script = "524104a882d414e478039cd5b52a92ffb13dd5e6bd4515497439dffd691a0f12af9575fa349b5694ed3155b136f09e63975a1700c9f4d4df849323dac06cf3bd6458cd41046ce31db9bdd543e72fe3039a1f1c047dab87037c36a669ff90e28da1848f640de68c2fe913d363a51154a0c62d7adea1b822d05035077418267b1a1379790187410411ffd36c70776538d079fbae117dc38effafb33304af83ce4894589747aee1ef992f63280567f52f5ba870678b4ab4ff6c8ea600bd217870a8b4f1f09f3a8e8353ae".into();
+        let script: Script = "524104a882d414e478039cd5b52a92ffb13dd5e6bd4515497439dffd691a0f12af9575fa349b5694ed3155b136f09e63975a1700c9f4d4df849323dac06cf3bd6458cd41046ce31db9bdd543e72fe3039a1f1c047dab87037c36a669ff90e28da1848f640de68c2fe913d363a51154a0c62d7adea1b822d05035077418267b1a1379790187410411ffd36c70776538d079fbae117dc38effafb33304af83ce4894589747aee1ef992f63280567f52f5ba870678b4ab4ff6c8ea600bd217870a8b4f1f09f3a8e8353ae".parse().unwrap();
         let not: Script =
             "ab00270025512102e485fdaa062387c0bbb5ab711a093b6635299ec155b7b852fce6b992d5adbfec51ae"
-                .into();
+                .parse()
+                .unwrap();
         assert!(script.is_multisig_script());
         assert!(!not.is_multisig_script());
     }
@@ -796,31 +807,41 @@ OP_ADD
     fn test_script_type() {
         assert_eq!(
             ScriptType::PubKeyHash,
-            Script::from("76a914aab76ba4877d696590d94ea3e02948b55294815188ac").script_type()
+            "76a914aab76ba4877d696590d94ea3e02948b55294815188ac"
+                .parse::<Script>()
+                .unwrap()
+                .script_type()
         );
-        assert_eq!(ScriptType::Multisig, Script::from("522102004525da5546e7603eefad5ef971e82f7dad2272b34e6b3036ab1fe3d299c22f21037d7f2227e6c646707d1c61ecceb821794124363a2cf2c1d2a6f28cf01e5d6abe52ae").script_type());
+        assert_eq!(ScriptType::Multisig, "522102004525da5546e7603eefad5ef971e82f7dad2272b34e6b3036ab1fe3d299c22f21037d7f2227e6c646707d1c61ecceb821794124363a2cf2c1d2a6f28cf01e5d6abe52ae".parse::<Script>().unwrap().script_type());
         assert_eq!(
             ScriptType::ScriptHash,
-            Script::from("a9146262b64aec1f4a4c1d21b32e9c2811dd2171fd7587").script_type()
+            "a9146262b64aec1f4a4c1d21b32e9c2811dd2171fd7587"
+                .parse::<Script>()
+                .unwrap()
+                .script_type()
         );
-        assert_eq!(ScriptType::PubKey, Script::from("4104ae1a62fe09c5f51b13905f07f06b99a2f7159b2225f374cd378d71302fa28414e7aab37397f554a7df5f142c21c1b7303b8a0626f1baded5c72a704f7e6cd84cac").script_type());
+        assert_eq!(ScriptType::PubKey, "4104ae1a62fe09c5f51b13905f07f06b99a2f7159b2225f374cd378d71302fa28414e7aab37397f554a7df5f142c21c1b7303b8a0626f1baded5c72a704f7e6cd84cac".parse::<Script>().unwrap().script_type());
     }
 
     #[test]
     fn test_sigops_count() {
         assert_eq!(
             1usize,
-            Script::from("76a914aab76ba4877d696590d94ea3e02948b55294815188ac")
+            "76a914aab76ba4877d696590d94ea3e02948b55294815188ac"
+                .parse::<Script>()
+                .unwrap()
                 .sigops_count(false, false)
         );
-        assert_eq!(2usize, Script::from("522102004525da5546e7603eefad5ef971e82f7dad2272b34e6b3036ab1fe3d299c22f21037d7f2227e6c646707d1c61ecceb821794124363a2cf2c1d2a6f28cf01e5d6abe52ae").sigops_count(false, true));
-        assert_eq!(20usize, Script::from("522102004525da5546e7603eefad5ef971e82f7dad2272b34e6b3036ab1fe3d299c22f21037d7f2227e6c646707d1c61ecceb821794124363a2cf2c1d2a6f28cf01e5d6abe52ae").sigops_count(false, false));
+        assert_eq!(2usize, "522102004525da5546e7603eefad5ef971e82f7dad2272b34e6b3036ab1fe3d299c22f21037d7f2227e6c646707d1c61ecceb821794124363a2cf2c1d2a6f28cf01e5d6abe52ae".parse::<Script>().unwrap().sigops_count(false, true));
+        assert_eq!(20usize, "522102004525da5546e7603eefad5ef971e82f7dad2272b34e6b3036ab1fe3d299c22f21037d7f2227e6c646707d1c61ecceb821794124363a2cf2c1d2a6f28cf01e5d6abe52ae".parse::<Script>().unwrap().sigops_count(false, false));
         assert_eq!(
             0usize,
-            Script::from("a9146262b64aec1f4a4c1d21b32e9c2811dd2171fd7587")
+            "a9146262b64aec1f4a4c1d21b32e9c2811dd2171fd7587"
+                .parse::<Script>()
+                .unwrap()
                 .sigops_count(false, false)
         );
-        assert_eq!(1usize, Script::from("4104ae1a62fe09c5f51b13905f07f06b99a2f7159b2225f374cd378d71302fa28414e7aab37397f554a7df5f142c21c1b7303b8a0626f1baded5c72a704f7e6cd84cac").sigops_count(false, false));
+        assert_eq!(1usize, "4104ae1a62fe09c5f51b13905f07f06b99a2f7159b2225f374cd378d71302fa28414e7aab37397f554a7df5f142c21c1b7303b8a0626f1baded5c72a704f7e6cd84cac".parse::<Script>().unwrap().sigops_count(false, false));
     }
 
     #[test]
@@ -1004,37 +1025,37 @@ OP_ADD
 
     #[test]
     fn redeem_script() {
-        let script: Script = REDEEM.into();
+        let script: Script = REDEEM.parse().unwrap();
         assert_eq!(script.is_multisig_script(), true);
     }
 
     #[test]
     fn extract_multi_scriptsig1() {
-        let script: Script = SCRIPT_SIG1.into();
+        let script: Script = SCRIPT_SIG1.parse().unwrap();
         let (sigs, dem) = script.extract_multi_scriptsig().unwrap();
-        let sig_bytes: Bytes = SIG1.into();
+        let sig_bytes: Bytes = SIG1.parse().unwrap();
         assert_eq!(sig_bytes, sigs[0]);
-        let script: Script = REDEEM.into();
+        let script: Script = REDEEM.parse().unwrap();
         assert_eq!(script, dem);
         assert_eq!(sigs.len(), 1);
     }
 
     #[test]
     fn extract_multi_scriptsig2() {
-        let script: Script = SCRIPT_SIG2.into();
+        let script: Script = SCRIPT_SIG2.parse().unwrap();
         let (sigs, dem) = script.extract_multi_scriptsig().unwrap();
-        let sig_bytes1: Bytes = SIG1.into();
+        let sig_bytes1: Bytes = SIG1.parse().unwrap();
         assert_eq!(sig_bytes1, sigs[0]);
-        let sig_bytes2: Bytes = SIG2.into();
+        let sig_bytes2: Bytes = SIG2.parse().unwrap();
         assert_eq!(sig_bytes2, sigs[1]);
-        let script: Script = REDEEM.into();
+        let script: Script = REDEEM.parse().unwrap();
         assert_eq!(script, dem);
         assert_eq!(sigs.len(), 2);
     }
 
     #[test]
     fn parse_redeem() {
-        let script: Script = REDEEM.into();
+        let script: Script = REDEEM.parse().unwrap();
         let (keys, siglen, keylen) = script.parse_redeem_script().unwrap();
         assert_eq!(siglen, 2);
         assert_eq!(keylen, 3);

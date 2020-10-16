@@ -26,7 +26,7 @@ where
         let mut hasher = DHash256::new();
         let data = self.read_with_proxy(|bytes| {
             size += bytes.len();
-            hasher.input(bytes);
+            hasher.update(bytes);
         })?;
 
         Ok(HashedData {

@@ -8,31 +8,82 @@ mod compact;
 mod hash;
 pub mod io;
 
-#[cfg(not(feature = "std"))]
-use alloc::string::String;
 pub use primitive_types::U256;
 
 pub use self::bytes::{Bytes, TaggedBytes};
 pub use self::compact::Compact;
 pub use self::hash::{H160, H256, H264, H32, H512, H520};
 
-/// `s` must be 64 chars, e.g. c16a4a6a6cc43c67770cbec9dd0cc4bf7e956d6b4c9e7c15ff1a2dc8ef3afc63.
-/// only used in the test code
-pub fn h256_conv_endian_from_str(s: &str) -> H256 {
-    let hex = hex::decode(s).unwrap();
-    let h256 = H256::from_slice(&hex);
-    h256_conv_endian(h256)
-}
-
-pub fn h256_conv_endian(mut hash: H256) -> H256 {
-    let bytes = hash.as_bytes_mut();
+/// Convert the endian of hash, return the new hash.
+pub fn hash_rev<T: AsMut<[u8]>>(mut hash: T) -> T {
+    let bytes = hash.as_mut();
     bytes.reverse();
     hash
 }
 
-pub fn h256_conv_endian_and_hex(be: H256) -> String {
-    let le = h256_conv_endian(be);
-    hex::encode(&le)
+/// `s` must be 10 (with 0x prefix) or 8 (without 0x prefix) chars
+pub fn h32(s: &str) -> H32 {
+    let hex = if s.starts_with("0x") {
+        hex::decode(&s[2..]).unwrap()
+    } else {
+        hex::decode(s).unwrap()
+    };
+    H32::from_slice(&hex)
+}
+
+/// `s` must be 42 (with 0x prefix) or 40 (without 0x prefix) chars
+pub fn h160(s: &str) -> H160 {
+    let hex = if s.starts_with("0x") {
+        hex::decode(&s[2..]).unwrap()
+    } else {
+        hex::decode(s).unwrap()
+    };
+    H160::from_slice(&hex)
+}
+
+/// `s` must be 66 (with 0x prefix) or 64 (without 0x prefix) chars
+pub fn h256(s: &str) -> H256 {
+    let hex = if s.starts_with("0x") {
+        hex::decode(&s[2..]).unwrap()
+    } else {
+        hex::decode(s).unwrap()
+    };
+    H256::from_slice(&hex)
+}
+
+/// `s` must be 66 (with 0x prefix) or 64 (without 0x prefix) chars
+pub fn h256_rev(s: &str) -> H256 {
+    hash_rev(h256(s))
+}
+
+/// `s` must be 68 (with 0x prefix) or 66 (without 0x prefix) chars
+pub fn h264(s: &str) -> H264 {
+    let hex = if s.starts_with("0x") {
+        hex::decode(&s[2..]).unwrap()
+    } else {
+        hex::decode(s).unwrap()
+    };
+    H264::from_slice(&hex)
+}
+
+/// `s` must be 130 (with 0x prefix) or 128 (without 0x prefix) chars
+pub fn h512(s: &str) -> H512 {
+    let hex = if s.starts_with("0x") {
+        hex::decode(&s[2..]).unwrap()
+    } else {
+        hex::decode(s).unwrap()
+    };
+    H512::from_slice(&hex)
+}
+
+/// `s` must be 132 (with 0x prefix) or 130 (without 0x prefix) chars
+pub fn h520(s: &str) -> H520 {
+    let hex = if s.starts_with("0x") {
+        hex::decode(&s[2..]).unwrap()
+    } else {
+        hex::decode(s).unwrap()
+    };
+    H520::from_slice(&hex)
 }
 
 #[cfg(test)]
@@ -40,29 +91,60 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_h256_conv_endian_and_hex() {
-        let hash = H256::from([
-            0x63, 0xfc, 0x3a, 0xef, 0xc8, 0x2d, 0x1a, 0xff, 0x15, 0x7c, 0x9e, 0x4c, 0x6b, 0x6d,
-            0x95, 0x7e, 0xbf, 0xc4, 0x0c, 0xdd, 0xc9, 0xbe, 0x0c, 0x77, 0x67, 0x3c, 0xc4, 0x6c,
-            0x6a, 0x4a, 0x6a, 0xc1,
-        ]);
+    fn test_hash() {
+        let hash = h32("9595c9df");
+        assert_eq!(format!("{:?}", hash), "0x9595c9df");
+
+        let hash = h160("b6a9c8c230722b7c748331a8b450f05566dc7d0f");
         assert_eq!(
-            h256_conv_endian_and_hex(hash),
-            "c16a4a6a6cc43c67770cbec9dd0cc4bf7e956d6b4c9e7c15ff1a2dc8ef3afc63"
+            format!("{:?}", hash),
+            "0xb6a9c8c230722b7c748331a8b450f05566dc7d0f"
+        );
+
+        let hash = h256("0000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad7");
+        assert_eq!(
+            format!("{:?}", hash),
+            "0x0000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad7"
+        );
+        let hash = h256("0x0000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad7");
+        assert_eq!(
+            format!("{:?}", hash),
+            "0x0000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad7"
+        );
+
+        let hash = h264("0000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad712");
+        assert_eq!(
+            format!("{:?}", hash),
+            "0x0000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad712"
+        );
+
+        let hash = h512("0000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad70000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad7");
+        assert_eq!(
+            format!("{:?}", hash),
+            "0x0000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad70000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad7"
+        );
+
+        let hash = h520("0000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad70000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad712");
+        assert_eq!(
+            format!("{:?}", hash),
+            "0x0000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad70000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad712"
         );
     }
 
     #[test]
-    fn test_h256_conv_endian() {
-        let hash = H256::from([
-            0x63, 0xfc, 0x3a, 0xef, 0xc8, 0x2d, 0x1a, 0xff, 0x15, 0x7c, 0x9e, 0x4c, 0x6b, 0x6d,
-            0x95, 0x7e, 0xbf, 0xc4, 0x0c, 0xdd, 0xc9, 0xbe, 0x0c, 0x77, 0x67, 0x3c, 0xc4, 0x6c,
-            0x6a, 0x4a, 0x6a, 0xc1,
-        ]);
-        let conv_hash = h256_conv_endian(hash);
+    fn test_hash_reverse() {
+        let hash = h256("0000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad7");
+        let hash = hash_rev(hash);
         assert_eq!(
-            h256_conv_endian_and_hex(conv_hash),
-            "63fc3aefc82d1aff157c9e4c6b6d957ebfc40cddc9be0c77673cc46c6a4a6ac1"
+            format!("{:?}", hash),
+            "0xd7ca74801dd354b2623be0c344e4485b0580273a4b110a000000000000000000"
+        );
+
+        let hash = h512("0000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad70000000000000000000a114b3a2780055b48e444c3e03b62b254d31d8074cad7");
+        let hash = hash_rev(hash);
+        assert_eq!(
+            format!("{:?}", hash),
+            "0xd7ca74801dd354b2623be0c344e4485b0580273a4b110a000000000000000000d7ca74801dd354b2623be0c344e4485b0580273a4b110a000000000000000000"
         );
     }
 }

@@ -1,10 +1,8 @@
 //! Wrapper around `Vec<u8>`
 
 #[cfg(not(feature = "std"))]
-use alloc::{string::String, vec, vec::Vec};
+use alloc::{vec, vec::Vec};
 use core::{fmt, marker, ops, str};
-
-use rustc_hex::{FromHex, FromHexError, ToHex};
 
 /// Wrapper around `Vec<u8>`
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Hash, Default)]
@@ -28,24 +26,17 @@ impl From<Bytes> for Vec<u8> {
     }
 }
 
-// Only for test
-impl From<&'static str> for Bytes {
-    fn from(s: &'static str) -> Self {
-        s.parse().unwrap()
-    }
-}
-
 impl str::FromStr for Bytes {
-    type Err = FromHexError;
+    type Err = hex::FromHexError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        s.from_hex().map(Bytes)
+        hex::decode(s).map(Bytes)
     }
 }
 
 impl fmt::Debug for Bytes {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(&self.0.to_hex::<String>())
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(hex::encode(&self.0).as_str())
     }
 }
 
@@ -111,7 +102,7 @@ impl serde::Serialize for Bytes {
     where
         S: serde::Serializer,
     {
-        let hex = self.0.to_hex::<String>();
+        let hex = hex::encode(&self.0);
         serializer.serialize_str(&hex)
     }
 }
@@ -133,7 +124,7 @@ struct BytesVisitor;
 impl<'de> serde::de::Visitor<'de> for BytesVisitor {
     type Value = Bytes;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(formatter, "a 0x-prefixed hex-encoded vector of bytes")
     }
 
@@ -143,7 +134,7 @@ impl<'de> serde::de::Visitor<'de> for BytesVisitor {
     {
         if v.len() >= 2 {
             Ok(Bytes(
-                FromHex::from_hex(&v[..]).map_err(|_| serde::de::Error::custom("invalid hex"))?,
+                hex::decode(&v[..]).map_err(|_| serde::de::Error::custom("invalid hex"))?,
             ))
         } else {
             Err(serde::de::Error::custom("invalid format"))
@@ -210,13 +201,13 @@ mod tests {
 
     #[test]
     fn test_bytes_from_hex() {
-        let bytes: Bytes = "0145".into();
+        let bytes: Bytes = "0145".parse().unwrap();
         assert_eq!(bytes, vec![0x01, 0x45].into());
     }
 
     #[test]
     fn test_bytes_debug_formatter() {
-        let bytes: Bytes = "0145".into();
+        let bytes: Bytes = "0145".parse().unwrap();
         assert_eq!(format!("{:?}", bytes), String::from("0145"));
     }
 }

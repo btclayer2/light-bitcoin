@@ -17,14 +17,14 @@ pub struct KeyPair {
 }
 
 impl fmt::Debug for KeyPair {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.private.fmt(f)?;
         writeln!(f, "public: {:?}", self.public)
     }
 }
 
 impl fmt::Display for KeyPair {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "private: {}", self.private)?;
         writeln!(f, "public: {}", self.public)
     }

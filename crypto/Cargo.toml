@@ -1,7 +1,7 @@
 [package]
 name = "light-bitcoin-crypto"
 version = "0.2.0"
-authors = ["ChainX <https://github.com/chainx-org>"]
+authors = ["The ChainX Authors"]
 edition = "2018"
 license = "GPL-3.0"
 
@@ -18,13 +18,10 @@ std = [
 ]
 
 [dependencies]
-digest = "0.8"
-ripemd160 = { version = "0.8", default-features = false }
-sha-1 = { version = "0.8", default-features = false }
-sha2 = { version = "0.8", default-features = false }
+digest = "0.9"
+ripemd160 = { version = "0.9", default-features = false }
+sha-1 = { version = "0.9", default-features = false }
+sha2 = { version = "0.9", default-features = false }
 siphasher = { version = "0.3", default-features = false }
 
 light-bitcoin-primitives = { path = "../primitives", default-features = false }
-
-[dev-dependencies]
-hex-literal = "0.3"

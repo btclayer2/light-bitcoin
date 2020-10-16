@@ -21,7 +21,6 @@ use crate::AddressHash;
 
 /// There are two address formats currently in use.
 /// https://bitcoin.org/en/developer-reference#address-conversion
-#[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode)]
@@ -72,7 +71,6 @@ impl Deserializable for Type {
     }
 }
 
-#[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode)]
@@ -118,7 +116,6 @@ impl Deserializable for Network {
 }
 
 /// `AddressHash` with network identifier and format type
-#[rustfmt::skip]
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Default)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Serializable, Deserializable)]
@@ -133,7 +130,7 @@ pub struct Address {
 }
 
 impl fmt::Display for Address {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         bs58::encode(self.layout().0).into_string().fmt(f)
     }
 }
@@ -146,13 +143,6 @@ impl str::FromStr for Address {
             .into_vec()
             .map_err(|_| Error::InvalidAddress)?;
         Address::from_layout(&hex)
-    }
-}
-
-// Only for test
-impl From<&'static str> for Address {
-    fn from(s: &'static str) -> Self {
-        s.parse().unwrap()
     }
 }
 
@@ -218,7 +208,7 @@ impl DisplayLayout for Address {
 
 #[cfg(test)]
 mod tests {
-    use hex_literal::hex;
+    use light_bitcoin_primitives::h160;
 
     use super::*;
 
@@ -227,7 +217,7 @@ mod tests {
         let address = Address {
             kind: Type::P2PKH,
             network: Network::Mainnet,
-            hash: AddressHash::from(hex!["3f4aa1fedf1f54eeb03b759deadb36676b184911"]),
+            hash: h160("3f4aa1fedf1f54eeb03b759deadb36676b184911"),
         };
         assert_eq!(
             address.to_string(),
@@ -237,7 +227,7 @@ mod tests {
         let address = Address {
             kind: Type::P2SH,
             network: Network::Mainnet,
-            hash: AddressHash::from(hex!["d246f700f4969106291a75ba85ad863cae68d667"]),
+            hash: h160("d246f700f4969106291a75ba85ad863cae68d667"),
         };
         assert_eq!(
             address.to_string(),
@@ -250,7 +240,7 @@ mod tests {
         let address = Address {
             kind: Type::P2PKH,
             network: Network::Mainnet,
-            hash: AddressHash::from(hex!["3f4aa1fedf1f54eeb03b759deadb36676b184911"]),
+            hash: h160("3f4aa1fedf1f54eeb03b759deadb36676b184911"),
         };
         assert_eq!(
             address,
@@ -260,7 +250,7 @@ mod tests {
         let address = Address {
             kind: Type::P2SH,
             network: Network::Mainnet,
-            hash: AddressHash::from(hex!["d246f700f4969106291a75ba85ad863cae68d667"]),
+            hash: h160("d246f700f4969106291a75ba85ad863cae68d667"),
         };
         assert_eq!(
             address,

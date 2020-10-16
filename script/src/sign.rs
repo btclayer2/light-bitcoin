@@ -73,10 +73,7 @@ impl Sighash {
         };
 
         // Only exact All | None | Single values are passing this check
-        match u {
-            1 | 2 | 3 => true,
-            _ => false,
-        }
+        matches!(u, 1 | 2 | 3)
     }
 
     /// Creates Sighash from any u, even if is_defined() == false
@@ -382,9 +379,8 @@ fn compute_hash_outputs(
 
 #[cfg(test)]
 mod tests {
-    use hex_literal::hex;
     use light_bitcoin_keys::{Address, Private};
-    use light_bitcoin_primitives::h256_conv_endian_from_str;
+    use light_bitcoin_primitives::{h256, h256_rev};
 
     use super::*;
 
@@ -396,18 +392,20 @@ mod tests {
         let private: Private = "5HusYj2b2x4nroApgfvaSfKYZhRbKFH41bVyPooymbC6KfgSXdD"
             .parse()
             .unwrap();
-        let previous_tx_hash = h256_conv_endian_from_str(
-            "81b4c832d70cb56ff957589752eb4125a4cab78a25a8fc52d6a09e5bd4404d48",
-        );
+        let previous_tx_hash =
+            h256_rev("81b4c832d70cb56ff957589752eb4125a4cab78a25a8fc52d6a09e5bd4404d48");
         let previous_output_index = 0;
         let from: Address = "1MMMMSUb1piy2ufrSguNUdFmAcvqrQF8M5".parse().unwrap();
         let to: Address = "1KKKK6N21XKo48zWKuQKXdvSsCf95ibHFa".parse().unwrap();
-        let previous_output = "76a914df3bd30160e6c6145baaf2c88a8844c13a00d1d588ac".into();
-        let current_output: Bytes = "76a914c8e90996c7c6080ee06284600c684ed904d14c5c88ac".into();
+        let previous_output: Script = "76a914df3bd30160e6c6145baaf2c88a8844c13a00d1d588ac"
+            .parse()
+            .unwrap();
+        let current_output: Bytes = "76a914c8e90996c7c6080ee06284600c684ed904d14c5c88ac"
+            .parse()
+            .unwrap();
         let value = 91234;
-        let expected_signature_hash = H256::from(hex![
-            "5fda68729a6312e17e641e9a49fac2a4a6a680126610af573caab270d232f850"
-        ]);
+        let expected_signature_hash =
+            h256("5fda68729a6312e17e641e9a49fac2a4a6a680126610af573caab270d232f850");
 
         // this is irrelevant
         let kp = KeyPair::from_private(private).unwrap();
@@ -418,7 +416,7 @@ mod tests {
             sequence: 0xffff_ffff,
             previous_output: OutPoint {
                 index: previous_output_index,
-                hash: previous_tx_hash,
+                txid: previous_tx_hash,
             },
         };
 
@@ -444,17 +442,11 @@ mod tests {
         assert_eq!(hash, expected_signature_hash);
     }
 
-    fn run_test_sighash(
-        tx: &'static str,
-        script: &'static str,
-        input_index: usize,
-        hash_type: i32,
-        result: &'static str,
-    ) {
-        let tx: Transaction = tx.into();
+    fn run_test_sighash(tx: &str, script: &str, input_index: usize, hash_type: i32, result: &str) {
+        let tx: Transaction = tx.parse().unwrap();
         let signer: TransactionInputSigner = tx.into();
-        let script: Script = script.into();
-        let expected = h256_conv_endian_from_str(result);
+        let script: Script = script.parse().unwrap();
+        let expected = h256_rev(result);
 
         let sighash = Sighash::from_u32(SignatureVersion::Base, hash_type as u32);
         let hash = signer.signature_hash_original(input_index, &script, hash_type as u32, sighash);

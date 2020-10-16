@@ -1,15 +1,15 @@
 [package]
 name = "light-bitcoin-chain"
 version = "0.2.0"
-authors = ["ChainX <https://github.com/chainx-org>"]
+authors = ["The ChainX Authors"]
 edition = "2018"
 license = "GPL-3.0"
 
 [features]
 default = ["std"]
 std = [
-  "rustc-hex/std",
   "codec/std",
+  "hex/std",
   "serde",
 
   "light-bitcoin-crypto/std",
@@ -18,8 +18,8 @@ std = [
 ]
 
 [dependencies]
-rustc-hex = { version = "2.0", default-features = false }
 codec = { package = "parity-scale-codec", version = "1.3", default-features = false, features = ["derive"] }
+hex = { version = "0.4", default-features = false }
 serde = { version = "1.0", features = ["derive"], optional = true }
 
 light-bitcoin-crypto = { path = "../crypto", default-features = false }

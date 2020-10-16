@@ -14,6 +14,9 @@ fn concat(a: &H256, b: &H256) -> H512 {
 
 /// Calculates the root of the merkle tree
 /// https://en.bitcoin.it/wiki/Protocol_documentation#Merkle_Trees
+///
+/// Indicating user-visible serializations of this hash should be backward.
+/// For some reason Satoshi decided this for `Double Sha256 Hash`.
 pub fn merkle_root(hashes: &[H256]) -> H256 {
     if hashes.len() == 1 {
         return hashes[0];
@@ -36,58 +39,45 @@ pub fn merkle_root(hashes: &[H256]) -> H256 {
 }
 
 /// Calculate merkle tree node hash
+///
+/// Indicating user-visible serializations of this hash should be backward.
+/// For some reason Satoshi decided this for `Double Sha256 Hash`.
 pub fn merkle_node_hash(left: &H256, right: &H256) -> H256 {
     dhash256(concat(left, right).as_bytes())
 }
 
 #[cfg(test)]
 mod tests {
-    use light_bitcoin_primitives::h256_conv_endian_from_str;
+    use light_bitcoin_primitives::h256_rev;
 
     use super::*;
 
     // block 80_000
     // https://blockchain.info/block/000000000043a8c0fd1d6f726790caa2a406010d19efd2780db27bdbbd93baf6
+    // block 80_001
+    // https://blockchain.info/block/00000000000036312a44ab7711afa46f475913fbd9727cf508ed4af3bc933d16
     #[test]
-    fn test_merkle_root_with_2_hashes() {
-        let tx1 = h256_conv_endian_from_str(
-            "c06fbab289f723c6261d3030ddb6be121f7d2508d77862bb1e484f5cd7f92b25",
-        );
-        let tx2 = h256_conv_endian_from_str(
-            "5a4ebf66822b0b2d56bd9dc64ece0bc38ee7844a23ff1d7320a88c5fdb2ad3e2",
-        );
-        let expected = h256_conv_endian_from_str(
-            "8fb300e3fdb6f30a4c67233b997f99fdd518b968b9a3fd65857bfe78b2600719",
-        );
-
-        let result = merkle_root(&[tx1, tx2]);
-        assert_eq!(result, expected);
-    }
-
-    // Test with 5 hashes
-    #[test]
-    fn test_merkle_root_with_5_hashes() {
-        let mut vec = Vec::new();
-        vec.push(h256_conv_endian_from_str(
-            "1da63abbc8cc611334a753c4c31de14d19839c65b2b284202eaf3165861fb58d",
-        ));
-        vec.push(h256_conv_endian_from_str(
-            "26c6a6f18d13d2f0787c1c0f3c5e23cf5bc8b3de685dd1923ae99f44c5341c0c",
-        ));
-        vec.push(h256_conv_endian_from_str(
-            "513507fa209db823541caf7b9742bb9999b4a399cf604ba8da7037f3acced649",
-        ));
-        vec.push(h256_conv_endian_from_str(
-            "6bf5d2e02b8432d825c5dff692d435b6c5f685d94efa6b3d8fb818f2ecdcfb66",
-        ));
-        vec.push(h256_conv_endian_from_str(
-            "8a5ad423bc54fb7c76718371fd5a73b8c42bf27beaf2ad448761b13bcafb8895",
-        ));
-        let result = merkle_root(&vec);
-
-        let expected = h256_conv_endian_from_str(
-            "3a432cd416ea05b1be4ec1e72d7952d08670eaa5505b6794a186ddb253aa62e6",
-        );
-        assert_eq!(result, expected);
+    fn test_merkle_root() {
+        let cases = vec![
+            (
+                vec![
+                    h256_rev("c06fbab289f723c6261d3030ddb6be121f7d2508d77862bb1e484f5cd7f92b25"),
+                    h256_rev("5a4ebf66822b0b2d56bd9dc64ece0bc38ee7844a23ff1d7320a88c5fdb2ad3e2"),
+                ],
+                h256_rev("8fb300e3fdb6f30a4c67233b997f99fdd518b968b9a3fd65857bfe78b2600719"),
+            ),
+            (
+                vec![
+                    h256_rev("fd859b8a041591c4a759fc5e0a1eba3776739eef2066823a15fa3c2f2f0eb15e"),
+                    h256_rev("10b6fe7a18750cd43c847ed1d82daf8f3ee19f885da2b770ecfa22e961a5b829"),
+                    h256_rev("73496b488e2fccace327a81c6887ca08c3551c42f9adfe3984104390859bd794"),
+                ],
+                h256_rev("876ec557b3686aec47a98587420373a29f36c1fbc119a7bc6807163164a5fb8a"),
+            ),
+        ];
+        for (txs, expected) in cases {
+            let got = merkle_root(&txs);
+            assert_eq!(got, expected);
+        }
     }
 }

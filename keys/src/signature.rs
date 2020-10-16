@@ -3,11 +3,10 @@
 //! http://bitcoin.stackexchange.com/q/12554/40688
 
 #[cfg(not(feature = "std"))]
-use alloc::{string::String, vec::Vec};
+use alloc::vec::Vec;
 use core::{fmt, ops, str};
 
 use light_bitcoin_primitives::H520;
-use rustc_hex::{FromHex, ToHex};
 
 use crate::error::Error;
 
@@ -15,14 +14,14 @@ use crate::error::Error;
 pub struct Signature(Vec<u8>);
 
 impl fmt::Debug for Signature {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.to_hex::<String>().fmt(f)
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        hex::encode(&self.0).fmt(f)
     }
 }
 
 impl fmt::Display for Signature {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.to_hex::<String>().fmt(f)
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        hex::encode(&self.0).fmt(f)
     }
 }
 
@@ -34,19 +33,17 @@ impl ops::Deref for Signature {
     }
 }
 
+// mainly use for test
 impl str::FromStr for Signature {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Error> {
-        let vec = s.from_hex().map_err(|_| Error::InvalidSignature)?;
-        Ok(Signature(vec))
-    }
-}
-
-// Only for test
-impl From<&'static str> for Signature {
-    fn from(s: &'static str) -> Self {
-        s.parse().unwrap()
+        let bytes = if s.starts_with("0x") {
+            hex::decode(&s.as_bytes()[2..]).map_err(|_| Error::InvalidSignature)?
+        } else {
+            hex::decode(s).map_err(|_| Error::InvalidSignature)?
+        };
+        Ok(Signature(bytes))
     }
 }
 
@@ -79,13 +76,13 @@ impl<'a> From<&'a [u8]> for Signature {
 pub struct CompactSignature(H520);
 
 impl fmt::Debug for CompactSignature {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "{}", self.0)
     }
 }
 
 impl fmt::Display for CompactSignature {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "{}", self.0)
     }
 }
@@ -98,21 +95,23 @@ impl ops::Deref for CompactSignature {
     }
 }
 
+// mainly use for test
 impl str::FromStr for CompactSignature {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Error> {
-        match FromHex::from_hex::<Vec<u8>>(s) {
-            Ok(hash) => Ok(CompactSignature(H520::from_slice(&hash))),
-            _ => Err(Error::InvalidSignature),
-        }
-    }
-}
-
-// Only for test
-impl From<&'static str> for CompactSignature {
-    fn from(s: &'static str) -> Self {
-        s.parse().unwrap()
+        let bytes = if s.starts_with("0x") {
+            if s.len() != H520::len_bytes() * 2 + 2 {
+                return Err(Error::InvalidSignature);
+            }
+            hex::decode(&s.as_bytes()[2..]).map_err(|_| Error::InvalidSignature)?
+        } else {
+            if s.len() != H520::len_bytes() * 2 {
+                return Err(Error::InvalidSignature);
+            }
+            hex::decode(s).map_err(|_| Error::InvalidSignature)?
+        };
+        Ok(CompactSignature(H520::from_slice(&bytes)))
     }
 }
 

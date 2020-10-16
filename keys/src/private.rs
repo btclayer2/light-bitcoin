@@ -25,7 +25,7 @@ pub struct Private {
 }
 
 impl fmt::Debug for Private {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "network: {:?}", self.network)?;
         writeln!(f, "secret: {}", self.secret)?;
         writeln!(f, "compressed: {}", self.compressed)
@@ -33,7 +33,7 @@ impl fmt::Debug for Private {
 }
 
 impl fmt::Display for Private {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         bs58::encode(self.layout().as_slice()).into_string().fmt(f)
     }
 }
@@ -46,13 +46,6 @@ impl str::FromStr for Private {
             .into_vec()
             .map_err(|_| Error::InvalidPrivate)?;
         Private::from_layout(&hex)
-    }
-}
-
-// Only for test
-impl From<&'static str> for Private {
-    fn from(s: &'static str) -> Self {
-        s.parse().unwrap()
     }
 }
 
@@ -139,7 +132,7 @@ impl DisplayLayout for Private {
 
 #[cfg(test)]
 mod tests {
-    use light_bitcoin_primitives::h256_conv_endian_from_str;
+    use light_bitcoin_primitives::h256_rev;
 
     use super::*;
 
@@ -147,9 +140,7 @@ mod tests {
     fn test_private_to_string() {
         let private = Private {
             network: Network::Mainnet,
-            secret: h256_conv_endian_from_str(
-                "063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5",
-            ),
+            secret: h256_rev("063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5"),
             compressed: false,
         };
 
@@ -163,9 +154,7 @@ mod tests {
     fn test_private_from_str() {
         let private = Private {
             network: Network::Mainnet,
-            secret: h256_conv_endian_from_str(
-                "063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5",
-            ),
+            secret: h256_rev("063377054c25f98bc538ac8dd2cf9064dd5d253a725ece0628a34e2f84803bd5"),
             compressed: false,
         };
 

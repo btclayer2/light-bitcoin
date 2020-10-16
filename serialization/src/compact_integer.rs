@@ -12,7 +12,7 @@ use crate::stream::{Serializable, Stream};
 pub struct CompactInteger(u64);
 
 impl fmt::Display for CompactInteger {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
     }
 }

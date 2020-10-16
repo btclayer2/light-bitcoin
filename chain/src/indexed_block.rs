@@ -1,13 +1,12 @@
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
+use core::str;
 
 use light_bitcoin_primitives::H256;
 use light_bitcoin_serialization::{
     deserialize, serialized_list_size, serialized_list_size_with_flags, Deserializable,
     Serializable, SERIALIZE_TRANSACTION_WITNESS,
 };
-
-use rustc_hex::FromHex;
 
 use crate::block::Block;
 use crate::indexed_header::IndexedBlockHeader;
@@ -33,10 +32,13 @@ impl From<Block> for IndexedBlock {
     }
 }
 
-// Only for test
-impl From<&'static str> for IndexedBlock {
-    fn from(s: &'static str) -> Self {
-        deserialize(&s.from_hex::<Vec<u8>>().unwrap() as &[u8]).unwrap()
+// mainly use for test
+impl str::FromStr for IndexedBlock {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let bytes = hex::decode(s).map_err(|_| "hex decode error")?;
+        deserialize(bytes.as_slice()).map_err(|_| "deserialize error")
     }
 }
 
@@ -53,7 +55,7 @@ impl IndexedBlock {
     /// Hashes block header + transactions.
     pub fn from_raw(block: Block) -> Self {
         let Block {
-            block_header,
+            header: block_header,
             transactions,
         } = block;
         Self::new(
@@ -136,14 +138,14 @@ mod tests {
 
     #[test]
     fn size_with_witness_not_equal_to_size() {
-        let block_without_witness: IndexedBlock = "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000".into();
+        let block_without_witness: IndexedBlock = "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000".parse().unwrap();
         assert_eq!(
             block_without_witness.size(),
             block_without_witness.size_with_witness()
         );
 
         // bip143 block
-        let block_with_witness: IndexedBlock = "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000010100000000000000000000000000000000000000000000000000000000000000000000000000000000000001010000000000".into();
+        let block_with_witness: IndexedBlock = "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000010100000000000000000000000000000000000000000000000000000000000000000000000000000000000001010000000000".parse().unwrap();
         assert_ne!(
             block_with_witness.size(),
             block_with_witness.size_with_witness()

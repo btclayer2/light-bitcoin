@@ -15,7 +15,7 @@ pub enum Error {
 impl std::error::Error for Error {}
 
 impl core::fmt::Display for Error {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let msg = match *self {
             Error::InvalidPublic => "Invalid Public",
             Error::InvalidSecret => "Invalid Secret",

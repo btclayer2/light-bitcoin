@@ -1,7 +1,7 @@
 [package]
 name = "light-bitcoin"
 version = "0.2.0"
-authors = ["ChainX <https://github.com/chainx-org>"]
+authors = ["The ChainX Authors"]
 description = "A light bitcoin library inherited from parity-bitcoin, with `no_std` support."
 edition = "2018"
 license = "GPL-3.0"

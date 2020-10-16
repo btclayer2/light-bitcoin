@@ -1,9 +1,9 @@
 use core::fmt;
 
-use light_bitcoin_primitives::{h256_conv_endian, io, H256};
+use light_bitcoin_primitives::{hash_rev, io, H256};
 use light_bitcoin_serialization::{Deserializable, Reader};
 
-use crate::block_header::{block_header_hash, BlockHeader};
+use crate::block_header::BlockHeader;
 use crate::read_and_hash::ReadAndHash;
 
 #[derive(Ord, PartialOrd, Eq, Copy, Clone, Default)]
@@ -19,9 +19,9 @@ impl PartialEq for IndexedBlockHeader {
 }
 
 impl fmt::Debug for IndexedBlockHeader {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("IndexedBlockHeader")
-            .field("hash", &h256_conv_endian(self.hash))
+            .field("hash", &hash_rev(self.hash))
             .field("raw", &self.raw)
             .finish()
     }
@@ -42,7 +42,7 @@ impl IndexedBlockHeader {
     ///
     /// Hashes the contents of block header.
     pub fn from_raw(header: BlockHeader) -> Self {
-        IndexedBlockHeader::new(block_header_hash(&header), header)
+        IndexedBlockHeader::new(header.hash(), header)
     }
 }
 

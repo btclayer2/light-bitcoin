@@ -1,10 +1,10 @@
 use core::fmt;
 
-use light_bitcoin_primitives::{h256_conv_endian, io, H256};
+use light_bitcoin_primitives::{hash_rev, io, H256};
 use light_bitcoin_serialization::{Deserializable, Reader};
 
 use crate::read_and_hash::ReadAndHash;
-use crate::transaction::{transaction_hash, Transaction};
+use crate::transaction::Transaction;
 
 #[derive(Ord, PartialOrd, Eq, Clone, Default)]
 pub struct IndexedTransaction {
@@ -19,9 +19,9 @@ impl PartialEq for IndexedTransaction {
 }
 
 impl fmt::Debug for IndexedTransaction {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("IndexedTransaction")
-            .field("hash", &h256_conv_endian(self.hash))
+            .field("hash", &hash_rev(self.hash))
             .field("raw", &self.raw)
             .finish()
     }
@@ -52,7 +52,7 @@ impl IndexedTransaction {
         Transaction: From<T>,
     {
         let transaction = Transaction::from(transaction);
-        Self::new(transaction_hash(&transaction), transaction)
+        Self::new(transaction.hash(), transaction)
     }
 }
 
