@@ -10,23 +10,15 @@ use crate::private::Private;
 use crate::public::Public;
 use crate::Secret;
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Debug, Copy, Clone, Default)]
 pub struct KeyPair {
     private: Private,
     public: Public,
 }
 
-impl fmt::Debug for KeyPair {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.private.fmt(f)?;
-        writeln!(f, "public: {:?}", self.public)
-    }
-}
-
 impl fmt::Display for KeyPair {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "private: {}", self.private)?;
-        writeln!(f, "public: {}", self.public)
+        fmt::Debug::fmt(self, f)
     }
 }
 

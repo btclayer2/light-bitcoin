@@ -12,8 +12,9 @@ use crate::signature::{CompactSignature, Signature};
 use crate::{AddressHash, Message};
 
 /// Secret public key
-#[derive(Ord, PartialOrd, Eq, Copy, Clone)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(untagged))]
 #[derive(Encode, Decode)]
 pub enum Public {
     /// Normal version of public key
@@ -22,28 +23,20 @@ pub enum Public {
     Compressed(H264),
 }
 
-impl PartialEq for Public {
-    fn eq(&self, other: &Self) -> bool {
-        let s_slice: &[u8] = self;
-        let o_slice: &[u8] = other;
-        s_slice == o_slice
-    }
-}
-
 impl fmt::Debug for Public {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            Public::Normal(ref hash) => writeln!(f, "normal: {}", hash),
-            Public::Compressed(ref hash) => writeln!(f, "compressed: {}", hash),
+        match self {
+            Public::Normal(hash) => write!(f, "{:?}", hash),
+            Public::Compressed(hash) => write!(f, "{:?}", hash),
         }
     }
 }
 
 impl fmt::Display for Public {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            Public::Normal(ref hash) => writeln!(f, "normal: {}", hash),
-            Public::Compressed(ref hash) => writeln!(f, "compressed: {}", hash),
+        match self {
+            Public::Normal(hash) => write!(f, "{}", hash),
+            Public::Compressed(hash) => write!(f, "{}", hash),
         }
     }
 }
@@ -52,9 +45,9 @@ impl ops::Deref for Public {
     type Target = [u8];
 
     fn deref(&self) -> &Self::Target {
-        match *self {
-            Public::Normal(ref hash) => hash.as_bytes(),
-            Public::Compressed(ref hash) => hash.as_bytes(),
+        match self {
+            Public::Normal(hash) => hash.as_bytes(),
+            Public::Compressed(hash) => hash.as_bytes(),
         }
     }
 }
@@ -121,4 +114,20 @@ impl Public {
         };
         Ok(public)
     }
+}
+
+#[test]
+fn test_serde_public() {
+    #[derive(Ord, PartialOrd, Eq, PartialEq, Debug, Copy, Clone)]
+    #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+    struct Test(Public);
+
+    let pubkey = Test(Public::Compressed(H264::from([1u8; 33])));
+    let ser = serde_json::to_string(&pubkey).unwrap();
+    assert_eq!(
+        ser,
+        "\"0x010101010101010101010101010101010101010101010101010101010101010101\""
+    );
+    let de = serde_json::from_str::<Test>(&ser).unwrap();
+    assert_eq!(de, pubkey);
 }

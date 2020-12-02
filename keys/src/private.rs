@@ -14,7 +14,7 @@ use crate::signature::{CompactSignature, Signature};
 use crate::{Message, Secret};
 
 /// Secret with additional network identifier and format type
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Debug, Copy, Clone, Default)]
 pub struct Private {
     /// The network on which this key should be used.
     pub network: Network,
@@ -22,14 +22,6 @@ pub struct Private {
     pub secret: Secret,
     /// True if this private key represents a compressed address.
     pub compressed: bool,
-}
-
-impl fmt::Debug for Private {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "network: {:?}", self.network)?;
-        writeln!(f, "secret: {}", self.secret)?;
-        writeln!(f, "compressed: {}", self.compressed)
-    }
 }
 
 impl fmt::Display for Private {

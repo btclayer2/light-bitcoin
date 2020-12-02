@@ -23,32 +23,32 @@ pub fn hash_rev<T: AsMut<[u8]>>(mut hash: T) -> T {
 
 /// `s` must be 10 (with 0x prefix) or 8 (without 0x prefix) chars
 pub fn h32(s: &str) -> H32 {
-    let hex = if s.starts_with("0x") {
-        hex::decode(&s[2..]).unwrap()
+    let data = if let Some(hex) = s.strip_prefix("0x") {
+        hex::decode(hex).unwrap()
     } else {
         hex::decode(s).unwrap()
     };
-    H32::from_slice(&hex)
+    H32::from_slice(&data)
 }
 
 /// `s` must be 42 (with 0x prefix) or 40 (without 0x prefix) chars
 pub fn h160(s: &str) -> H160 {
-    let hex = if s.starts_with("0x") {
-        hex::decode(&s[2..]).unwrap()
+    let data = if let Some(hex) = s.strip_prefix("0x") {
+        hex::decode(hex).unwrap()
     } else {
         hex::decode(s).unwrap()
     };
-    H160::from_slice(&hex)
+    H160::from_slice(&data)
 }
 
 /// `s` must be 66 (with 0x prefix) or 64 (without 0x prefix) chars
 pub fn h256(s: &str) -> H256 {
-    let hex = if s.starts_with("0x") {
-        hex::decode(&s[2..]).unwrap()
+    let data = if let Some(hex) = s.strip_prefix("0x") {
+        hex::decode(hex).unwrap()
     } else {
         hex::decode(s).unwrap()
     };
-    H256::from_slice(&hex)
+    H256::from_slice(&data)
 }
 
 /// `s` must be 66 (with 0x prefix) or 64 (without 0x prefix) chars
@@ -58,32 +58,32 @@ pub fn h256_rev(s: &str) -> H256 {
 
 /// `s` must be 68 (with 0x prefix) or 66 (without 0x prefix) chars
 pub fn h264(s: &str) -> H264 {
-    let hex = if s.starts_with("0x") {
-        hex::decode(&s[2..]).unwrap()
+    let data = if let Some(hex) = s.strip_prefix("0x") {
+        hex::decode(hex).unwrap()
     } else {
         hex::decode(s).unwrap()
     };
-    H264::from_slice(&hex)
+    H264::from_slice(&data)
 }
 
 /// `s` must be 130 (with 0x prefix) or 128 (without 0x prefix) chars
 pub fn h512(s: &str) -> H512 {
-    let hex = if s.starts_with("0x") {
-        hex::decode(&s[2..]).unwrap()
+    let data = if let Some(hex) = s.strip_prefix("0x") {
+        hex::decode(hex).unwrap()
     } else {
         hex::decode(s).unwrap()
     };
-    H512::from_slice(&hex)
+    H512::from_slice(&data)
 }
 
 /// `s` must be 132 (with 0x prefix) or 130 (without 0x prefix) chars
 pub fn h520(s: &str) -> H520 {
-    let hex = if s.starts_with("0x") {
-        hex::decode(&s[2..]).unwrap()
+    let data = if let Some(hex) = s.strip_prefix("0x") {
+        hex::decode(hex).unwrap()
     } else {
         hex::decode(s).unwrap()
     };
-    H520::from_slice(&hex)
+    H520::from_slice(&data)
 }
 
 #[cfg(test)]

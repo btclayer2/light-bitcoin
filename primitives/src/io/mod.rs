@@ -33,7 +33,7 @@ where
         };
         let ret = f(g.buf);
         if str::from_utf8(&g.buf[g.len..]).is_err() {
-            ret.and_then(|_| Err(Error::InvalidData))
+            ret.and(Err(Error::InvalidData))
         } else {
             g.len = g.buf.len();
             ret

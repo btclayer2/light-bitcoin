@@ -29,3 +29,6 @@ serde = { version = "1.0", features = ["derive"], optional = true }
 light-bitcoin-crypto = { path = "../crypto", default-features = false }
 light-bitcoin-primitives = { path = "../primitives", default-features = false }
 light-bitcoin-serialization = { path = "../serialization", default-features = false, features = ["derive"] }
+
+[dev-dependencies]
+serde_json = "1.0"
