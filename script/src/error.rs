@@ -72,7 +72,7 @@ impl std::error::Error for Error {}
 
 impl core::fmt::Display for Error {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match *self {
+        match self {
             Error::Unknown => "Unknown error".fmt(f),
             Error::EvalFalse => "Script evaluated to false".fmt(f),
             Error::ReturnOpcode => "Used return opcode".fmt(f),
@@ -96,7 +96,7 @@ impl core::fmt::Display for Error {
 
             // Logical/Format/Canonical errors.
             Error::BadOpcode => "Bad Opcode".fmt(f),
-            Error::DisabledOpcode(ref opcode) => writeln!(f, "Disabled Opcode: {:?}", opcode),
+            Error::DisabledOpcode(opcode) => write!(f, "Disabled Opcode: {:?}", opcode),
             Error::InvalidStackOperation => "Invalid stack operation".fmt(f),
             Error::InvalidAltstackOperation => "Invalid altstack operation".fmt(f),
             Error::UnbalancedConditional => "Unbalanced conditional".fmt(f),
