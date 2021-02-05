@@ -25,5 +25,5 @@ light-bitcoin-serialization = { path = "../serialization", default-features = fa
 [dev-dependencies]
 hashbrown = "0.9"
 hex = "0.4"
-rand = "0.7"
+rand = "0.8"
 light-bitcoin-crypto = { path = "../crypto" }
