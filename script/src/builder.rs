@@ -66,7 +66,7 @@ impl Builder {
     /// Appends bytes push operation to the end od script
     pub fn push_bytes(mut self, bytes: &[u8]) -> Self {
         let len = bytes.len();
-        if len < 1 || len > 75 {
+        if !(1..=75).contains(&len) {
             panic!("Cannot push {} bytes", len);
         }
 
@@ -108,7 +108,7 @@ impl Builder {
     /// Appends `OP_RETURN` operation to the end of script
     pub fn return_bytes(mut self, bytes: &[u8]) -> Self {
         let len = bytes.len();
-        if len < 1 || len > 75 {
+        if !(1..=75).contains(&len) {
             panic!("Cannot push {} bytes,", len);
         }
 

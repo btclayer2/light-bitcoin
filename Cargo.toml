@@ -38,5 +38,4 @@ members = [
   "script",
   "serialization",
   "serialization-derive",
-  "wasm-test",
 ]

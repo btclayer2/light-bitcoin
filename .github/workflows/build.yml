@@ -26,43 +26,43 @@ jobs:
           override: true
           components: rustfmt, clippy
 
-      - name: Run cargo fmt
+      - name: Check Code Format
         uses: actions-rs/cargo@v1
         with:
           command: fmt
           args: --all -- --check
 
-      - name: Run cargo clippy
+      - name: Code Lint
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --all --all-targets --exclude light-bitcoin-wasm-test -- -D warnings
+          args: --all --all-targets -- -D warnings
 
-  wasm:
-    name: Check Wasm
+  no_std:
+    name: Check no_std
     strategy:
       matrix:
         platform: [ubuntu-latest, macos-latest]
-        toolchain: [nightly]
+        toolchain: [stable]
     runs-on: ${{ matrix.platform }}
 
     steps:
-      - name: Checkout sources
+      - name: Checkout Sources
         uses: actions/checkout@v2
 
-      - name: Install Rust toolchain
+      - name: Install Rust Toolchain
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: ${{ matrix.toolchain }}
-          target: wasm32-unknown-unknown
+          target: thumbv6m-none-eabi
           override: true
 
-      - name: Build Wasm Test Suite
+      - name: Build
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --target wasm32-unknown-unknown --no-default-features -p light-bitcoin-wasm-test
+          args: --no-default-features --target thumbv6m-none-eabi
 
   native:
     name: Test Native
@@ -73,40 +73,40 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     steps:
-      - name: Checkout sources
+      - name: Checkout Sources
         uses: actions/checkout@v2
 
-      - name: Install Rust toolchain
+      - name: Install Rust Toolchain
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: ${{ matrix.toolchain }}
           override: true
 
-      - name: Run cargo test
+      - name: Test
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all --exclude light-bitcoin-wasm-test
+          args: --all
 
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout sources
+      - name: Checkout Sources
         uses: actions/checkout@v2
 
-      - name: Install stable Rust toolchain
+      - name: Install Rust Toolchain
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
           override: true
 
-      - name: Run cargo-tarpaulin
+      - name: Generate Code Coverage
         uses: actions-rs/tarpaulin@v0.1
         with:
-          args: --all --exclude light-bitcoin-wasm-test
+          args: --all
 
-      - name: Upload to codecov.io
+      - name: Upload Code Coverage
         uses: codecov/codecov-action@v1
