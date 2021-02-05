@@ -5,7 +5,7 @@
 
 [ga-svg]: https://github.com/chainx-org/light-bitcoin/workflows/build/badge.svg
 [ga-url]: https://github.com/chainx-org/light-bitcoin/actions
-[codecov-svg]: https://img.shields.io/codecov/c/github/chainx-org/light-bitcoin?style=flat-square
+[codecov-svg]: https://img.shields.io/codecov/c/github/chainx-org/light-bitcoin
 [codecov-url]: https://codecov.io/gh/chainx-org/light-bitcoin
 
 A light bitcoin library with `no_std` support.
