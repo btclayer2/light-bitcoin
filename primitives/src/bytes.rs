@@ -134,7 +134,7 @@ impl<'de> serde::de::Visitor<'de> for BytesVisitor {
     {
         if v.len() >= 2 {
             Ok(Bytes(
-                hex::decode(&v[..]).map_err(|_| serde::de::Error::custom("invalid hex"))?,
+                hex::decode(v).map_err(|_| serde::de::Error::custom("invalid hex"))?,
             ))
         } else {
             Err(serde::de::Error::custom("invalid format"))

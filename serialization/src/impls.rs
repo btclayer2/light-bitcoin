@@ -120,7 +120,7 @@ impl Deserializable for i32 {
     where
         T: io::Read,
     {
-        Ok(reader.read_i32::<LittleEndian>()?)
+        reader.read_i32::<LittleEndian>()
     }
 }
 
@@ -130,7 +130,7 @@ impl Deserializable for i64 {
     where
         T: io::Read,
     {
-        Ok(reader.read_i64::<LittleEndian>()?)
+        reader.read_i64::<LittleEndian>()
     }
 }
 
@@ -140,7 +140,7 @@ impl Deserializable for u8 {
     where
         T: io::Read,
     {
-        Ok(reader.read_u8()?)
+        reader.read_u8()
     }
 }
 
@@ -150,7 +150,7 @@ impl Deserializable for u16 {
     where
         T: io::Read,
     {
-        Ok(reader.read_u16::<LittleEndian>()?)
+        reader.read_u16::<LittleEndian>()
     }
 }
 
@@ -160,7 +160,7 @@ impl Deserializable for u32 {
     where
         T: io::Read,
     {
-        Ok(reader.read_u32::<LittleEndian>()?)
+        reader.read_u32::<LittleEndian>()
     }
 }
 
@@ -170,7 +170,7 @@ impl Deserializable for u64 {
     where
         T: io::Read,
     {
-        Ok(reader.read_u64::<LittleEndian>()?)
+        reader.read_u64::<LittleEndian>()
     }
 }
 

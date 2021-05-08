@@ -12,7 +12,6 @@ std = [
   "fixed-hash/std",
   "hex/std",
   "serde",
-
   "impl-serde",
   "impl-codec/std",
   "primitive-types/std",
@@ -22,7 +21,7 @@ std = [
 [dependencies]
 byteorder = { version = "1.3", default-features = false }
 fixed-hash = { version = "0.7", default-features = false }
-hex = { version = "0.4", default-features = false }
+hex = { version = "0.4", default-features = false, features = ["alloc"] }
 serde = { version = "1.0", features = ["derive"], optional = true }
 
 impl-serde = { version = "0.3", optional = true }
