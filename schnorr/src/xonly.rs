@@ -42,10 +42,10 @@ impl HashInto for XOnly {
     }
 }
 
-impl Into<Scalar> for XOnly {
-    fn into(self) -> Scalar {
+impl From<XOnly> for Scalar {
+    fn from(xonly: XOnly) -> Self {
         let mut scalar = Scalar::default();
-        let _ = scalar.set_b32(self.as_bytes());
+        let _ = scalar.set_b32(xonly.as_bytes());
         scalar
     }
 }

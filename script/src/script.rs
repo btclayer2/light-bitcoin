@@ -1026,7 +1026,7 @@ OP_ADD
     #[test]
     fn redeem_script() {
         let script: Script = REDEEM.parse().unwrap();
-        assert_eq!(script.is_multisig_script(), true);
+        assert!(script.is_multisig_script());
     }
 
     #[test]
