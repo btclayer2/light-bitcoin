@@ -329,7 +329,7 @@ impl Deserializable for Transaction {
 
 impl codec::Encode for Transaction {
     fn encode(&self) -> Vec<u8> {
-        let value = serialize::<Transaction>(&self);
+        let value = serialize::<Transaction>(self);
         value.encode()
     }
 }
