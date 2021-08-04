@@ -132,10 +132,17 @@ mod tests {
         let m = Message::parse_slice(msg.as_slice()).unwrap();
         let a = Message::parse_slice(aux.as_slice()).unwrap();
 
-        let seckey = SecretKey::parse_slice(&Scalar::from_int(1).b32()).unwrap();
+        let mut sec_slice = [0u8; 32];
+        sec_slice.copy_from_slice(
+            &hex::decode("08a345c3478a200f1cb2709165b3ef556fd493cee6e64af5637cd57fb7adc1a2")
+                .unwrap()[..],
+        );
+        let seckey = SecretKey::parse_slice(&sec_slice).unwrap();
+
         let pubkey = PublicKey::from_secret_key(&seckey);
 
         let sig = sign_with_aux(m, a, seckey, pubkey);
-        println!("{:?}", sig);
+
+        assert_eq!(hex::encode(sig.to_bytes()), "7a2724ce5b5e9f53f81e377e614fafd8f44902711c3eb641c7c1091aaa1aa08a63a6cd5fd3b636c0f48b4a957cf9ac1e576912d20d898f274041986e1e842bd7");
     }
 }

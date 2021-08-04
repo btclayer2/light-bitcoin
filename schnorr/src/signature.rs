@@ -1,8 +1,10 @@
+use core::fmt;
+
 use secp256k1::curve::Scalar;
 
 use crate::xonly::XOnly;
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Eq, PartialEq, Clone)]
 pub struct Signature {
     pub rx: XOnly,
     pub s: Scalar,
@@ -30,5 +32,11 @@ impl Signature {
         let _ = s.set_b32(&s_bytes);
 
         XOnly::from_bytes(rx_bytes).map(|rx| Signature { rx, s })
+    }
+}
+
+impl fmt::Debug for Signature {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        hex::encode(self.to_bytes()).fmt(f)
     }
 }
