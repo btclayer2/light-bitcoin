@@ -101,7 +101,7 @@ pub fn verify(sig: &Signature, msg: &Message, pubkey: PublicKey) -> bool {
 
     let pkx = XOnly::from_field(&mut P.x).unwrap();
 
-    let h = schnorrsig_challenge(&rx, &pkx, &msg);
+    let h = schnorrsig_challenge(rx, &pkx, msg);
 
     let mut rj = Jacobian::default();
     ECMULT_CONTEXT.ecmult(&mut rj, &pj, &h, s);
