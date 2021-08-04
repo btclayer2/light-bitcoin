@@ -1,4 +1,4 @@
-use secp256k1::curve::{Affine, Field, Scalar};
+use secp256k1::curve::{Affine, Field};
 
 use crate::taggedhash::HashInto;
 
@@ -39,13 +39,5 @@ impl XOnly {
 impl HashInto for XOnly {
     fn hash_into(&self, hash: &mut impl digest::Digest) {
         hash.update(self.as_bytes())
-    }
-}
-
-impl From<XOnly> for Scalar {
-    fn from(xonly: XOnly) -> Self {
-        let mut scalar = Scalar::default();
-        let _ = scalar.set_b32(xonly.as_bytes());
-        scalar
     }
 }

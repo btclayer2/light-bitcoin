@@ -3,13 +3,14 @@
 use core::ops::Neg;
 
 use crate::{
+    signature::Signature,
     taggedhash::{HashAdd, Tagged},
     xonly::XOnly,
 };
 use digest::Digest;
 use secp256k1::{
-    curve::{Affine, Scalar},
-    Message, PublicKey, SecretKey, Signature,
+    curve::{Affine, Jacobian, Scalar, ECMULT_CONTEXT},
+    Message, PublicKey, SecretKey,
 };
 
 /// Construct schnorr sig challenge
@@ -59,8 +60,13 @@ pub fn nonce_function_bip340(
     (k.into(), R.into())
 }
 
-/// Sign a message using the secret key
-pub fn sign(msg: Message, aux: Message, seckey: SecretKey, pubkey: PublicKey) -> Signature {
+/// Sign a message using the secret key with aux
+pub fn sign_with_aux(
+    msg: Message,
+    aux: Message,
+    seckey: SecretKey,
+    pubkey: PublicKey,
+) -> Signature {
     let mut pk: Affine = pubkey.into();
 
     let pkx = XOnly::from_field(&mut pk.x).unwrap();
@@ -77,7 +83,38 @@ pub fn sign(msg: Message, aux: Message, seckey: SecretKey, pubkey: PublicKey) ->
     let s = k_even + h * seckey.into();
 
     // Generate sig = R_x|s
-    Signature { r: rx.into(), s }
+    Signature { rx, s }
+}
+
+/// Sign a message with context
+pub fn sign_with_context() {
+    unimplemented!()
+}
+
+/// Verify a schnorr signature
+pub fn verify(sig: &Signature, msg: &Message, pubkey: PublicKey) -> bool {
+    let (rx, s) = sig.as_tuple();
+
+    let pj = Jacobian::default();
+
+    let mut P: Affine = pubkey.into();
+
+    let pkx = XOnly::from_field(&mut P.x).unwrap();
+
+    let h = schnorrsig_challenge(&rx, &pkx, &msg);
+
+    let mut rj = Jacobian::default();
+    ECMULT_CONTEXT.ecmult(&mut rj, &pj, &h, s);
+
+    let mut R = Affine::from_gej(&rj);
+
+    if R.is_infinity() {
+        return false;
+    }
+    // S == R + h * P
+    let Rx = XOnly::from_field(&mut R.x).unwrap();
+
+    *rx == Rx
 }
 
 #[cfg(test)]
@@ -88,7 +125,7 @@ mod tests {
 
     /// Check if the function is available
     #[test]
-    fn test_sign() {
+    fn test_sign_with_aux() {
         let msg = Sha256::digest(b"message");
         let aux = Sha256::digest(b"random auxiliary data");
 
@@ -98,7 +135,7 @@ mod tests {
         let seckey = SecretKey::parse_slice(&Scalar::from_int(1).b32()).unwrap();
         let pubkey = PublicKey::from_secret_key(&seckey);
 
-        let sig = sign(m, a, seckey, pubkey);
-        println!("{:?}", sig.serialize());
+        let sig = sign_with_aux(m, a, seckey, pubkey);
+        println!("{:?}", sig);
     }
 }
