@@ -34,7 +34,7 @@ impl Signature {
         XOnly::from_bytes(rx_bytes).map(|rx| Signature { rx, s })
     }
 
-    pub fn from_str(str: &str) -> Option<Self> {
+    pub fn from_hex_str(str: &str) -> Option<Self> {
         let mut s_slice = [0u8; 64];
         s_slice.copy_from_slice(&hex::decode(str).unwrap()[..]);
         Signature::from_bytes(s_slice)

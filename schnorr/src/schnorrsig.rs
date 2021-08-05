@@ -216,10 +216,10 @@ mod tests {
     }
 
     fn check_verify(sig: &str, msg: &str, pubkey: &str) -> bool {
-        if Signature::from_str(sig).is_none() {
+        if Signature::from_hex_str(sig).is_none() {
             return false;
         }
-        let s = Signature::from_str(sig).unwrap();
+        let s = Signature::from_hex_str(sig).unwrap();
         if pubkey_from_str(pubkey).is_err() {
             return false;
         }
