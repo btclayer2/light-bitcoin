@@ -93,6 +93,12 @@ pub fn sign_with_aux(
     Signature { rx, s }
 }
 
+/// Sign a message using the secret key, but not aux rand
+pub fn sign_no_aux(msg: Message, seckey: SecretKey, pubkey: PublicKey) -> Result<Signature, Error> {
+    let aux = message_from_str("")?;
+    Ok(sign_with_aux(msg, aux, seckey, pubkey))
+}
+
 /// Verify a schnorr signature
 pub fn verify(sig: &Signature, msg: &Message, pubkey: PublicKey) -> Result<bool, Error> {
     let (rx, s) = sig.as_tuple();
