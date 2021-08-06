@@ -3,15 +3,15 @@
 use core::ops::Neg;
 
 use crate::{
+    error::Error,
     signature::Signature,
     taggedhash::{HashAdd, Tagged},
     xonly::XOnly,
 };
 use digest::Digest;
 use secp256k1::{
-    curve::{Affine, Field, Jacobian, Scalar, ECMULT_CONTEXT},
-    util::{TAG_PUBKEY_EVEN, TAG_PUBKEY_ODD},
-    Error, Message, PublicKey, SecretKey,
+    curve::{Affine, Jacobian, Scalar, ECMULT_CONTEXT},
+    Message, PublicKey, SecretKey,
 };
 
 /// Construct schnorr sig challenge
@@ -93,19 +93,14 @@ pub fn sign_with_aux(
     Signature { rx, s }
 }
 
-/// Sign a message with context
-pub fn sign_with_context() {
-    unimplemented!()
-}
-
 /// Verify a schnorr signature
-pub fn verify(sig: &Signature, msg: &Message, pubkey: PublicKey) -> bool {
+pub fn verify(sig: &Signature, msg: &Message, pubkey: PublicKey) -> Result<bool, Error> {
     let (rx, s) = sig.as_tuple();
 
     let mut P: Affine = pubkey.into();
 
     if !P.is_valid_var() {
-        return false;
+        return Err(Error::InvalidPublic);
     }
     let mut pj = Jacobian::default();
     pj.set_ge(&P);
@@ -120,45 +115,28 @@ pub fn verify(sig: &Signature, msg: &Message, pubkey: PublicKey) -> bool {
     let mut R = Affine::from_gej(&rj);
 
     if R.is_infinity() {
-        return false;
+        return Err(Error::InvalidNoncePoint);
     }
     R.y.normalize_var();
 
     if R.y.is_odd() {
-        return false;
+        return Err(Error::InvalidNoncePoint);
     }
 
     // S == R + h * P
     let Rx = XOnly::from_field(&mut R.x).unwrap();
-    rx == &Rx
-}
-
-pub fn message_from_str(str: &str) -> Message {
-    let mut m = [0u8; 32];
-    m.copy_from_slice(&hex::decode(str).unwrap()[..]);
-    Message::parse(&m)
-}
-
-pub fn pubkey_from_str(str: &str) -> Result<PublicKey, Error> {
-    let mut p = [0u8; 32];
-    p.copy_from_slice(&hex::decode(str).unwrap()[..]);
-    let mut f = Field::default();
-    let _ = f.set_b32(&p);
-    f.normalize();
-    let tag = if f.is_odd() {
-        TAG_PUBKEY_EVEN
+    if rx == &Rx {
+        Ok(true)
     } else {
-        TAG_PUBKEY_ODD
-    };
-    let mut c = [0u8; 33];
-    for (i, byte) in c.iter_mut().enumerate() {
-        if i == 0 {
-            *byte = tag;
-            continue;
-        }
-        *byte = p[i - 1];
+        Err(Error::InvalidSignature)
     }
-    PublicKey::parse_compressed(&c)
+}
+
+/// A helper for test
+pub fn message_from_str(str: &str) -> Result<Message, Error> {
+    let mut m = [0u8; 32];
+    m.copy_from_slice(&hex::decode(str)?[..]);
+    Ok(Message::parse(&m))
 }
 
 #[cfg(test)]
@@ -207,58 +185,99 @@ mod tests {
     const SIGNATURE_13: &str = "6CFF5C3BA86C69EA4B7376F31A9BCB4F74C1976089B2D9963DA2E5543E177769FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141";
     const SIGNATURE_14: &str = "6CFF5C3BA86C69EA4B7376F31A9BCB4F74C1976089B2D9963DA2E5543E17776969E89B4C5564D00349106B8497785DD7D1D713A8AE82B32FA79D5F7FC407D39B";
 
-    fn check_sign(secret: &str, msg: &str, aux: &str, signature: &str) -> bool {
-        let m = message_from_str(msg);
-        let a = message_from_str(aux);
-        let keypair = KeyPair::from_secret_str(secret);
+    fn check_sign(secret: &str, msg: &str, aux: &str, signature: &str) -> Result<bool, Error> {
+        let m = message_from_str(msg)?;
+        let a = message_from_str(aux)?;
+        let keypair = KeyPair::from_secret_hex(secret)?;
         let sig = sign_with_aux(m, a, keypair.secret().clone(), keypair.public().clone());
-        hex::encode_upper(sig.to_bytes()) == signature
+        Ok(hex::encode_upper(sig.to_bytes()) == signature)
     }
 
-    fn check_verify(sig: &str, msg: &str, pubkey: &str) -> bool {
-        if Signature::from_hex_str(sig).is_none() {
-            return false;
+    fn check_verify(sig: &str, msg: &str, pubkey: &str) -> Result<bool, Error> {
+        let s = Signature::from_hex_str(sig)?;
+
+        let px = XOnly::from_hex(pubkey)?;
+        let m = message_from_str(msg)?;
+        if let Some(sig) = s {
+            verify(&sig, &m, px.to_public()?)
+        } else {
+            Err(Error::InvalidSignature)
         }
-        let s = Signature::from_hex_str(sig).unwrap();
-        if pubkey_from_str(pubkey).is_err() {
-            return false;
-        }
-        let p = pubkey_from_str(pubkey).unwrap();
-        let m = message_from_str(msg);
-        verify(&s, &m, p)
     }
 
     #[test]
     fn test_sign() {
-        assert!(check_sign(SECRET_0, MESSAGE_0, AUX_0, SIGNATURE_0));
-        assert!(check_sign(SECRET_1, MESSAGE_1, AUX_1, SIGNATURE_1));
-        assert!(check_sign(SECRET_2, MESSAGE_2, AUX_2, SIGNATURE_2));
+        assert_eq!(
+            check_sign(SECRET_0, MESSAGE_0, AUX_0, SIGNATURE_0),
+            Ok(true)
+        );
+        assert_eq!(
+            check_sign(SECRET_1, MESSAGE_1, AUX_1, SIGNATURE_1),
+            Ok(true)
+        );
+        assert_eq!(
+            check_sign(SECRET_2, MESSAGE_2, AUX_2, SIGNATURE_2),
+            Ok(true)
+        );
         // check fails if msg is reduced modulo p or n
-        assert!(!check_sign(SECRET_3, MESSAGE_3, AUX_3, SIGNATURE_3));
+        assert_eq!(
+            check_sign(SECRET_3, MESSAGE_3, AUX_3, SIGNATURE_3),
+            Ok(false)
+        );
     }
 
     #[test]
     fn test_verify() {
-        assert!(check_verify(SIGNATURE_4, MESSAGE_4, PUBKEY_4));
+        assert_eq!(check_verify(SIGNATURE_4, MESSAGE_4, PUBKEY_4), Ok(true));
         // public key not on the curve
-        assert!(!check_verify(SIGNATURE_5, MESSAGE_5, PUBKEY_5));
+        assert_eq!(
+            check_verify(SIGNATURE_5, MESSAGE_5, PUBKEY_5),
+            Err(Error::InvalidXOnly)
+        );
         // has_even_y(R) is false
-        assert!(!check_verify(SIGNATURE_6, MESSAGE_5, PUBKEY_6));
+        assert_eq!(
+            check_verify(SIGNATURE_6, MESSAGE_5, PUBKEY_6),
+            Err(Error::InvalidNoncePoint)
+        );
         // negated message
-        assert!(!check_verify(SIGNATURE_7, MESSAGE_5, PUBKEY_6));
+        assert_eq!(
+            check_verify(SIGNATURE_7, MESSAGE_5, PUBKEY_6),
+            Err(Error::InvalidNoncePoint)
+        );
         // negated s value
-        assert!(!check_verify(SIGNATURE_8, MESSAGE_5, PUBKEY_6));
+        assert_eq!(
+            check_verify(SIGNATURE_8, MESSAGE_5, PUBKEY_6),
+            Err(Error::InvalidSignature)
+        );
         // sG - eP is infinite. Test fails in single verification if has_even_y(inf) is defined as true and x(inf) as 0
-        assert!(!check_verify(SIGNATURE_9, MESSAGE_5, PUBKEY_6));
+        assert_eq!(
+            check_verify(SIGNATURE_9, MESSAGE_5, PUBKEY_6),
+            Err(Error::InvalidSignature)
+        );
         // sG - eP is infinite. Test fails in single verification if has_even_y(inf) is defined as true and x(inf) as 1
-        assert!(!check_verify(SIGNATURE_10, MESSAGE_5, PUBKEY_6));
+        assert_eq!(
+            check_verify(SIGNATURE_10, MESSAGE_5, PUBKEY_6),
+            Err(Error::InvalidNoncePoint)
+        );
         // sig[0:32] is not an X coordinate on the curve
-        assert!(!check_verify(SIGNATURE_11, MESSAGE_5, PUBKEY_6));
+        assert_eq!(
+            check_verify(SIGNATURE_11, MESSAGE_5, PUBKEY_6),
+            Err(Error::InvalidSignature)
+        );
         // sig[0:32] is equal to field size
-        assert!(!check_verify(SIGNATURE_12, MESSAGE_5, PUBKEY_6));
+        assert_eq!(
+            check_verify(SIGNATURE_12, MESSAGE_5, PUBKEY_6),
+            Err(Error::InvalidSignature)
+        );
         // sig[32:64] is equal to curve order
-        assert!(!check_verify(SIGNATURE_13, MESSAGE_5, PUBKEY_6));
+        assert_eq!(
+            check_verify(SIGNATURE_13, MESSAGE_5, PUBKEY_6),
+            Err(Error::InvalidSignature)
+        );
         // public key is not a valid X coordinate because it exceeds the field size
-        assert!(!check_verify(SIGNATURE_14, MESSAGE_5, PUBKEY_7));
+        assert_eq!(
+            check_verify(SIGNATURE_14, MESSAGE_5, PUBKEY_7),
+            Err(Error::InvalidXOnly)
+        );
     }
 }

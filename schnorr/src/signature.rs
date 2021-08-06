@@ -2,8 +2,9 @@ use core::fmt;
 
 use secp256k1::curve::Scalar;
 
-use crate::xonly::XOnly;
+use crate::{error::Error, xonly::XOnly};
 
+/// A standard for 64-byte Schnorr signatures over the elliptic curve secp256k1
 #[derive(Eq, PartialEq, Clone)]
 pub struct Signature {
     pub rx: XOnly,
@@ -34,10 +35,10 @@ impl Signature {
         XOnly::from_bytes(rx_bytes).map(|rx| Signature { rx, s })
     }
 
-    pub fn from_hex_str(str: &str) -> Option<Self> {
+    pub fn from_hex_str(str: &str) -> Result<Option<Self>, Error> {
         let mut s_slice = [0u8; 64];
-        s_slice.copy_from_slice(&hex::decode(str).unwrap()[..]);
-        Signature::from_bytes(s_slice)
+        s_slice.copy_from_slice(&hex::decode(str)?[..]);
+        Ok(Signature::from_bytes(s_slice))
     }
 }
 

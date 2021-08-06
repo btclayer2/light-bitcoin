@@ -1,5 +1,7 @@
 use secp256k1::{PublicKey, SecretKey};
 
+use crate::error::Error;
+
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub struct KeyPair {
     secret: SecretKey,
@@ -20,10 +22,10 @@ impl KeyPair {
         Self { secret, public }
     }
 
-    pub fn from_secret_str(secret: &str) -> Self {
+    pub fn from_secret_hex(secret: &str) -> Result<Self, Error> {
         let mut sec_slice = [0u8; 32];
-        sec_slice.copy_from_slice(&hex::decode(secret).unwrap()[..]);
-        let seckey = SecretKey::parse_slice(&sec_slice).unwrap();
-        KeyPair::from_secret_key(seckey)
+        sec_slice.copy_from_slice(&hex::decode(secret)?[..]);
+        let seckey = SecretKey::parse_slice(&sec_slice)?;
+        Ok(KeyPair::from_secret_key(seckey))
     }
 }
