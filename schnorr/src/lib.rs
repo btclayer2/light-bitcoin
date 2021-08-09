@@ -5,6 +5,7 @@ extern crate alloc;
 
 pub mod error;
 pub mod keypair;
+pub mod private;
 pub mod schnorrsig;
 pub mod signature;
 pub mod taggedhash;

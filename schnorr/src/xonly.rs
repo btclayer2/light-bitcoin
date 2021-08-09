@@ -1,10 +1,10 @@
 use secp256k1::{
     curve::{Affine, Field},
     util::{TAG_PUBKEY_EVEN, TAG_PUBKEY_ODD},
-    PublicKey,
+    Message, PublicKey,
 };
 
-use crate::{error::Error, taggedhash::HashInto};
+use crate::{error::Error, schnorrsig, signature::Signature, taggedhash::HashInto};
 /// An [`XOnly`] is the compressed representation of a [`PublicKey`] which
 /// only stores the x-coordinate of the point.
 ///
@@ -13,7 +13,7 @@ use crate::{error::Error, taggedhash::HashInto};
 #[derive(Debug, Clone, PartialEq, Copy, Eq, Hash)]
 pub struct XOnly([u8; 32]);
 
-/// A number of methods to load [`XOnly`]
+/// A number of methods to get [`XOnly`]
 impl XOnly {
     /// Convert [`Field`] to [`XOnly`]
     pub fn from_field(field: &mut Field) -> Option<Self> {
@@ -48,12 +48,15 @@ impl XOnly {
             None => Err(Error::InvalidXOnly),
         }
     }
+}
 
-    /// Convert [`XOnly`] to [u8; 32]
+/// Convert [`XOnly`] to [u8; 32]
+impl XOnly {
     pub fn as_bytes(&self) -> &[u8; 32] {
         &self.0
     }
 }
+
 /// Implementing conversions to and from public keys
 ///
 /// I think this implementation is much clearer than implementing [`From<T>`]
@@ -94,6 +97,17 @@ impl XOnly {
             Some(xonly) => Ok(xonly),
             None => Err(Error::InvalidPublic),
         }
+    }
+}
+
+/// Implementing signature verification using [`XOnly`]
+///
+/// It should be possible to use the public key for
+/// signature verification directly, which is more convenient.
+impl XOnly {
+    pub fn verify(&self, sig: &Signature, msg: &Message) -> Result<bool, Error> {
+        let pubkey = self.to_public()?;
+        schnorrsig::verify(sig, msg, pubkey)
     }
 }
 
