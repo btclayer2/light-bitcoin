@@ -1,3 +1,4 @@
+//! The current is of little use, leaving room for subsequent development.
 use secp256k1::{PublicKey, SecretKey};
 
 use crate::error::Error;

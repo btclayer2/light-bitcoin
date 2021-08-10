@@ -4,7 +4,9 @@ use hex::FromHexError;
 pub enum Error {
     // public key
     InvalidPublic,
+    // xonly error
     InvalidXOnly,
+    XCoordinateNotExist,
     InvalidNoncePoint,
     InvalidSecret,
     InvalidMessage,
@@ -28,6 +30,7 @@ impl core::fmt::Display for Error {
         let msg = match *self {
             Error::InvalidPublic => "Invalid Public",
             Error::InvalidXOnly => "Invalid XOnly",
+            Error::XCoordinateNotExist => "X Coordinate Not Exist",
             Error::InvalidNoncePoint => "Invalid nonce point R",
             Error::InvalidSecret => "Invalid Secret",
             Error::InvalidMessage => "Invalid Message",

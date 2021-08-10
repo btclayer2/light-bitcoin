@@ -1,3 +1,8 @@
+//! This is the basic implementation of the schnorr signature algorithm.
+//!
+//! Here are some implementation references:
+//! [`bitcoin`]: https://github.com/bitcoin/bitcoin/blob/3820090bd6/src/secp256k1/src/modules/schnorrsig/main_impl.h
+//! [`taproot-workshop`]: https://github.com/bitcoinops/taproot-workshop/blob/master/solutions/1.1-schnorr-signatures-solutions.ipynb
 #![allow(non_snake_case)]
 
 use core::ops::Neg;
@@ -33,7 +38,7 @@ pub fn nonce_function_bip340(
     bip340_pkx: &XOnly,
     msg: &Message,
     aux: &Message,
-) -> (Scalar, Affine) {
+) -> Result<(Scalar, Affine), Error> {
     let aux_hash = sha2::Sha256::default().tagged(b"BIP0340/aux");
     let aux_tagged = aux_hash.add(&aux.0).finalize();
     let sec_bytes: [u8; 32] = bip340_sk.b32();
@@ -56,9 +61,9 @@ pub fn nonce_function_bip340(
     nonce_bytes.copy_from_slice(nonce_tagged.as_slice());
     let mut scalar = Scalar::default();
     let _ = scalar.set_b32(&nonce_bytes);
-    let k = SecretKey::parse(&scalar.b32()).unwrap();
+    let k = SecretKey::parse(&scalar.b32())?;
     let R = PublicKey::from_secret_key(&k);
-    (k.into(), R.into())
+    Ok((k.into(), R.into()))
 }
 
 /// Sign a message using the secret key with aux
@@ -67,41 +72,41 @@ pub fn sign_with_aux(
     aux: Message,
     seckey: SecretKey,
     pubkey: PublicKey,
-) -> Signature {
+) -> Result<Signature, Error> {
     let mut pk: Affine = pubkey.into();
 
     pk.x.normalize();
     pk.y.normalize();
 
-    let pkx = XOnly::from_field(&mut pk.x).unwrap();
+    let pkx = XOnly::from(&mut pk.x);
 
     let sk: Scalar = seckey.clone().into();
     let sec = if pk.y.is_odd() { sk.neg() } else { sk };
 
     // Get nonce k and nonce point R
-    let (k, mut R) = nonce_function_bip340(&sec, &pkx, &msg, &aux);
+    let (k, mut R) = nonce_function_bip340(&sec, &pkx, &msg, &aux)?;
     R.y.normalize();
     R.x.normalize();
     let k_even = if R.y.is_odd() { k.neg() } else { k };
 
     // Generate s = k + tagged_hash("BIP0340/challenge", R_x|P_x|msg) * d
-    let rx = XOnly::from_bytes(R.x.b32()).unwrap();
+    let rx = XOnly::from(&mut R.x);
     let h = schnorrsig_challenge(&rx, &pkx, &msg);
     let s = k_even + h * seckey.into();
 
     // Generate sig = R_x|s
-    Signature { rx, s }
+    Ok(Signature { rx, s })
 }
 
 /// Sign a message using the secret key, but not aux rand
 pub fn sign_no_aux(msg: Message, seckey: SecretKey, pubkey: PublicKey) -> Result<Signature, Error> {
     let aux = message_from_str("")?;
-    Ok(sign_with_aux(msg, aux, seckey, pubkey))
+    sign_with_aux(msg, aux, seckey, pubkey)
 }
 
 /// Verify a schnorr signature
 pub fn verify(sig: &Signature, msg: &Message, pubkey: PublicKey) -> Result<bool, Error> {
-    let (rx, s) = sig.as_tuple();
+    let (rx, s) = (&sig.rx, &sig.s);
 
     let mut P: Affine = pubkey.into();
 
@@ -111,7 +116,7 @@ pub fn verify(sig: &Signature, msg: &Message, pubkey: PublicKey) -> Result<bool,
     let mut pj = Jacobian::default();
     pj.set_ge(&P);
 
-    let pkx = XOnly::from_field(&mut P.x).unwrap();
+    let pkx = (&mut P.x).into();
 
     let h = schnorrsig_challenge(rx, &pkx, msg);
 
@@ -130,7 +135,7 @@ pub fn verify(sig: &Signature, msg: &Message, pubkey: PublicKey) -> Result<bool,
     }
 
     // S == R + h * P
-    let Rx = XOnly::from_field(&mut R.x).unwrap();
+    let Rx: XOnly = (&mut R.x).into();
     if rx == &Rx {
         Ok(true)
     } else {
@@ -147,6 +152,8 @@ pub fn message_from_str(str: &str) -> Result<Message, Error> {
 
 #[cfg(test)]
 mod tests {
+    use core::convert::{TryFrom, TryInto};
+
     use crate::keypair::KeyPair;
 
     use super::*;
@@ -195,20 +202,18 @@ mod tests {
         let m = message_from_str(msg)?;
         let a = message_from_str(aux)?;
         let keypair = KeyPair::from_secret_hex(secret)?;
-        let sig = sign_with_aux(m, a, keypair.secret().clone(), keypair.public().clone());
-        Ok(hex::encode_upper(sig.to_bytes()) == signature)
+        let sig = sign_with_aux(m, a, keypair.secret().clone(), keypair.public().clone())?;
+
+        Ok(sig.eq(&signature.try_into()?))
     }
 
     fn check_verify(sig: &str, msg: &str, pubkey: &str) -> Result<bool, Error> {
-        let s = Signature::from_hex_str(sig)?;
+        let s = sig.try_into()?;
 
-        let px = XOnly::from_hex(pubkey)?;
+        let px = XOnly::try_from(pubkey)?;
+        let pk = px.try_into()?;
         let m = message_from_str(msg)?;
-        if let Some(sig) = s {
-            verify(&sig, &m, px.to_public()?)
-        } else {
-            Err(Error::InvalidSignature)
-        }
+        verify(&s, &m, pk)
     }
 
     #[test]
@@ -238,7 +243,7 @@ mod tests {
         // public key not on the curve
         assert_eq!(
             check_verify(SIGNATURE_5, MESSAGE_5, PUBKEY_5),
-            Err(Error::InvalidXOnly)
+            Err(Error::InvalidPublic)
         );
         // has_even_y(R) is false
         assert_eq!(
@@ -258,7 +263,7 @@ mod tests {
         // sG - eP is infinite. Test fails in single verification if has_even_y(inf) is defined as true and x(inf) as 0
         assert_eq!(
             check_verify(SIGNATURE_9, MESSAGE_5, PUBKEY_6),
-            Err(Error::InvalidSignature)
+            Err(Error::XCoordinateNotExist)
         );
         // sG - eP is infinite. Test fails in single verification if has_even_y(inf) is defined as true and x(inf) as 1
         assert_eq!(
@@ -268,12 +273,12 @@ mod tests {
         // sig[0:32] is not an X coordinate on the curve
         assert_eq!(
             check_verify(SIGNATURE_11, MESSAGE_5, PUBKEY_6),
-            Err(Error::InvalidSignature)
+            Err(Error::XCoordinateNotExist)
         );
         // sig[0:32] is equal to field size
         assert_eq!(
             check_verify(SIGNATURE_12, MESSAGE_5, PUBKEY_6),
-            Err(Error::InvalidSignature)
+            Err(Error::XCoordinateNotExist)
         );
         // sig[32:64] is equal to curve order
         assert_eq!(
@@ -283,7 +288,7 @@ mod tests {
         // public key is not a valid X coordinate because it exceeds the field size
         assert_eq!(
             check_verify(SIGNATURE_14, MESSAGE_5, PUBKEY_7),
-            Err(Error::InvalidXOnly)
+            Err(Error::InvalidNoncePoint)
         );
     }
 }

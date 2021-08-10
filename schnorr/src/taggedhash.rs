@@ -4,6 +4,9 @@
 //!
 //! [`Digest`]: digest::Digest
 //! [`RustCrypto`]: https://github.com/RustCrypto/hashes
+//!
+//! Code from:
+//! [`secp256kfun`]: https://github.com/LLFourn/secp256kfun/blob/master/secp256kfun/src/hash.rs
 use digest::{
     generic_array::typenum::{PartialDiv, Unsigned},
     BlockInput, Digest,
