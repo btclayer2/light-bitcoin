@@ -5,6 +5,9 @@
 //! [`taproot-workshop`]: https://github.com/bitcoinops/taproot-workshop/blob/master/solutions/1.1-schnorr-signatures-solutions.ipynb
 #![allow(non_snake_case)]
 
+#[cfg(feature = "getrandom")]
+use crate::private::Private;
+
 use core::ops::Neg;
 
 use crate::{
@@ -104,6 +107,18 @@ pub fn sign_no_aux(msg: Message, seckey: SecretKey, pubkey: PublicKey) -> Result
     sign_with_aux(msg, aux, seckey, pubkey)
 }
 
+/// Sign a message using the secret key, but not aux rand
+#[cfg(feature = "getrandom")]
+pub fn sign_with_rand_aux(
+    msg: Message,
+    seckey: SecretKey,
+    pubkey: PublicKey,
+) -> Result<Signature, Error> {
+    let s = Private::generate_nonce();
+    let aux = Message(s);
+    sign_with_aux(msg, aux, seckey, pubkey)
+}
+
 /// Verify a schnorr signature
 pub fn verify(sig: &Signature, msg: &Message, pubkey: PublicKey) -> Result<bool, Error> {
     let (rx, s) = (&sig.rx, &sig.s);
@@ -154,8 +169,6 @@ pub fn message_from_str(str: &str) -> Result<Message, Error> {
 mod tests {
     use core::convert::{TryFrom, TryInto};
 
-    use crate::keypair::KeyPair;
-
     use super::*;
 
     /// BIP340 test vectors
@@ -201,8 +214,10 @@ mod tests {
     fn check_sign(secret: &str, msg: &str, aux: &str, signature: &str) -> Result<bool, Error> {
         let m = message_from_str(msg)?;
         let a = message_from_str(aux)?;
-        let keypair = KeyPair::from_secret_hex(secret)?;
-        let sig = sign_with_aux(m, a, keypair.secret().clone(), keypair.public().clone())?;
+
+        let seckey = Private::try_from(secret)?.0;
+        let pubkey = PublicKey::from_secret_key(&seckey);
+        let sig = sign_with_aux(m, a, seckey, pubkey)?;
 
         Ok(sig.eq(&signature.try_into()?))
     }
@@ -214,6 +229,19 @@ mod tests {
         let pk = px.try_into()?;
         let m = message_from_str(msg)?;
         verify(&s, &m, pk)
+    }
+
+    #[test]
+    fn test_random_aux() {
+        #[cfg(feature = "getrandom")]
+        let msg = Message(Private::generate_nonce());
+
+        let privkey = Private::generate().unwrap();
+        let seckey = privkey.0;
+        let pubkey = PublicKey::from_secret_key(&seckey);
+        let sig = sign_with_rand_aux(msg.clone(), seckey, pubkey.clone()).unwrap();
+
+        assert_eq!(verify(&sig, &msg, pubkey), Ok(true));
     }
 
     #[test]

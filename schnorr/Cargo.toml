@@ -6,14 +6,18 @@ edition = "2018"
 license = "GPL-3.0"
 
 [features]
-default = ["std"]
+default = ["std", "getrandom"]
 std = [
     "libsecp256k1/std",
-    "hex/std"
+    "hex/std",
+    "sha2/std",
+    "rand_core/std"
 ]
+getrandom = ["rand_core/getrandom"]
 
 [dependencies]
 libsecp256k1 = { version = "0.3.5", default-features = false, features = ["hmac"] }
 digest = { version = "0.9.0", default-features = false }
 sha2 = { version = "0.9.5", default-features = false }
 hex = { version = "0.4", default-features = false }
+rand_core = { version = "0.6.3", default-features = false }

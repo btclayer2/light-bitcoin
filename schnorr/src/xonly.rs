@@ -8,6 +8,7 @@
 //! [`libsecp256k1`]: https://github.com/paritytech/libsecp256k1/blob/master/src/lib.rs
 use core::convert::{TryFrom, TryInto};
 
+use rand_core::{CryptoRng, RngCore};
 use secp256k1::{
     curve::{Affine, Field},
     util::{TAG_PUBKEY_EVEN, TAG_PUBKEY_ODD},
@@ -32,6 +33,20 @@ impl XOnly {
     pub fn verify(self, sig: &Signature, msg: &Message) -> Result<bool, Error> {
         let pubkey = self.try_into()?;
         schnorrsig::verify(sig, msg, pubkey)
+    }
+
+    pub fn generate_with<R>(mut csprng: R) -> XOnly
+    where
+        R: CryptoRng + RngCore,
+    {
+        let mut key: [u8; 32] = [0u8; 32];
+        csprng.fill_bytes(&mut key);
+        Self(key)
+    }
+
+    #[cfg(feature = "getrandom")]
+    pub fn generate() -> XOnly {
+        Self::generate_with(super::rand_hack())
     }
 }
 
