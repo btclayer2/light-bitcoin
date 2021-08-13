@@ -35,6 +35,16 @@ impl XOnly {
         schnorrsig::verify(sig, msg, pubkey)
     }
 
+    pub fn on_curve(&self) -> Result<bool, Error> {
+        let mut elem = Field::default();
+        let mut affine_coords = Affine::default();
+        if elem.set_b32(&self.0) && affine_coords.set_xquad(&elem) {
+            Ok(true)
+        } else {
+            Err(Error::XCoordinateNotExist)
+        }
+    }
+
     pub fn generate_with<R>(mut csprng: R) -> XOnly
     where
         R: CryptoRng + RngCore,

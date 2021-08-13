@@ -123,6 +123,19 @@ pub fn sign_with_rand_aux(
 pub fn verify(sig: &Signature, msg: &Message, pubkey: PublicKey) -> Result<bool, Error> {
     let (rx, s) = (&sig.rx, &sig.s);
 
+    // Determine if the x coordinate is on the elliptic curve
+    // Also here it will be verified that there are two y's at point x
+    if rx.on_curve().is_err() {
+        return Err(Error::XCoordinateNotExist);
+    }
+
+    // Detect signature overflow
+    let mut s_check = Scalar::default();
+    let s_choice = s_check.set_b32(&s.b32());
+    if s_choice.unwrap_u8() == 1 {
+        return Err(Error::InvalidSignature);
+    }
+
     let mut P: Affine = pubkey.into();
 
     if !P.is_valid_var() {
@@ -232,19 +245,6 @@ mod tests {
     }
 
     #[test]
-    fn test_random_aux() {
-        #[cfg(feature = "getrandom")]
-        let msg = Message(Private::generate_nonce());
-
-        let privkey = Private::generate().unwrap();
-        let seckey = privkey.0;
-        let pubkey = PublicKey::from_secret_key(&seckey);
-        let sig = sign_with_rand_aux(msg.clone(), seckey, pubkey.clone()).unwrap();
-
-        assert_eq!(verify(&sig, &msg, pubkey), Ok(true));
-    }
-
-    #[test]
     fn test_sign() {
         assert_eq!(
             check_sign(SECRET_0, MESSAGE_0, AUX_0, SIGNATURE_0),
@@ -318,5 +318,18 @@ mod tests {
             check_verify(SIGNATURE_14, MESSAGE_5, PUBKEY_7),
             Err(Error::InvalidNoncePoint)
         );
+    }
+
+    #[test]
+    fn test_random_aux() {
+        #[cfg(feature = "getrandom")]
+        let msg = Message(Private::generate_nonce());
+
+        let privkey = Private::generate().unwrap();
+        let seckey = privkey.0;
+        let pubkey = PublicKey::from_secret_key(&seckey);
+        let sig = sign_with_rand_aux(msg.clone(), seckey, pubkey.clone()).unwrap();
+
+        assert_eq!(verify(&sig, &msg, pubkey), Ok(true));
     }
 }
