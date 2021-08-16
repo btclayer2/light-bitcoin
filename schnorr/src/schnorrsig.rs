@@ -176,6 +176,13 @@ pub fn verify(sig: &Signature, msg: &Message, pubkey: PublicKey) -> Result<bool,
 }
 
 /// Batch verify
+///
+/// References:
+/// [`schnorr`]: https://github.com/hbakhtiyor/schnorr/blob/master/schnorr.go
+/// [`lontivero`]: https://gist.github.com/lontivero/1d75b11e9243c0f2a75466db05776623
+/// [`SIN-core`]: https://github.com/SINOVATEblockchain/SIN-core/blob/f549503cbb69b8276a9fa6b0ba5022e01d370958/src/secp256k1/src/modules/schnorr/main_impl.h
+/// [`gaon`]: https://github.com/gaoncoin/gaon/blob/93f94f7d268c0f9abd0b7ef82791945349fcb40c/src/secp256k1/src/modules/schnorr/schnorr_impl.h
+/// [`tao-core`]: https://github.com/taoblockchain/tao-core/blob/0bf6de9d801edd6bd05b358f34460c137ebcb5e3/src/secp256k1/src/schnorr_impl.h
 pub fn batch_verify(
     sigs: Vec<Signature>,
     msgs: Vec<Message>,
@@ -227,6 +234,13 @@ pub fn batch_verify(
         let mut R = Affine::from_gej(&rj);
         R.y.normalize_var();
         R.x.normalize();
+        if R.is_infinity() {
+            return Err(Error::InvalidNoncePoint);
+        }
+        if R.y.is_odd() {
+            return Err(Error::InvalidNoncePoint);
+        }
+
         Rxs += R.x;
     }
 
@@ -235,6 +249,28 @@ pub fn batch_verify(
     } else {
         Err(Error::InvalidSignature)
     }
+}
+
+/// Signature Aggregate
+pub fn signature_aggregation(sigs: Vec<Signature>) -> Signature {
+    let mut ss = Scalar::default();
+
+    let mut rxs = Field::default();
+    rxs.normalize();
+
+    for (_, sig) in sigs.iter().enumerate() {
+        let (rx, s) = (&sig.rx, &sig.s);
+
+        let mut rxf = Field::default();
+        let _ = rxf.set_b32(&rx.0);
+        rxf.normalize();
+        rxs += rxf;
+
+        ss += s;
+    }
+
+    let rx = (&mut rxs).into();
+    Signature { rx, s: ss }
 }
 
 /// A helper for test
