@@ -8,6 +8,10 @@
 #[cfg(feature = "getrandom")]
 use crate::private::Private;
 
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+
+use core::convert::TryFrom;
 use core::ops::Neg;
 
 use crate::{
@@ -18,7 +22,7 @@ use crate::{
 };
 use digest::Digest;
 use secp256k1::{
-    curve::{Affine, Jacobian, Scalar, ECMULT_CONTEXT},
+    curve::{Affine, Field, Jacobian, Scalar, ECMULT_CONTEXT},
     Message, PublicKey, SecretKey,
 };
 
@@ -133,7 +137,7 @@ pub fn verify(sig: &Signature, msg: &Message, pubkey: PublicKey) -> Result<bool,
     let mut s_check = Scalar::default();
     let s_choice = s_check.set_b32(&s.b32());
     if s_choice.unwrap_u8() == 1 {
-        return Err(Error::InvalidSignature);
+        return Err(Error::SignatureOverflow);
     }
 
     let mut P: Affine = pubkey.into();
@@ -165,6 +169,68 @@ pub fn verify(sig: &Signature, msg: &Message, pubkey: PublicKey) -> Result<bool,
     // S == R + h * P
     let Rx: XOnly = (&mut R.x).into();
     if rx == &Rx {
+        Ok(true)
+    } else {
+        Err(Error::InvalidSignature)
+    }
+}
+
+/// Batch verify
+pub fn batch_verify(
+    sigs: Vec<Signature>,
+    msgs: Vec<Message>,
+    pubkeys: Vec<PublicKey>,
+) -> Result<bool, Error> {
+    if sigs.len() != msgs.len() || sigs.len() != pubkeys.len() {
+        // The number of batch verifications does not match, and
+        // you must ensure that the public key and signature and
+        // the number of messages to be signed are the same.
+        return Err(Error::InvalidSignature);
+    }
+
+    let mut Rxs = Field::default();
+    Rxs.normalize();
+
+    let mut rxs = Field::default();
+    rxs.normalize();
+    for (i, sig) in sigs.iter().enumerate() {
+        let pubkey = &pubkeys[i];
+        let msg = &msgs[i];
+        let (rx, s) = (&sig.rx, &sig.s);
+
+        let mut rxf = Field::default();
+        let _ = rxf.set_b32(&rx.0);
+        rxf.normalize();
+        rxs += rxf;
+        // Determine if the x coordinate is on the elliptic curve
+        // Also here it will be verified that there are two y's at point x
+        if rx.on_curve().is_err() {
+            return Err(Error::XCoordinateNotExist);
+        }
+
+        // Detect signature overflow
+        let mut s_check = Scalar::default();
+        let s_choice = s_check.set_b32(&s.b32());
+        if s_choice.unwrap_u8() == 1 {
+            return Err(Error::SignatureOverflow);
+        }
+
+        let pkx = XOnly::try_from(pubkey.clone())?;
+        let h = schnorrsig_challenge(rx, &pkx, msg);
+
+        let P: Affine = pubkey.clone().into();
+        let mut pj = Jacobian::default();
+        pj.set_ge(&P);
+        let mut rj = Jacobian::default();
+        ECMULT_CONTEXT.ecmult(&mut rj, &pj, &h.neg(), s);
+
+        let mut R = Affine::from_gej(&rj);
+        R.y.normalize_var();
+        R.x.normalize();
+        Rxs += R.x;
+    }
+
+    if rxs == Rxs {
         Ok(true)
     } else {
         Err(Error::InvalidSignature)
@@ -331,5 +397,30 @@ mod tests {
         let sig = sign_with_rand_aux(msg.clone(), seckey, pubkey.clone()).unwrap();
 
         assert_eq!(verify(&sig, &msg, pubkey), Ok(true));
+    }
+
+    #[test]
+    fn test_batch_verify() {
+        let mut msgs = Vec::<Message>::new();
+        let mut pubkeys = Vec::<PublicKey>::new();
+        let mut sigs = Vec::<Signature>::new();
+
+        for _ in 0..5 {
+            #[cfg(feature = "getrandom")]
+            let msg = Message(Private::generate_nonce());
+
+            let privkey = Private::generate().unwrap();
+            let seckey = privkey.0;
+            let pubkey = PublicKey::from_secret_key(&seckey);
+            let sig = sign_with_rand_aux(msg.clone(), seckey, pubkey.clone()).unwrap();
+
+            assert_eq!(verify(&sig, &msg, pubkey.clone()), Ok(true));
+
+            msgs.push(msg);
+            pubkeys.push(pubkey);
+            sigs.push(sig);
+        }
+
+        assert_eq!(batch_verify(sigs, msgs, pubkeys), Ok(true));
     }
 }

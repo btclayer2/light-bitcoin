@@ -10,7 +10,9 @@ pub enum Error {
     InvalidNoncePoint,
     InvalidSecret,
     InvalidMessage,
+    // sig error
     InvalidSignature,
+    SignatureOverflow,
     InvalidNetwork,
     InvalidChecksum,
     InvalidPrivate,
@@ -35,6 +37,7 @@ impl core::fmt::Display for Error {
             Error::InvalidSecret => "Invalid Secret",
             Error::InvalidMessage => "Invalid Message",
             Error::InvalidSignature => "Invalid Signature",
+            Error::SignatureOverflow => "Signature Overflow",
             Error::InvalidNetwork => "Invalid Network",
             Error::InvalidChecksum => "Invalid Checksum",
             Error::InvalidPrivate => "Invalid Private",
