@@ -10,12 +10,18 @@
 #[cfg(feature = "getrandom")]
 use crate::schnorrsig::sign_with_rand_aux;
 
+#[cfg(feature = "getrandom")]
+use crate::signature::Signature;
+
+#[cfg(feature = "getrandom")]
+use secp256k1::{Message, PublicKey};
+
 use core::convert::TryFrom;
 
 use rand_core::{CryptoRng, RngCore};
-use secp256k1::{curve::Scalar, Message, PublicKey, SecretKey};
+use secp256k1::{curve::Scalar, SecretKey};
 
-use crate::{error::Error, signature::Signature};
+use crate::error::Error;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Private(pub SecretKey);
