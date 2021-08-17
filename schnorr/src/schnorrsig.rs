@@ -107,7 +107,7 @@ pub fn sign_with_aux(
 
 /// Sign a message using the secret key, but not aux rand
 pub fn sign_no_aux(msg: Message, seckey: SecretKey, pubkey: PublicKey) -> Result<Signature, Error> {
-    let aux = message_from_str("")?;
+    let aux = Message(Scalar::default());
     sign_with_aux(msg, aux, seckey, pubkey)
 }
 
@@ -145,6 +145,7 @@ pub fn verify(sig: &Signature, msg: &Message, pubkey: PublicKey) -> Result<bool,
     if !P.is_valid_var() {
         return Err(Error::InvalidPublic);
     }
+
     let mut pj = Jacobian::default();
     pj.set_ge(&P);
 
@@ -177,6 +178,8 @@ pub fn verify(sig: &Signature, msg: &Message, pubkey: PublicKey) -> Result<bool,
 
 /// Batch verify
 ///
+/// Calculate the X coordinates, add them up and compare them With X in Signature directly.
+///
 /// References:
 /// [`schnorr`]: https://github.com/hbakhtiyor/schnorr/blob/master/schnorr.go
 /// [`lontivero`]: https://gist.github.com/lontivero/1d75b11e9243c0f2a75466db05776623
@@ -200,6 +203,7 @@ pub fn batch_verify(
 
     let mut rxs = Field::default();
     rxs.normalize();
+
     for (i, sig) in sigs.iter().enumerate() {
         let pubkey = &pubkeys[i];
         let msg = &msgs[i];
@@ -223,9 +227,14 @@ pub fn batch_verify(
         }
 
         let pkx = XOnly::try_from(pubkey.clone())?;
+
         let h = schnorrsig_challenge(rx, &pkx, msg);
 
         let P: Affine = pubkey.clone().into();
+        if !P.is_valid_var() {
+            return Err(Error::InvalidPublic);
+        }
+
         let mut pj = Jacobian::default();
         pj.set_ge(&P);
         let mut rj = Jacobian::default();
@@ -252,6 +261,11 @@ pub fn batch_verify(
 }
 
 /// Signature Aggregate
+///
+/// Splitting the signature into [`XOnly`] and [`Scalar`]
+/// Add up all the signed [`XOnly`] and [`Scalar`], and finally
+/// combine them into a signature again to complete the
+/// signature aggregation.
 pub fn signature_aggregation(sigs: Vec<Signature>) -> Signature {
     let mut ss = Scalar::default();
 
@@ -271,13 +285,6 @@ pub fn signature_aggregation(sigs: Vec<Signature>) -> Signature {
 
     let rx = (&mut rxs).into();
     Signature { rx, s: ss }
-}
-
-/// A helper for test
-pub fn message_from_str(str: &str) -> Result<Message, Error> {
-    let mut m = [0u8; 32];
-    m.copy_from_slice(&hex::decode(str)?[..]);
-    Ok(Message::parse(&m))
 }
 
 #[cfg(test)]
@@ -327,8 +334,8 @@ mod tests {
     const SIGNATURE_14: &str = "6CFF5C3BA86C69EA4B7376F31A9BCB4F74C1976089B2D9963DA2E5543E17776969E89B4C5564D00349106B8497785DD7D1D713A8AE82B32FA79D5F7FC407D39B";
 
     fn check_sign(secret: &str, msg: &str, aux: &str, signature: &str) -> Result<bool, Error> {
-        let m = message_from_str(msg)?;
-        let a = message_from_str(aux)?;
+        let m = Message::parse_slice(&hex::decode(msg)?[..])?;
+        let a = Message::parse_slice(&hex::decode(aux)?[..])?;
 
         let seckey = Private::try_from(secret)?.0;
         let pubkey = PublicKey::from_secret_key(&seckey);
@@ -342,7 +349,8 @@ mod tests {
 
         let px = XOnly::try_from(pubkey)?;
         let pk = px.try_into()?;
-        let m = message_from_str(msg)?;
+        let m = Message::parse_slice(&hex::decode(msg)?[..])?;
+
         verify(&s, &m, pk)
     }
 
