@@ -15,18 +15,13 @@ use core::convert::TryFrom;
 use rand_core::{CryptoRng, RngCore};
 use secp256k1::{curve::Scalar, Message, PublicKey, SecretKey};
 
-use crate::{error::Error, schnorrsig::sign_no_aux, signature::Signature};
+use crate::{error::Error, signature::Signature};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Private(pub SecretKey);
 
 /// Convenient use of private key signatures
 impl Private {
-    pub fn sign_no_aux(&self, msg: &Message) -> Result<Signature, Error> {
-        let pubkey = PublicKey::from_secret_key(&self.0);
-        sign_no_aux(msg.clone(), self.0.clone(), pubkey)
-    }
-
     #[cfg(feature = "getrandom")]
     pub fn sign_with_rand(&self, msg: &Message) -> Result<Signature, Error> {
         let pubkey = PublicKey::from_secret_key(&self.0);

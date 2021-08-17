@@ -105,13 +105,7 @@ pub fn sign_with_aux(
     Ok(Signature { rx, s })
 }
 
-/// Sign a message using the secret key, but not aux rand
-pub fn sign_no_aux(msg: Message, seckey: SecretKey, pubkey: PublicKey) -> Result<Signature, Error> {
-    let aux = Message(Scalar::default());
-    sign_with_aux(msg, aux, seckey, pubkey)
-}
-
-/// Sign a message using the secret key, but not aux rand
+/// Sign a message using the secret key
 #[cfg(feature = "getrandom")]
 pub fn sign_with_rand_aux(
     msg: Message,
