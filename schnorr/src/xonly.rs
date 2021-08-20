@@ -128,11 +128,16 @@ impl TryInto<PublicKey> for XOnly {
     type Error = Error;
 
     fn try_into(self) -> Result<PublicKey, Self::Error> {
-        let mut f = Field::default();
-        let _ = f.set_b32(&self.0);
-        f.normalize();
+        let mut x = Field::default();
+        let _ = x.set_b32(&self.0);
+        x.normalize();
+
+        let mut elem = Affine::default();
+        elem.set_xquad(&x);
+        elem.y.normalize();
         // determine the first byte of the compressed format public key
-        let tag = if f.is_odd() {
+        let tag = if elem.y.is_odd() {
+            // need to convert y to an even number
             TAG_PUBKEY_EVEN
         } else {
             TAG_PUBKEY_ODD
@@ -144,7 +149,7 @@ impl TryInto<PublicKey> for XOnly {
                 *byte = tag;
                 continue;
             }
-            *byte = f.b32()[i - 1];
+            *byte = x.b32()[i - 1];
         }
         let p = PublicKey::parse_compressed(&c)?;
         Ok(p)

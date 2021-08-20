@@ -420,7 +420,7 @@ mod tests {
         // public key is not a valid X coordinate because it exceeds the field size
         assert_eq!(
             check_verify(SIGNATURE_14, MESSAGE_5, PUBKEY_7),
-            Err(Error::InvalidNoncePoint)
+            Err(Error::InvalidSignature)
         );
     }
 
