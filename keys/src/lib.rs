@@ -11,7 +11,9 @@ mod error;
 mod keypair;
 mod private;
 mod public;
+mod schnorr;
 mod signature;
+mod tagged;
 
 use light_bitcoin_primitives::*;
 

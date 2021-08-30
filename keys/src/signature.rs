@@ -4,11 +4,15 @@
 
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
-use core::{fmt, ops, str};
+use core::{
+    convert::{TryFrom, TryInto},
+    fmt, ops, str,
+};
+use secp256k1::curve::Scalar;
 
 use light_bitcoin_primitives::H520;
 
-use crate::error::Error;
+use crate::{error::Error, public::XOnly};
 
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Default)]
 pub struct Signature(Vec<u8>);
@@ -124,5 +128,51 @@ impl From<H520> for CompactSignature {
 impl From<CompactSignature> for H520 {
     fn from(s: CompactSignature) -> Self {
         s.0
+    }
+}
+
+/// This is 64-byte schnorr signature.
+///
+/// More details:
+/// [`BIP340`]: https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki#design
+/// A standard for 64-byte Schnorr signatures over the elliptic curve secp256k1
+#[derive(Eq, PartialEq, Clone)]
+pub struct SchnorrSignature {
+    pub rx: XOnly,
+    pub s: Scalar,
+}
+
+impl TryFrom<&str> for SchnorrSignature {
+    type Error = Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let mut s_slice = [0u8; 64];
+        s_slice.copy_from_slice(&hex::decode(value)?[..]);
+        s_slice.try_into()
+    }
+}
+
+impl TryFrom<[u8; 64]> for SchnorrSignature {
+    type Error = Error;
+
+    fn try_from(bytes: [u8; 64]) -> Result<Self, Self::Error> {
+        let mut rx_bytes = [0u8; 32];
+        rx_bytes.copy_from_slice(&bytes[0..32]);
+
+        let mut s_bytes = [0u8; 32];
+        s_bytes.copy_from_slice(&bytes[32..64]);
+        let mut s = Scalar::default();
+        let _ = s.set_b32(&s_bytes);
+        let rx = rx_bytes.try_into()?;
+        Ok(SchnorrSignature { rx, s })
+    }
+}
+
+impl fmt::Debug for SchnorrSignature {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut bytes = [0u8; 64];
+        bytes[0..32].copy_from_slice(&self.rx.0[..]);
+        bytes[32..64].copy_from_slice(&self.s.b32());
+        hex::encode(bytes).fmt(f)
     }
 }
