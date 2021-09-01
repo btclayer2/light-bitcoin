@@ -153,6 +153,12 @@ impl XOnly {
             Err(Error::XCoordinateNotExist)
         }
     }
+
+    pub fn verify(&self, message: &Message, signature: [u8; 64]) -> Result<bool, Error> {
+        let signature = SchnorrSignature::try_from(signature)?;
+
+        verify_schnorr(&signature, message, *self)
+    }
 }
 
 /// Convert [`Field`] to [`XOnly`]
