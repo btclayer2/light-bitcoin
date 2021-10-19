@@ -44,6 +44,13 @@ pub fn verify_schnorr(
     let pubkey: PublicKey = xonlypubkey.try_into()?;
     let mut P: Affine = pubkey.into();
 
+    // Note that the correctness of verification relies on the fact that
+    // lift_x always returns a point with an even Y coordinate.
+    P.y.normalize();
+    if P.y.is_odd() {
+        return Err(Error::InvalidPublic);
+    }
+
     let mut pj = secp256k1::curve::Jacobian::default();
     pj.set_ge(&P);
 
@@ -176,7 +183,7 @@ mod tests {
         // public key is not a valid X coordinate because it exceeds the field size
         assert_eq!(
             check_verify(SIGNATURE_14, MESSAGE_5, PUBKEY_7),
-            Err(Error::InvalidSignature)
+            Err(Error::InvalidPublic)
         );
     }
 }
