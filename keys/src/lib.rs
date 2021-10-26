@@ -17,7 +17,7 @@ mod tagged;
 
 use light_bitcoin_primitives::*;
 
-pub use self::address::{Address, Network, Type};
+pub use self::address::{Address, AddressTypes, Network, Type};
 pub use self::display::DisplayLayout;
 pub use self::error::Error;
 pub use self::keypair::KeyPair;

@@ -922,6 +922,10 @@ OP_ADD
             .parse::<Address>()
             .unwrap()
             .hash;
+        let address = match address {
+            keys::AddressTypes::Legacy(h) => h,
+            _ => todo!(),
+        };
         let script = Builder::build_p2pkh(&address);
         assert_eq!(script.script_type(), ScriptType::PubKeyHash);
         assert_eq!(
@@ -936,6 +940,10 @@ OP_ADD
             .parse::<Address>()
             .unwrap()
             .hash;
+        let address = match address {
+            keys::AddressTypes::Legacy(h) => h,
+            _ => todo!(),
+        };
         let script = Builder::build_p2sh(&address);
         assert_eq!(script.script_type(), ScriptType::ScriptHash);
         assert_eq!(

@@ -8,7 +8,7 @@
 use core::{fmt, ops, str};
 
 use light_bitcoin_crypto::checksum;
-use light_bitcoin_primitives::io;
+use light_bitcoin_primitives::{h160, io, H160, H256};
 use light_bitcoin_serialization::{Deserializable, Reader, Serializable, Stream};
 
 use codec::{Decode, Encode};
@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::display::DisplayLayout;
 use crate::error::Error;
-use crate::AddressHash;
+use crate::{AddressHash, XOnly};
 
 /// There are two address formats currently in use.
 /// https://bitcoin.org/en/developer-reference#address-conversion
@@ -115,6 +115,64 @@ impl Deserializable for Network {
     }
 }
 
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Encode, Decode)]
+pub enum AddressTypes {
+    Legacy(AddressHash),
+    WitnessV0ScriptHash(H256),
+    WitnessV0KeyHash(H160),
+    WitnessV1Taproot(XOnly),
+}
+
+impl Default for AddressTypes {
+    fn default() -> Self {
+        AddressTypes::Legacy(h160("default"))
+    }
+}
+
+impl Serializable for AddressTypes {
+    fn serialize(&self, s: &mut Stream) {
+        let _stream = match *self {
+            AddressTypes::Legacy(h) => s.append(&0).append(&h),
+            AddressTypes::WitnessV0ScriptHash(h) => s.append(&1).append(&h),
+            AddressTypes::WitnessV0KeyHash(h) => s.append(&2).append(&h),
+            AddressTypes::WitnessV1Taproot(h) => s.append(&3).append_slice(&h.0),
+        };
+    }
+}
+
+impl Deserializable for AddressTypes {
+    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
+    where
+        Self: Sized,
+        T: io::Read,
+    {
+        let t: u32 = reader.read()?;
+        match t {
+            0 => {
+                let h: H160 = reader.read()?;
+                Ok(AddressTypes::Legacy(h))
+            }
+            1 => {
+                let h: H256 = reader.read()?;
+                Ok(AddressTypes::WitnessV0ScriptHash(h))
+            }
+            2 => {
+                let h: H160 = reader.read()?;
+                Ok(AddressTypes::WitnessV0KeyHash(h))
+            }
+            3 => {
+                let mut keys = [0u8; 32];
+                reader.read_slice(&mut keys)?;
+
+                Ok(AddressTypes::WitnessV1Taproot(XOnly(keys)))
+            }
+            _ => Err(io::Error::ReadMalformedData),
+        }
+    }
+}
+
 /// `AddressHash` with network identifier and format type
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Default)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -126,7 +184,7 @@ pub struct Address {
     /// The network of the address.
     pub network: Network,
     /// Public key hash.
-    pub hash: AddressHash,
+    pub hash: AddressTypes,
 }
 
 impl fmt::Display for Address {
@@ -170,7 +228,10 @@ impl DisplayLayout for Address {
             (Network::Testnet, Type::P2SH) => 196,
         };
 
-        result[1..21].copy_from_slice(self.hash.as_bytes());
+        match self.hash {
+            AddressTypes::Legacy(h) => result[1..21].copy_from_slice(&h.as_bytes()),
+            _ => todo!(),
+        };
         let cs = checksum(&result[0..21]);
         result[21..25].copy_from_slice(cs.as_bytes());
         AddressDisplayLayout(result)
@@ -201,15 +262,13 @@ impl DisplayLayout for Address {
         Ok(Address {
             kind,
             network,
-            hash,
+            hash: AddressTypes::Legacy(hash),
         })
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use light_bitcoin_primitives::h160;
-
     use super::*;
 
     #[test]
@@ -217,7 +276,7 @@ mod tests {
         let address = Address {
             kind: Type::P2PKH,
             network: Network::Mainnet,
-            hash: h160("3f4aa1fedf1f54eeb03b759deadb36676b184911"),
+            hash: AddressTypes::Legacy(h160("3f4aa1fedf1f54eeb03b759deadb36676b184911")),
         };
         assert_eq!(
             address.to_string(),
@@ -227,7 +286,7 @@ mod tests {
         let address = Address {
             kind: Type::P2SH,
             network: Network::Mainnet,
-            hash: h160("d246f700f4969106291a75ba85ad863cae68d667"),
+            hash: AddressTypes::Legacy(h160("d246f700f4969106291a75ba85ad863cae68d667")),
         };
         assert_eq!(
             address.to_string(),
@@ -240,7 +299,7 @@ mod tests {
         let address = Address {
             kind: Type::P2PKH,
             network: Network::Mainnet,
-            hash: h160("3f4aa1fedf1f54eeb03b759deadb36676b184911"),
+            hash: AddressTypes::Legacy(h160("3f4aa1fedf1f54eeb03b759deadb36676b184911")),
         };
         assert_eq!(
             address,
@@ -250,7 +309,7 @@ mod tests {
         let address = Address {
             kind: Type::P2SH,
             network: Network::Mainnet,
-            hash: h160("d246f700f4969106291a75ba85ad863cae68d667"),
+            hash: AddressTypes::Legacy(h160("d246f700f4969106291a75ba85ad863cae68d667")),
         };
         assert_eq!(
             address,

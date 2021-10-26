@@ -379,7 +379,7 @@ fn compute_hash_outputs(
 
 #[cfg(test)]
 mod tests {
-    use light_bitcoin_keys::{Address, Private};
+    use light_bitcoin_keys::{Address, AddressTypes, Private};
     use light_bitcoin_primitives::{h256, h256_rev};
 
     use super::*;
@@ -410,7 +410,11 @@ mod tests {
         // this is irrelevant
         let kp = KeyPair::from_private(private).unwrap();
         assert_eq!(kp.address(), from);
-        assert_eq!(&current_output[3..23], to.hash.as_bytes());
+        let address = match to.hash {
+            AddressTypes::Legacy(h) => h,
+            _ => todo!(),
+        };
+        assert_eq!(&current_output[3..23], address.as_bytes());
 
         let unsigned_input = UnsignedTransactionInput {
             sequence: 0xffff_ffff,

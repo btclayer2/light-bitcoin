@@ -4,7 +4,7 @@ use core::fmt;
 
 use light_bitcoin_primitives::{H264, H520};
 
-use crate::address::{Address, Network, Type};
+use crate::address::{Address, AddressTypes, Network, Type};
 use crate::error::Error;
 use crate::private::Private;
 use crate::public::Public;
@@ -70,7 +70,7 @@ impl KeyPair {
         Address {
             kind: Type::P2PKH,
             network: self.private.network,
-            hash: self.public.address_hash(),
+            hash: AddressTypes::Legacy(self.public.address_hash()),
         }
     }
 }
