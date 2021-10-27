@@ -6,7 +6,10 @@
 //! https://en.bitcoin.it/wiki/Address
 
 use core::{fmt, ops, str};
+use std::convert::TryFrom;
 
+use bitcoin_bech32::constants::Network as Bech32Network;
+use bitcoin_bech32::{u5, WitnessProgram};
 use light_bitcoin_crypto::checksum;
 use light_bitcoin_primitives::{h160, io, H160, H256};
 use light_bitcoin_serialization::{Deserializable, Reader, Serializable, Stream};
@@ -201,7 +204,36 @@ pub struct Address {
 
 impl fmt::Display for Address {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        bs58::encode(self.layout().0).into_string().fmt(f)
+        match self.hash {
+            AddressTypes::Legacy(_) => bs58::encode(self.layout().0).into_string().fmt(f),
+            AddressTypes::WitnessV0ScriptHash(h) => {
+                let witness = WitnessProgram::new(
+                    u5::try_from_u8(0).unwrap(),
+                    h.0.to_vec(),
+                    Bech32Network::Signet,
+                )
+                .unwrap();
+                witness.to_string().fmt(f)
+            }
+            AddressTypes::WitnessV0KeyHash(h) => {
+                let witness = WitnessProgram::new(
+                    u5::try_from_u8(0).unwrap(),
+                    h.0.to_vec(),
+                    Bech32Network::Signet,
+                )
+                .unwrap();
+                witness.to_string().fmt(f)
+            }
+            AddressTypes::WitnessV1Taproot(h) => {
+                let witness = WitnessProgram::new(
+                    u5::try_from_u8(1).unwrap(),
+                    h.0.to_vec(),
+                    Bech32Network::Signet,
+                )
+                .unwrap();
+                witness.to_string().fmt(f)
+            }
+        }
     }
 }
 
@@ -209,10 +241,39 @@ impl str::FromStr for Address {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Error> {
-        let hex = bs58::decode(s)
-            .into_vec()
-            .map_err(|_| Error::InvalidAddress)?;
-        Address::from_layout(&hex)
+        if bs58::decode(s).into_vec().is_ok() {
+            let hex = bs58::decode(s)
+                .into_vec()
+                .map_err(|_| Error::InvalidAddress)?;
+            Address::from_layout(&hex)
+        } else {
+            let witness = WitnessProgram::from_str(s).map_err(|_| Error::InvalidAddress)?;
+            let version = witness.version().to_u8();
+
+            let (kind, hash) = if version == 1 {
+                (
+                    Type::P2TR,
+                    AddressTypes::WitnessV1Taproot(XOnly::try_from(witness.program())?),
+                )
+            } else {
+                if witness.program().len() == 20 {
+                    (
+                        Type::P2WPKH,
+                        AddressTypes::WitnessV0KeyHash(H160::from_slice(witness.program())),
+                    )
+                } else {
+                    (
+                        Type::P2WSH,
+                        AddressTypes::WitnessV0ScriptHash(H256::from_slice(witness.program())),
+                    )
+                }
+            };
+            Ok(Self {
+                kind,
+                network: Network::Mainnet,
+                hash,
+            })
+        }
     }
 }
 

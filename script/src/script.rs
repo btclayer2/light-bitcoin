@@ -30,9 +30,10 @@ pub enum ScriptType {
     ScriptHash,
     Multisig,
     NullData,
-    WitnessScript,
-    WitnessKey,
-    WitnessTaproot,
+    WitnessV0Scripthash,
+    WitnessV0Keyhash,
+    WitnessV1Taproot,
+    WitnessUnknown,
 }
 
 /// Address from Script
@@ -425,11 +426,11 @@ impl Script {
         } else if self.is_null_data_script() {
             ScriptType::NullData
         } else if self.is_pay_to_witness_key_hash() {
-            ScriptType::WitnessKey
+            ScriptType::WitnessV0Keyhash
         } else if self.is_pay_to_witness_script_hash() {
-            ScriptType::WitnessScript
+            ScriptType::WitnessV0Scripthash
         } else if self.is_pay_to_witness_taproot() {
-            ScriptType::WitnessTaproot
+            ScriptType::WitnessV1Taproot
         } else {
             ScriptType::NonStandard
         }
@@ -526,17 +527,18 @@ impl Script {
                 Ok(addresses)
             }
             ScriptType::NullData => Ok(vec![]),
-            ScriptType::WitnessScript => Ok(vec![ScriptAddress::new_p2wsh(H256::from_slice(
-                &self.data[2..34],
-            ))]),
-            ScriptType::WitnessKey => Ok(vec![ScriptAddress::new_p2wpkh(H160::from_slice(
+            ScriptType::WitnessV0Scripthash => Ok(vec![ScriptAddress::new_p2wsh(
+                H256::from_slice(&self.data[2..34]),
+            )]),
+            ScriptType::WitnessV0Keyhash => Ok(vec![ScriptAddress::new_p2wpkh(H160::from_slice(
                 &self.data[2..22],
             ))]),
-            ScriptType::WitnessTaproot => {
+            ScriptType::WitnessV1Taproot => {
                 let mut keys = [0u8; 32];
                 keys.copy_from_slice(&self.data[2..34]);
                 Ok(vec![ScriptAddress::new_p2tr(XOnly(keys))])
             }
+            ScriptType::WitnessUnknown => Ok(vec![]),
         }
     }
 
@@ -793,6 +795,14 @@ mod tests {
     }
 
     #[test]
+    fn test_is_pay_to_taproot() {
+        let script: Script = "512052898a03a9f04bb83f8a48fb953089de10e6ee70658b059551ebf7c008b05b7a"
+            .parse()
+            .unwrap();
+        assert!(script.is_pay_to_witness_taproot());
+    }
+
+    #[test]
     fn test_script_debug() {
         let script = Builder::default()
             .push_num(3.into())
@@ -1010,6 +1020,63 @@ OP_ADD
                 ScriptAddress::new_p2pkh(address1),
                 ScriptAddress::new_p2pkh(address2),
             ])
+        );
+    }
+
+    #[test]
+    fn test_extract_destinations_witness_v0_keyhash() {
+        // signet test data
+        let address = "tb1q002k02rkff3d0gmprwmyg7z95gncmn4hqdsvug"
+            .parse::<Address>()
+            .unwrap()
+            .hash;
+        let address = match address {
+            AddressTypes::WitnessV0KeyHash(h) => h,
+            _ => todo!(),
+        };
+        let script = Builder::build_p2wpkh(&address);
+        assert_eq!(script.script_type(), ScriptType::WitnessV0Keyhash);
+        assert_eq!(
+            script.extract_destinations(),
+            Ok(vec![ScriptAddress::new_p2wpkh(address),])
+        );
+    }
+
+    #[test]
+    fn test_extract_destinations_witness_v0_scripthash() {
+        // signet test data
+        let address = "tb1qft5p2uhsdcdc3l2ua4ap5qqfg4pjaqlp250x7us7a8qqhrxrxfsqaqh7jw"
+            .parse::<Address>()
+            .unwrap()
+            .hash;
+        let address = match address {
+            AddressTypes::WitnessV0ScriptHash(h) => h,
+            _ => todo!(),
+        };
+        let script = Builder::build_p2wsh(&address);
+        assert_eq!(script.script_type(), ScriptType::WitnessV0Scripthash);
+        assert_eq!(
+            script.extract_destinations(),
+            Ok(vec![ScriptAddress::new_p2wsh(address),])
+        );
+    }
+
+    #[test]
+    fn test_extract_destinations_witness_v1_taproot() {
+        // signet test data
+        let address = "tb1p22yc5qaf7p9ms0u2frae2vyfmcgwdmnsvk9st923a0muqz9stdaqn3h0p6"
+            .parse::<Address>()
+            .unwrap()
+            .hash;
+        let address = match address {
+            AddressTypes::WitnessV1Taproot(h) => h,
+            _ => todo!(),
+        };
+        let script = Builder::build_p2tr(&address);
+        assert_eq!(script.script_type(), ScriptType::WitnessV1Taproot);
+        assert_eq!(
+            script.extract_destinations(),
+            Ok(vec![ScriptAddress::new_p2tr(address),])
         );
     }
 

@@ -1,6 +1,7 @@
 //! Script builder
 
-use light_bitcoin_keys::AddressHash;
+use light_bitcoin_chain::{H160, H256};
+use light_bitcoin_keys::{AddressHash, XOnly};
 use light_bitcoin_primitives::Bytes;
 
 use crate::num::Num;
@@ -31,6 +32,30 @@ impl Builder {
             .push_opcode(Opcode::OP_HASH160)
             .push_bytes(address.as_bytes())
             .push_opcode(Opcode::OP_EQUAL)
+            .into_script()
+    }
+
+    /// Builds p2wpkh script pubkey
+    pub fn build_p2wpkh(address: &H160) -> Script {
+        Builder::default()
+            .push_opcode(Opcode::OP_0)
+            .push_bytes(address.as_bytes())
+            .into_script()
+    }
+
+    /// Builds p2wsh script pubkey
+    pub fn build_p2wsh(address: &H256) -> Script {
+        Builder::default()
+            .push_opcode(Opcode::OP_0)
+            .push_bytes(address.as_bytes())
+            .into_script()
+    }
+
+    /// Builds p2tr script pubkey
+    pub fn build_p2tr(address: &XOnly) -> Script {
+        Builder::default()
+            .push_opcode(Opcode::OP_1)
+            .push_bytes(&address.0)
             .into_script()
     }
 
