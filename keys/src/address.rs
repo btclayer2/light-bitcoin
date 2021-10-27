@@ -204,31 +204,35 @@ pub struct Address {
 
 impl fmt::Display for Address {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let network = match self.network {
+            Network::Mainnet => Bech32Network::Bitcoin,
+            Network::Testnet => Bech32Network::Testnet,
+        };
         match self.hash {
             AddressTypes::Legacy(_) => bs58::encode(self.layout().0).into_string().fmt(f),
             AddressTypes::WitnessV0ScriptHash(h) => {
                 let witness = WitnessProgram::new(
-                    u5::try_from_u8(0).unwrap(),
+                    u5::try_from_u8(0).map_err(|_| fmt::Error)?,
                     h.0.to_vec(),
-                    Bech32Network::Signet,
+                    network,
                 )
                 .unwrap();
                 witness.to_string().fmt(f)
             }
             AddressTypes::WitnessV0KeyHash(h) => {
                 let witness = WitnessProgram::new(
-                    u5::try_from_u8(0).unwrap(),
+                    u5::try_from_u8(0).map_err(|_| fmt::Error)?,
                     h.0.to_vec(),
-                    Bech32Network::Signet,
+                    network,
                 )
                 .unwrap();
                 witness.to_string().fmt(f)
             }
             AddressTypes::WitnessV1Taproot(h) => {
                 let witness = WitnessProgram::new(
-                    u5::try_from_u8(1).unwrap(),
+                    u5::try_from_u8(1).map_err(|_| fmt::Error)?,
                     h.0.to_vec(),
-                    Bech32Network::Signet,
+                    network,
                 )
                 .unwrap();
                 witness.to_string().fmt(f)
