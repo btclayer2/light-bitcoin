@@ -33,6 +33,12 @@ pub enum Type {
     /// Newer P2SH type starting with the number 3, eg: 3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy.
     /// https://bitcoin.org/en/glossary/p2sh-address
     P2SH,
+    /// Pay to Witness PubKey Hash
+    P2WPKH,
+    /// Pay to Witness Script Hash
+    P2WSH,
+    /// Pay to Witness Taproot
+    P2TR,
 }
 
 impl Default for Type {
@@ -46,6 +52,9 @@ impl Type {
         match v {
             0 => Some(Type::P2PKH),
             1 => Some(Type::P2SH),
+            2 => Some(Type::P2WPKH),
+            3 => Some(Type::P2WSH),
+            4 => Some(Type::P2TR),
             _ => None,
         }
     }
@@ -56,6 +65,9 @@ impl Serializable for Type {
         let _stream = match *self {
             Type::P2PKH => s.append(&Type::P2PKH),
             Type::P2SH => s.append(&Type::P2SH),
+            Type::P2WPKH => s.append(&Type::P2WPKH),
+            Type::P2WSH => s.append(&Type::P2WSH),
+            Type::P2TR => s.append(&Type::P2TR),
         };
     }
 }
@@ -226,6 +238,7 @@ impl DisplayLayout for Address {
             (Network::Mainnet, Type::P2SH) => 5,
             (Network::Testnet, Type::P2PKH) => 111,
             (Network::Testnet, Type::P2SH) => 196,
+            _ => todo!(),
         };
 
         match self.hash {

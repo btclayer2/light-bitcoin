@@ -3,9 +3,8 @@
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
 use core::{fmt, ops, str};
-
-use light_bitcoin_keys::{self as keys, AddressHash, Public};
-use light_bitcoin_primitives::Bytes;
+use light_bitcoin_keys::{self as keys, AddressHash, AddressTypes, Public, XOnly};
+use light_bitcoin_primitives::{Bytes, H160, H256};
 
 use crate::error::Error;
 use crate::opcode::Opcode;
@@ -33,6 +32,7 @@ pub enum ScriptType {
     NullData,
     WitnessScript,
     WitnessKey,
+    WitnessTaproot,
 }
 
 /// Address from Script
@@ -41,7 +41,7 @@ pub struct ScriptAddress {
     /// The type of the address.
     pub kind: keys::Type,
     /// Public key hash.
-    pub hash: AddressHash,
+    pub hash: AddressTypes,
 }
 
 impl ScriptAddress {
@@ -49,7 +49,7 @@ impl ScriptAddress {
     pub fn new_p2pkh(hash: AddressHash) -> Self {
         ScriptAddress {
             kind: keys::Type::P2PKH,
-            hash,
+            hash: AddressTypes::Legacy(hash),
         }
     }
 
@@ -57,7 +57,31 @@ impl ScriptAddress {
     pub fn new_p2sh(hash: AddressHash) -> Self {
         ScriptAddress {
             kind: keys::Type::P2SH,
-            hash,
+            hash: AddressTypes::Legacy(hash),
+        }
+    }
+
+    /// Creates P2WPKH-type ScriptAddress
+    pub fn new_p2wpkh(hash: H160) -> Self {
+        ScriptAddress {
+            kind: keys::Type::P2WPKH,
+            hash: AddressTypes::WitnessV0KeyHash(hash),
+        }
+    }
+
+    /// Creates P2WSH-type ScriptAddress
+    pub fn new_p2wsh(hash: H256) -> Self {
+        ScriptAddress {
+            kind: keys::Type::P2WSH,
+            hash: AddressTypes::WitnessV0ScriptHash(hash),
+        }
+    }
+
+    /// Creates P2TR-type ScriptAddress
+    pub fn new_p2tr(hash: XOnly) -> Self {
+        ScriptAddress {
+            kind: keys::Type::P2TR,
+            hash: AddressTypes::WitnessV1Taproot(hash),
         }
     }
 }
@@ -208,6 +232,13 @@ impl Script {
     pub fn is_pay_to_witness_script_hash(&self) -> bool {
         self.data.len() == 34
             && self.data[0] == Opcode::OP_0 as u8
+            && self.data[1] == Opcode::OP_PUSHBYTES_32 as u8
+    }
+
+    /// Extra-fast test for pay-to-witness-taproot scripts.
+    pub fn is_pay_to_witness_taproot(&self) -> bool {
+        self.data.len() == 34
+            && self.data[0] == Opcode::OP_1 as u8
             && self.data[1] == Opcode::OP_PUSHBYTES_32 as u8
     }
 
@@ -397,6 +428,8 @@ impl Script {
             ScriptType::WitnessKey
         } else if self.is_pay_to_witness_script_hash() {
             ScriptType::WitnessScript
+        } else if self.is_pay_to_witness_taproot() {
+            ScriptType::WitnessTaproot
         } else {
             ScriptType::NonStandard
         }
@@ -493,11 +526,16 @@ impl Script {
                 Ok(addresses)
             }
             ScriptType::NullData => Ok(vec![]),
-            ScriptType::WitnessScript => {
-                Ok(vec![]) // TODO
-            }
-            ScriptType::WitnessKey => {
-                Ok(vec![]) // TODO
+            ScriptType::WitnessScript => Ok(vec![ScriptAddress::new_p2wsh(H256::from_slice(
+                &self.data[2..34],
+            ))]),
+            ScriptType::WitnessKey => Ok(vec![ScriptAddress::new_p2wpkh(H160::from_slice(
+                &self.data[2..22],
+            ))]),
+            ScriptType::WitnessTaproot => {
+                let mut keys = [0u8; 32];
+                keys.copy_from_slice(&self.data[2..34]);
+                Ok(vec![ScriptAddress::new_p2tr(XOnly(keys))])
             }
         }
     }
@@ -897,7 +935,7 @@ OP_ADD
         assert_eq!(script.script_type(), ScriptType::PubKey);
         assert_eq!(
             script.extract_destinations(),
-            Ok(vec![ScriptAddress::new_p2pkh(address),])
+            Ok(vec![ScriptAddress::new_p2pkh(address)])
         );
     }
 
@@ -912,7 +950,7 @@ OP_ADD
         assert_eq!(script.script_type(), ScriptType::PubKey);
         assert_eq!(
             script.extract_destinations(),
-            Ok(vec![ScriptAddress::new_p2pkh(address),])
+            Ok(vec![ScriptAddress::new_p2pkh(address)])
         );
     }
 
@@ -930,7 +968,7 @@ OP_ADD
         assert_eq!(script.script_type(), ScriptType::PubKeyHash);
         assert_eq!(
             script.extract_destinations(),
-            Ok(vec![ScriptAddress::new_p2pkh(address),])
+            Ok(vec![ScriptAddress::new_p2pkh(address)])
         );
     }
 
@@ -948,7 +986,7 @@ OP_ADD
         assert_eq!(script.script_type(), ScriptType::ScriptHash);
         assert_eq!(
             script.extract_destinations(),
-            Ok(vec![ScriptAddress::new_p2sh(address),])
+            Ok(vec![ScriptAddress::new_p2sh(address)])
         );
     }
 
