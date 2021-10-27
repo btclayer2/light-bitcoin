@@ -249,7 +249,10 @@ impl str::FromStr for Address {
         } else {
             let witness = WitnessProgram::from_str(s).map_err(|_| Error::InvalidAddress)?;
             let version = witness.version().to_u8();
-
+            let network = match witness.network() {
+                Bech32Network::Bitcoin => Network::Mainnet,
+                _ => Network::Testnet,
+            };
             let (kind, hash) = if version == 1 {
                 (
                     Type::P2TR,
@@ -270,7 +273,7 @@ impl str::FromStr for Address {
             };
             Ok(Self {
                 kind,
-                network: Network::Mainnet,
+                network,
                 hash,
             })
         }
