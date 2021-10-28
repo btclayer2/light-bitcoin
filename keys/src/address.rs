@@ -5,6 +5,8 @@
 //!
 //! https://en.bitcoin.it/wiki/Address
 
+extern crate alloc;
+use alloc::string::ToString;
 use core::{convert::TryFrom, fmt, ops, str};
 
 use bitcoin_bech32::constants::Network as Bech32Network;
