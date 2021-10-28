@@ -5,13 +5,12 @@
 //!
 //! https://en.bitcoin.it/wiki/Address
 
-use core::{fmt, ops, str};
-use std::convert::TryFrom;
+use core::{convert::TryFrom, fmt, ops, str};
 
 use bitcoin_bech32::constants::Network as Bech32Network;
 use bitcoin_bech32::{u5, WitnessProgram};
 use light_bitcoin_crypto::checksum;
-use light_bitcoin_primitives::{h160, io, H160, H256};
+use light_bitcoin_primitives::{io, H160, H256};
 use light_bitcoin_serialization::{Deserializable, Reader, Serializable, Stream};
 
 use codec::{Decode, Encode};
@@ -351,6 +350,7 @@ impl DisplayLayout for Address {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use light_bitcoin_primitives::h160;
 
     #[test]
     fn test_address_to_string() {
