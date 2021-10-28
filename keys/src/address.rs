@@ -142,7 +142,7 @@ pub enum AddressTypes {
 
 impl Default for AddressTypes {
     fn default() -> Self {
-        AddressTypes::Legacy(h160("default"))
+        AddressTypes::Legacy(AddressHash::default())
     }
 }
 
