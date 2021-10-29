@@ -4,7 +4,7 @@
 use alloc::{vec, vec::Vec};
 
 use light_bitcoin_chain::{OutPoint, Transaction, TransactionInput, TransactionOutput};
-use light_bitcoin_crypto::dhash256;
+use light_bitcoin_crypto::{dhash256, sha256};
 use light_bitcoin_keys::KeyPair;
 use light_bitcoin_primitives::{Bytes, H256};
 use light_bitcoin_serialization::Stream;
@@ -17,14 +17,88 @@ pub enum SignatureVersion {
     Base,
     WitnessV0,
     ForkId,
+    Taproot,
+    TapScript,
+}
+
+#[derive(Debug)]
+pub struct ScriptExecutionData {
+    // Whether m_tapleaf_hash is initialized.
+    pub m_tapleaf_hash_init: bool,
+    // The tapleaf hash.
+    pub m_tapleaf_hash: H256,
+
+    // Whether m_codeseparator_pos is initialized.
+    pub m_codeseparator_pos_init: bool,
+    // Opcode position of the last executed OP_CODESEPARATOR (or 0xFFFFFFFF if none executed).
+    pub m_codeseparator_pos: u32,
+
+    // Whether m_annex_present and (when needed) m_annex_hash are initialized.
+    pub m_annex_init: bool,
+    // Whether an annex is present.
+    pub m_annex_present: bool,
+    // Hash of the annex data.
+    pub m_annex_hash: H256,
+
+    // Whether m_validation_weight_left is initialized.
+    pub m_validation_weight_left_init: bool,
+    // How much validation weight is left (decremented for every successful non-empty signature check).
+    pub m_validation_weight_left: i64,
+}
+
+impl Default for ScriptExecutionData {
+    fn default() -> Self {
+        ScriptExecutionData {
+            m_tapleaf_hash_init: false,
+            m_tapleaf_hash: Default::default(),
+            m_codeseparator_pos_init: false,
+            m_codeseparator_pos: 0xFFFFFFFF,
+            m_annex_init: false,
+            m_annex_present: false,
+            m_annex_hash: Default::default(),
+            m_validation_weight_left_init: false,
+            m_validation_weight_left: 0,
+        }
+    }
+}
+
+impl ScriptExecutionData {
+    // Refer: https://github.com/bitcoin/bitcoin/blob/7fcf53f7b4524572d1d0c9a5fdc388e87eb02416/test/functional/test_framework/script.py#L745-L786
+    pub fn with_script(&mut self, script: &Script) {
+        let mut stream = Stream::default();
+        stream.append(&sha256(b"TapLeaf"));
+        stream.append(&sha256(b"TapLeaf"));
+        stream.append(&0xc0);
+        stream.append_list(&**script);
+        let out = stream.out();
+        self.m_tapleaf_hash_init = true;
+        self.m_tapleaf_hash = sha256(&out);
+    }
+
+    pub fn with_annex(&mut self, annex: &Script) {
+        let mut stream = Stream::default();
+        stream.append_list(&**annex);
+        let out = stream.out();
+        self.m_annex_init = true;
+        self.m_annex_present = true;
+        self.m_annex_hash = sha256(&out);
+    }
+
+    pub fn with_codeseparator_pos(&mut self, pos: u32) {
+        self.m_codeseparator_pos_init = true;
+        self.m_codeseparator_pos = pos;
+    }
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 #[repr(u8)]
 pub enum SighashBase {
+    // Taproot only; implied when sighash byte is missing, and equivalent to SIGHASH_ALL
+    Default = 0,
     All = 1,
     None = 2,
     Single = 3,
+    Mask = 0x80,
 }
 
 impl From<SighashBase> for u32 {
@@ -81,8 +155,10 @@ impl Sighash {
         let anyone_can_pay = (u & 0x80) == 0x80;
         let fork_id = version == SignatureVersion::ForkId && (u & 0x40) == 0x40;
         let base = match u & 0x1f {
+            0 => SighashBase::Default,
             2 => SighashBase::None,
             3 => SighashBase::Single,
+            0x80 => SighashBase::Mask,
             _ => SighashBase::All,
         };
 
@@ -127,6 +203,7 @@ impl From<Transaction> for TransactionInputSigner {
 }
 
 impl TransactionInputSigner {
+    /// script_pubkey - script_pubkey of input's previous_output pubkey
     pub fn signature_hash(
         &self,
         input_index: usize,
@@ -154,6 +231,7 @@ impl TransactionInputSigner {
                 sighashtype,
                 sighash,
             ),
+            _ => todo!()
         }
     }
 
@@ -257,6 +335,8 @@ impl TransactionInputSigner {
                 })
                 .collect(),
             SighashBase::None => Vec::new(),
+            SighashBase::Default => todo!(),
+            SighashBase::Mask => todo!(),
         };
 
         let tx = Transaction {
@@ -328,6 +408,103 @@ impl TransactionInputSigner {
             sighash,
         )
     }
+
+    // Refer: https://github.com/bitcoin/bitcoin/blob/a93e7a442250d3522261d6e04d5660c5fecd2d8a/src/script/interpreter.cpp#L1503-L1587
+    // and https://github.com/bitcoin/bitcoin/blob/7fcf53f7b4524572d1d0c9a5fdc388e87eb02416/test/functional/test_framework/script.py#L745-L786
+    pub fn signature_hash_schnorr(
+        &self,
+        input_index: usize,
+        input_amount: u64,
+        spent_outputs: Vec<TransactionOutput>,
+        sigversion: SignatureVersion,
+        sighashtype: u32,
+        execdata: &ScriptExecutionData,
+    ) -> H256 {
+        let sighash = Sighash::from_u32(sigversion, sighashtype);
+        let key_version = 0u8;
+        let ext_flag = if sigversion == SignatureVersion::Taproot {
+            0u8
+        } else {
+            1u8
+        };
+
+        let mut stream = Stream::default();
+
+        stream.append(&sha256(b"TapSighash"));
+        stream.append(&sha256(b"TapSighash"));
+        // Epoch
+        stream.append(&0u8);
+        // Hash type
+        let hash_type: u8 = match sighash.base {
+            SighashBase::Default => 0x00,
+            SighashBase::All => 0x01,
+            SighashBase::None => 0x02,
+            SighashBase::Single => 0x03,
+            SighashBase::Mask => 0x80,
+        };
+        let output_type = if hash_type == 0 { 1u8 } else { hash_type & 3 };
+        let input_type = hash_type & 128;
+
+        stream.append(&hash_type);
+        // Transaction level data
+        stream.append(&self.version);
+        stream.append(&self.lock_time);
+
+        let tx_to_prevouts = compute_schnorr_hash_prevouts(&self.inputs);
+        let tx_to_sequence = compute_schnorr_hash_sequence(&self.inputs);
+        let tx_to_outputs = compute_schnorr_hash_outputs(input_index, &self.outputs);
+        let spent_outputs_amounts = compute_schnorr_hash_amounts(&spent_outputs);
+        let spent_outputs_scripts = compute_schnorr_hash_scripts(&spent_outputs);
+        if input_type != 128 {
+            stream.append(&tx_to_prevouts);
+            stream.append(&spent_outputs_amounts);
+            stream.append(&spent_outputs_scripts);
+            stream.append(&tx_to_sequence);
+        }
+        if output_type == 1 {
+            stream.append(&tx_to_outputs);
+        }
+
+        let have_annex = if execdata.m_annex_present { 1u8 } else { 0u8 };
+        let spend_type = (ext_flag << 1) + have_annex;
+        stream.append(&spend_type);
+        // L1489-1495
+        if input_type == 128 {
+            stream.append(&self.inputs[input_index].previous_output);
+            stream.append(&input_amount);
+            stream.append_list(&spent_outputs[input_index].script_pubkey);
+            stream.append(&self.inputs[input_index].sequence);
+        } else {
+            stream.append(&(input_index as u32));
+        }
+
+        if execdata.m_annex_present {
+            stream.append(&execdata.m_annex_hash);
+        }
+
+        // Data about the output (if only one).
+        if output_type == 3 {
+            // input_index >= tx_to.vout.size() return false
+            let mut single_output = Stream::default();
+            single_output.append(&self.outputs[input_index]);
+            let output = single_output.out();
+            stream.append(&sha256(&output));
+        }
+
+        // Additional data for BIP 342 signatures
+        if sigversion == SignatureVersion::TapScript {
+            if execdata.m_tapleaf_hash_init {
+                stream.append(&execdata.m_tapleaf_hash);
+                stream.append(&key_version);
+            }
+            if execdata.m_codeseparator_pos_init {
+                stream.append(&execdata.m_codeseparator_pos);
+            }
+        }
+        let out = stream.out();
+
+        sha256(&out)
+    }
 }
 
 fn compute_hash_prevouts(sighash: Sighash, inputs: &[UnsignedTransactionInput]) -> H256 {
@@ -375,6 +552,46 @@ fn compute_hash_outputs(
         }
         _ => H256::zero(),
     }
+}
+
+fn compute_schnorr_hash_prevouts(inputs: &[UnsignedTransactionInput]) -> H256 {
+    let mut stream = Stream::default();
+    for input in inputs {
+        stream.append(&input.previous_output);
+    }
+    sha256(&stream.out())
+}
+
+fn compute_schnorr_hash_sequence(inputs: &[UnsignedTransactionInput]) -> H256 {
+    let mut stream = Stream::default();
+    for input in inputs {
+        stream.append(&input.sequence);
+    }
+    sha256(&stream.out())
+}
+
+fn compute_schnorr_hash_outputs(_input_index: usize, outputs: &[TransactionOutput]) -> H256 {
+    let mut stream = Stream::default();
+    for output in outputs {
+        stream.append(output);
+    }
+    sha256(&stream.out())
+}
+
+fn compute_schnorr_hash_amounts(outputs: &[TransactionOutput]) -> H256 {
+    let mut stream = Stream::default();
+    for output in outputs {
+        stream.append(&output.value);
+    }
+    sha256(&stream.out())
+}
+
+fn compute_schnorr_hash_scripts(outputs: &[TransactionOutput]) -> H256 {
+    let mut stream = Stream::default();
+    for output in outputs {
+        stream.append(&output.script_pubkey);
+    }
+    sha256(&stream.out())
 }
 
 #[cfg(test)]
@@ -444,6 +661,30 @@ mod tests {
             SighashBase::All.into(),
         );
         assert_eq!(hash, expected_signature_hash);
+    }
+
+    #[test]
+    fn test_schnorr_sighash() {
+        let mut stream = Stream::default();
+        stream.append(&sha256(b"TapLeaf"));
+        stream.append(&sha256(b"TapLeaf"));
+        stream.append(&0xc0);
+        let out = stream.out();
+        let m_tapleaf_hash = sha256(&out);
+        println!("{}", hex::encode(m_tapleaf_hash.as_bytes()));
+        let tx_prev: Transaction = "02000000000101bb32358c3f04fc9ae2ef8942ce07b9517ace985633b85465b808a9a5375933d5000000000000000000028096980000000000225120dc82a9c33d787242d80fb4535bcc8d90bb13843fea52c9e78bb43c541dd607b90000000000000000326a3035516a706f3772516e7751657479736167477a6334526a376f737758534c6d4d7141754332416255364c464646476a380140df155ac9b77864be2cce361a99c944fb6fd6efa17d56c335b35c8f5314a1f15d9dd2c6fd91ae024ec8ad1a6ab345e3c5033b750090dfdddf25d458e4217353c600000000".parse().unwrap();
+        let tx: Transaction = "02000000000101de36752296e6ad122c14f953f0541c8eae52eca02bcfe452e47eb035731d2c8d00000000000000000001404b4c0000000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f0340fc196ea71912cef4d65ffaea0f15185b4e2afbd15fa68d1c91b43751650e4d33f45109f4ed316821d8e6c7b8756ce52f90253675a1beea91d5b1c2cc254caf8a222083f579dd2380bd31355d066086e1b4d46b518987c1f8a64d4c0101560280eae2ac61c1032513ab37143495fcf3bc088de5cdecb94f1c3d7c313075f14a9e35230bb824142b1d0be52980a4791a097a4b7a7df52a97dfe0b1b5023b97c0937a9ab884db9c0bc456a7da1e3879b4e78139e31603c6b6305dc8248e2ede5b4a5b5d45e3dd00000000".parse().unwrap();
+
+        let signer: TransactionInputSigner = tx.clone().into();
+        let input_index = 0;
+        let script: Script = tx.inputs[input_index].script_witness[tx.inputs[input_index].script_witness.len()-2].clone().into();
+        let mut execdata = ScriptExecutionData::default();
+        execdata.with_script(&script);
+
+        let input_amount = tx_prev.outputs[input_index].value;
+        let sighash = signer.signature_hash_schnorr(input_index, input_amount, vec![tx_prev.outputs[input_index].clone()], SignatureVersion::TapScript, 0, &execdata);
+        println!("{:?}", sighash);
+        println!("{}", "2b6258a0131a583e4945d207a80f2492be00f561bbf8b5be562b362aaea72c5d");
     }
 
     fn run_test_sighash(tx: &str, script: &str, input_index: usize, hash_type: i32, result: &str) {
