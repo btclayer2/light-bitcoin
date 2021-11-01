@@ -410,7 +410,6 @@ impl TransactionInputSigner {
     pub fn signature_hash_schnorr(
         &self,
         input_index: usize,
-        input_amount: u64,
         spent_outputs: Vec<TransactionOutput>,
         sigversion: SignatureVersion,
         hash_type: u8,
@@ -457,7 +456,7 @@ impl TransactionInputSigner {
         // L1489-1495
         if input_type == 128 {
             stream.append(&self.inputs[input_index].previous_output);
-            stream.append(&input_amount);
+            stream.append(&spent_outputs[input_index].value);
             stream.append_list(&spent_outputs[input_index].script_pubkey);
             stream.append(&self.inputs[input_index].sequence);
         } else {
@@ -667,10 +666,8 @@ mod tests {
         let mut execdata = ScriptExecutionData::default();
         execdata.with_script(&script);
 
-        let input_amount = tx_prev.outputs[input_index].value;
         let sighash = signer.signature_hash_schnorr(
             input_index,
-            input_amount,
             vec![tx_prev.outputs[input_index].clone()],
             SignatureVersion::TapScript,
             0,
@@ -688,10 +685,8 @@ mod tests {
         let input_index = 0;
         let execdata = ScriptExecutionData::default();
 
-        let input_amount = tx_prev.outputs[input_index].value;
         let sighash = signer.signature_hash_schnorr(
             input_index,
-            input_amount,
             vec![tx_prev.outputs[input_index].clone()],
             SignatureVersion::Taproot,
             0,
