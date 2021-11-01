@@ -23,6 +23,7 @@ pub use self::error::Error;
 pub use self::keypair::KeyPair;
 pub use self::private::Private;
 pub use self::public::{Public, XOnly};
+pub use self::schnorr::*;
 pub use self::signature::{CompactSignature, SchnorrSignature, Signature};
 pub use self::tagged::*;
 
