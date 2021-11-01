@@ -4,13 +4,14 @@
 use alloc::{vec, vec::Vec};
 
 use light_bitcoin_chain::{OutPoint, Transaction, TransactionInput, TransactionOutput};
-use light_bitcoin_crypto::{dhash256, sha256};
-use light_bitcoin_keys::KeyPair;
+use light_bitcoin_crypto::{dhash256, sha256, Digest};
+use light_bitcoin_keys::{HashAdd, KeyPair, Tagged};
 use light_bitcoin_primitives::{Bytes, H256};
 use light_bitcoin_serialization::Stream;
 
 use crate::builder::Builder;
 use crate::script::Script;
+use std::prelude::v1::Vec;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum SignatureVersion {
@@ -51,7 +52,7 @@ impl Default for ScriptExecutionData {
         ScriptExecutionData {
             m_tapleaf_hash_init: false,
             m_tapleaf_hash: Default::default(),
-            m_codeseparator_pos_init: false,
+            m_codeseparator_pos_init: true,
             m_codeseparator_pos: 0xFFFFFFFF,
             m_annex_init: false,
             m_annex_present: false,
@@ -66,13 +67,15 @@ impl ScriptExecutionData {
     // Refer: https://github.com/bitcoin/bitcoin/blob/7fcf53f7b4524572d1d0c9a5fdc388e87eb02416/test/functional/test_framework/script.py#L745-L786
     pub fn with_script(&mut self, script: &Script) {
         let mut stream = Stream::default();
-        stream.append(&sha256(b"TapLeaf"));
-        stream.append(&sha256(b"TapLeaf"));
-        stream.append(&0xc0);
+        stream.append(&0xc0_u8);
         stream.append_list(&**script);
         let out = stream.out();
         self.m_tapleaf_hash_init = true;
-        self.m_tapleaf_hash = sha256(&out);
+        let hash = sha2::Sha256::default()
+            .tagged(b"TapLeaf")
+            .add(&out[..])
+            .finalize();
+        self.m_tapleaf_hash = H256::from_slice(hash.as_slice());
     }
 
     pub fn with_annex(&mut self, annex: &Script) {
@@ -93,12 +96,9 @@ impl ScriptExecutionData {
 #[derive(Debug, PartialEq, Clone, Copy)]
 #[repr(u8)]
 pub enum SighashBase {
-    // Taproot only; implied when sighash byte is missing, and equivalent to SIGHASH_ALL
-    Default = 0,
     All = 1,
     None = 2,
     Single = 3,
-    Mask = 0x80,
 }
 
 impl From<SighashBase> for u32 {
@@ -155,10 +155,8 @@ impl Sighash {
         let anyone_can_pay = (u & 0x80) == 0x80;
         let fork_id = version == SignatureVersion::ForkId && (u & 0x40) == 0x40;
         let base = match u & 0x1f {
-            0 => SighashBase::Default,
             2 => SighashBase::None,
             3 => SighashBase::Single,
-            0x80 => SighashBase::Mask,
             _ => SighashBase::All,
         };
 
@@ -231,7 +229,7 @@ impl TransactionInputSigner {
                 sighashtype,
                 sighash,
             ),
-            _ => todo!()
+            _ => todo!(),
         }
     }
 
@@ -335,8 +333,6 @@ impl TransactionInputSigner {
                 })
                 .collect(),
             SighashBase::None => Vec::new(),
-            SighashBase::Default => todo!(),
-            SighashBase::Mask => todo!(),
         };
 
         let tx = Transaction {
@@ -417,10 +413,9 @@ impl TransactionInputSigner {
         input_amount: u64,
         spent_outputs: Vec<TransactionOutput>,
         sigversion: SignatureVersion,
-        sighashtype: u32,
+        hash_type: u8,
         execdata: &ScriptExecutionData,
     ) -> H256 {
-        let sighash = Sighash::from_u32(sigversion, sighashtype);
         let key_version = 0u8;
         let ext_flag = if sigversion == SignatureVersion::Taproot {
             0u8
@@ -430,18 +425,9 @@ impl TransactionInputSigner {
 
         let mut stream = Stream::default();
 
-        stream.append(&sha256(b"TapSighash"));
-        stream.append(&sha256(b"TapSighash"));
         // Epoch
         stream.append(&0u8);
         // Hash type
-        let hash_type: u8 = match sighash.base {
-            SighashBase::Default => 0x00,
-            SighashBase::All => 0x01,
-            SighashBase::None => 0x02,
-            SighashBase::Single => 0x03,
-            SighashBase::Mask => 0x80,
-        };
         let output_type = if hash_type == 0 { 1u8 } else { hash_type & 3 };
         let input_type = hash_type & 128;
 
@@ -487,10 +473,10 @@ impl TransactionInputSigner {
             // input_index >= tx_to.vout.size() return false
             let mut single_output = Stream::default();
             single_output.append(&self.outputs[input_index]);
-            let output = single_output.out();
-            stream.append(&sha256(&output));
+            let output: Vec<u8> = single_output.out().into();
+            let hash = sha2::Sha256::default().add(&output[..]).finalize();
+            stream.append_slice(hash.as_slice());
         }
-
         // Additional data for BIP 342 signatures
         if sigversion == SignatureVersion::TapScript {
             if execdata.m_tapleaf_hash_init {
@@ -501,9 +487,12 @@ impl TransactionInputSigner {
                 stream.append(&execdata.m_codeseparator_pos);
             }
         }
-        let out = stream.out();
-
-        sha256(&out)
+        let out: Vec<u8> = stream.out().into();
+        let hash = sha2::Sha256::default()
+            .tagged(b"TapSighash")
+            .add(&out[..])
+            .finalize();
+        H256::from_slice(hash.as_slice())
     }
 }
 
@@ -665,26 +654,53 @@ mod tests {
 
     #[test]
     fn test_schnorr_sighash() {
-        let mut stream = Stream::default();
-        stream.append(&sha256(b"TapLeaf"));
-        stream.append(&sha256(b"TapLeaf"));
-        stream.append(&0xc0);
-        let out = stream.out();
-        let m_tapleaf_hash = sha256(&out);
-        println!("{}", hex::encode(m_tapleaf_hash.as_bytes()));
-        let tx_prev: Transaction = "02000000000101bb32358c3f04fc9ae2ef8942ce07b9517ace985633b85465b808a9a5375933d5000000000000000000028096980000000000225120dc82a9c33d787242d80fb4535bcc8d90bb13843fea52c9e78bb43c541dd607b90000000000000000326a3035516a706f3772516e7751657479736167477a6334526a376f737758534c6d4d7141754332416255364c464646476a380140df155ac9b77864be2cce361a99c944fb6fd6efa17d56c335b35c8f5314a1f15d9dd2c6fd91ae024ec8ad1a6ab345e3c5033b750090dfdddf25d458e4217353c600000000".parse().unwrap();
-        let tx: Transaction = "02000000000101de36752296e6ad122c14f953f0541c8eae52eca02bcfe452e47eb035731d2c8d00000000000000000001404b4c0000000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f0340fc196ea71912cef4d65ffaea0f15185b4e2afbd15fa68d1c91b43751650e4d33f45109f4ed316821d8e6c7b8756ce52f90253675a1beea91d5b1c2cc254caf8a222083f579dd2380bd31355d066086e1b4d46b518987c1f8a64d4c0101560280eae2ac61c1032513ab37143495fcf3bc088de5cdecb94f1c3d7c313075f14a9e35230bb824142b1d0be52980a4791a097a4b7a7df52a97dfe0b1b5023b97c0937a9ab884db9c0bc456a7da1e3879b4e78139e31603c6b6305dc8248e2ede5b4a5b5d45e3dd00000000".parse().unwrap();
+        // script path
+        let tx_prev: Transaction = "020000000001014d954f5ab2fdda9070e51e9096dab6c67b6ba7b06eb53365335b55b0db893e20000000000000000000028096980000000000225120dc82a9c33d787242d80fb4535bcc8d90bb13843fea52c9e78bb43c541dd607b90000000000000000326a3035516a706f3772516e7751657479736167477a6334526a376f737758534c6d4d7141754332416255364c464646476a3801405c207eadfa01aa2402cd02a73f28fd5d85302c76bcfee45a2a460af9f5674ba7105ac7e13b858e54de8135f13c5166607c189ba50caa74809460a66a5d279c2d00000000".parse().unwrap();
+        let tx: Transaction = "020000000001014b8336c563851c3073fcf4aa454b2d3b35947020d16f66f18036fb1a7b2aa3ca00000000000000000001404b4c0000000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f03407f444bee6fecafc8cdc46536e790c0d6df31bb533a7613b1b5b0e515eab292fe7e60cf3a9f1976d313cbbd49ea00580eef594f3f3e9d7b436bd436741fc068cc222083f579dd2380bd31355d066086e1b4d46b518987c1f8a64d4c0101560280eae2ac61c1032513ab37143495fcf3bc088de5cdecb94f1c3d7c313075f14a9e35230bb824142b1d0be52980a4791a097a4b7a7df52a97dfe0b1b5023b97c0937a9ab884db9c0bc456a7da1e3879b4e78139e31603c6b6305dc8248e2ede5b4a5b5d45e3dd00000000".parse().unwrap();
 
         let signer: TransactionInputSigner = tx.clone().into();
         let input_index = 0;
-        let script: Script = tx.inputs[input_index].script_witness[tx.inputs[input_index].script_witness.len()-2].clone().into();
+        let script: Script = tx.inputs[input_index].script_witness
+            [tx.inputs[input_index].script_witness.len() - 2]
+            .clone()
+            .into();
         let mut execdata = ScriptExecutionData::default();
         execdata.with_script(&script);
 
         let input_amount = tx_prev.outputs[input_index].value;
-        let sighash = signer.signature_hash_schnorr(input_index, input_amount, vec![tx_prev.outputs[input_index].clone()], SignatureVersion::TapScript, 0, &execdata);
-        println!("{:?}", sighash);
-        println!("{}", "2b6258a0131a583e4945d207a80f2492be00f561bbf8b5be562b362aaea72c5d");
+        let sighash = signer.signature_hash_schnorr(
+            input_index,
+            input_amount,
+            vec![tx_prev.outputs[input_index].clone()],
+            SignatureVersion::TapScript,
+            0,
+            &execdata,
+        );
+        assert_eq!(
+            hex::encode(sighash.as_bytes()),
+            "e365c3949a260ae19e87ea13ac30bb12fa379d503cbd8c6382978acb7d40c999"
+        );
+        // key path
+        let tx_prev: Transaction = "020000000001011def6321e4ce48ad7ae210a97714bece4026eee96f304c608421f446061f9e56000000000000000000028096980000000000225120dc82a9c33d787242d80fb4535bcc8d90bb13843fea52c9e78bb43c541dd607b900b4c40400000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f01408d324ff1f3015e37017089df5139e235459f9c9d5e068ff35eca4aa22f89e244ac289db0e7c2df81d35f2f10af8c4b1572cf6fa8f6ce8ae2bdf4ab49c02202b300000000".parse().unwrap();
+        let tx: Transaction = "0200000000010136e0e1434cacdfa67192148a1b2f1839ada76f183da6476857f8d719d4c805b200000000000000000002404b4c0000000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f00093d0000000000225120dc82a9c33d787242d80fb4535bcc8d90bb13843fea52c9e78bb43c541dd607b90140910e001c23acd1f1426fc918c7de877da84f697b1d4f2af5793374b9489459634b9f73bf911b391455d5c8a2d12bf19268f7af4db4e774877de42bc151aa5a0000000000".parse().unwrap();
+
+        let signer: TransactionInputSigner = tx.clone().into();
+        let input_index = 0;
+        let execdata = ScriptExecutionData::default();
+
+        let input_amount = tx_prev.outputs[input_index].value;
+        let sighash = signer.signature_hash_schnorr(
+            input_index,
+            input_amount,
+            vec![tx_prev.outputs[input_index].clone()],
+            SignatureVersion::Taproot,
+            0,
+            &execdata,
+        );
+        assert_eq!(
+            hex::encode(sighash.as_bytes()),
+            "f70f6ed81c9c6b70b79733db39a37a7e43727d322f8cf747f5ed6c6833ec775b"
+        );
     }
 
     fn run_test_sighash(tx: &str, script: &str, input_index: usize, hash_type: i32, result: &str) {

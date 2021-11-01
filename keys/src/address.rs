@@ -263,18 +263,16 @@ impl str::FromStr for Address {
                     Type::P2TR,
                     AddressTypes::WitnessV1Taproot(XOnly::try_from(witness.program())?),
                 )
+            } else if witness.program().len() == 20 {
+                (
+                    Type::P2WPKH,
+                    AddressTypes::WitnessV0KeyHash(H160::from_slice(witness.program())),
+                )
             } else {
-                if witness.program().len() == 20 {
-                    (
-                        Type::P2WPKH,
-                        AddressTypes::WitnessV0KeyHash(H160::from_slice(witness.program())),
-                    )
-                } else {
-                    (
-                        Type::P2WSH,
-                        AddressTypes::WitnessV0ScriptHash(H256::from_slice(witness.program())),
-                    )
-                }
+                (
+                    Type::P2WSH,
+                    AddressTypes::WitnessV0ScriptHash(H256::from_slice(witness.program())),
+                )
             };
             Ok(Self {
                 kind,
@@ -311,7 +309,7 @@ impl DisplayLayout for Address {
         };
 
         match self.hash {
-            AddressTypes::Legacy(h) => result[1..21].copy_from_slice(&h.as_bytes()),
+            AddressTypes::Legacy(h) => result[1..21].copy_from_slice(h.as_bytes()),
             _ => todo!(),
         };
         let cs = checksum(&result[0..21]);
