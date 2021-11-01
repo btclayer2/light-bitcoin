@@ -5,13 +5,19 @@ use alloc::{vec, vec::Vec};
 
 use light_bitcoin_chain::{OutPoint, Transaction, TransactionInput, TransactionOutput};
 use light_bitcoin_crypto::{dhash256, sha256, Digest};
-use light_bitcoin_keys::{HashAdd, KeyPair, Tagged};
+use light_bitcoin_keys::{HashAdd, KeyPair, Tagged, XOnly};
 use light_bitcoin_primitives::{Bytes, H256};
 use light_bitcoin_serialization::Stream;
 
 use crate::builder::Builder;
 use crate::script::Script;
-use std::prelude::v1::Vec;
+use std::{cmp::Ordering, convert::TryFrom, prelude::v1::Vec};
+
+use secp256k1::{
+    curve::{Affine, Jacobian, Scalar, ECMULT_CONTEXT},
+    PublicKey,
+};
+use std::convert::TryInto;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum SignatureVersion {
@@ -410,7 +416,7 @@ impl TransactionInputSigner {
     pub fn signature_hash_schnorr(
         &self,
         input_index: usize,
-        spent_outputs: &Vec<TransactionOutput>,
+        spent_outputs: &[TransactionOutput],
         sigversion: SignatureVersion,
         hash_type: u8,
         execdata: &ScriptExecutionData,
@@ -438,8 +444,8 @@ impl TransactionInputSigner {
         let tx_to_prevouts = compute_schnorr_hash_prevouts(&self.inputs);
         let tx_to_sequence = compute_schnorr_hash_sequence(&self.inputs);
         let tx_to_outputs = compute_schnorr_hash_outputs(input_index, &self.outputs);
-        let spent_outputs_amounts = compute_schnorr_hash_amounts(&spent_outputs);
-        let spent_outputs_scripts = compute_schnorr_hash_scripts(&spent_outputs);
+        let spent_outputs_amounts = compute_schnorr_hash_amounts(spent_outputs);
+        let spent_outputs_scripts = compute_schnorr_hash_scripts(spent_outputs);
         if input_type != 128 {
             stream.append(&tx_to_prevouts);
             stream.append(&spent_outputs_amounts);
@@ -580,6 +586,96 @@ fn compute_schnorr_hash_scripts(outputs: &[TransactionOutput]) -> H256 {
         stream.append(&output.script_pubkey);
     }
     sha256(&stream.out())
+}
+
+/// Checked, but no test
+fn compute_taproot_merkle_root(control: Bytes, tapleaf_hash: H256) -> H256 {
+    // TAPROOT_CONTROL_BASE_SIZE == 33, TAPROOT_CONTROL_NODE_SIZE == 32
+    let path_len = (control.len() - 33) / 32;
+
+    let mut k = tapleaf_hash;
+    for i in 0..path_len {
+        let mut branch = Stream::default();
+
+        let p = 33 + 32 * i;
+        let node = Bytes::from(&control[p..p + 32]);
+        if node.cmp(&Bytes::from(k.as_bytes())) == Ordering::Less {
+            branch.append(&node);
+            branch.append(&k);
+        } else {
+            branch.append(&k);
+            branch.append(&node);
+        }
+        let out = branch.out();
+        let hash = sha2::Sha256::default()
+            .tagged(b"TapBranch")
+            .add(&out[..])
+            .finalize();
+        k = H256::from_slice(hash.as_slice());
+    }
+    k
+}
+
+/// Verify Taproot Commitment
+/// Refer: https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#script-validation-rules
+fn verify_taproot_commitment(control: &[u8], program: &XOnly, scirpt: &Script) -> bool {
+    if control.len() < 33 || (control.len() - 33) % 32 != 0 {
+        return false;
+    }
+    let pubkey: PublicKey = if let Ok(d) = XOnly::try_from(&control[1..33]) {
+        if let Ok(pk) = d.try_into() {
+            pk
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    };
+    let script: Bytes = scirpt.clone().into();
+    let v = 0xfe & control[0];
+
+    let mut stream = Stream::default();
+    stream.append(&v);
+    stream.append_list(&**script);
+    let out = stream.out();
+    let hash = sha2::Sha256::default()
+        .tagged(b"TapLeaf")
+        .add(&out[..])
+        .finalize();
+    let merkle_root =
+        compute_taproot_merkle_root(Bytes::from(control), H256::from_slice(hash.as_slice()));
+
+    let mut stream = Stream::default();
+    stream.append_slice(&control[1..33]);
+    stream.append(&merkle_root);
+    let hash = sha2::Sha256::default()
+        .tagged(b"TapTweak")
+        .add(&out[..])
+        .finalize();
+    let mut keys = [0u8; 32];
+    keys.copy_from_slice(hash.as_slice());
+    let mut t = Scalar::default();
+    if bool::from(t.set_b32(&keys)) {
+        return false;
+    };
+
+    let mut p: Affine = pubkey.into();
+
+    p.y.normalize();
+    let p = if p.y.is_odd() { p.neg() } else { p };
+
+    let mut pj = secp256k1::curve::Jacobian::default();
+    pj.set_ge(&p);
+
+    let mut rj = Jacobian::default();
+    // Q = P + int(t)G.
+    ECMULT_CONTEXT.ecmult(&mut rj, &pj, &Scalar::from_int(1), &t);
+    let mut r = Affine::from_gej(&rj);
+    let rx: XOnly = (&mut r.x).into();
+    if rx != *program {
+        return false;
+    }
+    true
 }
 
 #[cfg(test)]
