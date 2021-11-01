@@ -5,19 +5,23 @@ use alloc::{vec, vec::Vec};
 
 use light_bitcoin_chain::{OutPoint, Transaction, TransactionInput, TransactionOutput};
 use light_bitcoin_crypto::{dhash256, sha256, Digest};
-use light_bitcoin_keys::{HashAdd, KeyPair, Tagged, XOnly};
+use light_bitcoin_keys::{verify_schnorr, HashAdd, KeyPair, SchnorrSignature, Tagged, XOnly};
 use light_bitcoin_primitives::{Bytes, H256};
 use light_bitcoin_serialization::Stream;
 
 use crate::builder::Builder;
 use crate::script::Script;
-use std::{cmp::Ordering, convert::TryFrom, prelude::v1::Vec};
+use std::{
+    cmp::Ordering,
+    convert::{TryFrom, TryInto},
+    prelude::v1::Vec,
+};
 
+use crate::Opcode;
 use secp256k1::{
     curve::{Affine, Jacobian, Scalar, ECMULT_CONTEXT},
     PublicKey,
 };
-use std::convert::TryInto;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum SignatureVersion {
@@ -589,22 +593,22 @@ fn compute_schnorr_hash_scripts(outputs: &[TransactionOutput]) -> H256 {
 }
 
 /// Checked, but no test
-fn compute_taproot_merkle_root(control: Bytes, tapleaf_hash: H256) -> H256 {
+pub fn compute_taproot_merkle_root(control: Bytes, tapleaf_hash: H256) -> H256 {
     // TAPROOT_CONTROL_BASE_SIZE == 33, TAPROOT_CONTROL_NODE_SIZE == 32
     let path_len = (control.len() - 33) / 32;
-
     let mut k = tapleaf_hash;
     for i in 0..path_len {
         let mut branch = Stream::default();
 
         let p = 33 + 32 * i;
         let node = Bytes::from(&control[p..p + 32]);
+
         if node.cmp(&Bytes::from(k.as_bytes())) == Ordering::Less {
-            branch.append(&node);
+            branch.append_slice(&Vec::from(node));
             branch.append(&k);
         } else {
             branch.append(&k);
-            branch.append(&node);
+            branch.append_slice(&Vec::from(node));
         }
         let out = branch.out();
         let hash = sha2::Sha256::default()
@@ -618,7 +622,7 @@ fn compute_taproot_merkle_root(control: Bytes, tapleaf_hash: H256) -> H256 {
 
 /// Verify Taproot Commitment
 /// Refer: https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#script-validation-rules
-fn verify_taproot_commitment(control: &[u8], program: &XOnly, scirpt: &Script) -> bool {
+pub fn verify_taproot_commitment(control: &[u8], program: &XOnly, scirpt: &Script) -> bool {
     if control.len() < 33 || (control.len() - 33) % 32 != 0 {
         return false;
     }
@@ -648,6 +652,7 @@ fn verify_taproot_commitment(control: &[u8], program: &XOnly, scirpt: &Script) -
     let mut stream = Stream::default();
     stream.append_slice(&control[1..33]);
     stream.append(&merkle_root);
+    let out = stream.out();
     let hash = sha2::Sha256::default()
         .tagged(b"TapTweak")
         .add(&out[..])
@@ -674,6 +679,109 @@ fn verify_taproot_commitment(control: &[u8], program: &XOnly, scirpt: &Script) -
     let rx: XOnly = (&mut r.x).into();
     if rx != *program {
         return false;
+    }
+    true
+}
+
+/// Check Taproot tx
+pub fn check_taproot_tx(tx: &Transaction, spent_outputs: &[TransactionOutput]) -> bool {
+    if tx.inputs.len() != spent_outputs.len() {
+        return false;
+    }
+
+    for i in 0..tx.inputs.len() {
+        let script_pubkey: Script = spent_outputs[i].script_pubkey.clone().into();
+        if !script_pubkey.is_pay_to_witness_taproot() {
+            return false;
+        }
+        let mut keys = [0u8; 32];
+        keys.copy_from_slice(&spent_outputs[i].script_pubkey[2..34]);
+        let tweak_pubkey = XOnly(keys);
+
+        let mut execdata = ScriptExecutionData::default();
+        let last_element: Bytes = if let Some(s) = tx.inputs[i].script_witness.last() {
+            s.clone()
+        } else {
+            return false;
+        };
+        let wit: Vec<Bytes> =
+            if tx.inputs[i].script_witness.len() >= 2 && last_element[0] == 0x50_u8 {
+                // TODO: fix annex not necessarily right
+                execdata.with_annex(&Script::new(last_element));
+                tx.inputs[i].script_witness[..tx.inputs[i].script_witness.len() - 1].to_vec()
+            } else {
+                tx.inputs[i].script_witness.clone()
+            };
+        if wit.is_empty() {
+            return false;
+        }
+        let signer: TransactionInputSigner = tx.clone().into();
+        if wit.len() == 1 {
+            let wit_element: Vec<u8> = wit[0].clone().into();
+            let hash_type = if wit_element.len() == 65 {
+                wit_element[64]
+            } else if wit_element.len() == 64 {
+                0
+            } else {
+                return false;
+            };
+            let mut keys = [0u8; 64];
+            keys.copy_from_slice(&wit_element);
+            let signature = if let Ok(s) = SchnorrSignature::try_from(keys) {
+                s
+            } else {
+                return false;
+            };
+
+            let sighash = signer.signature_hash_schnorr(
+                i,
+                spent_outputs,
+                SignatureVersion::Taproot,
+                hash_type,
+                &execdata,
+            );
+            if verify_schnorr(&signature, &sighash, tweak_pubkey).is_err() {
+                return false;
+            };
+        } else {
+            // Simplify verification, just verify the format of witness is : [signature, script, control]
+            let mut keys = [0u8; 64];
+            keys.copy_from_slice(&Vec::from(wit[0].clone()));
+            let signature = if let Ok(s) = SchnorrSignature::try_from(keys) {
+                s
+            } else {
+                return false;
+            };
+
+            if !(wit[wit.len() - 2].len() == 34
+                && wit[wit.len() - 2][0] == Opcode::OP_PUSHBYTES_32 as u8
+                && wit[wit.len() - 2][33] == Opcode::OP_CHECKSIG as u8)
+            {
+                return false;
+            }
+            let mut keys = [0u8; 32];
+            keys.copy_from_slice(&wit[wit.len() - 2][1..33]);
+            let pk = XOnly(keys);
+            let st: Script = wit[wit.len() - 2].clone().into();
+            execdata.with_script(&st);
+            let sighash = signer.signature_hash_schnorr(
+                i,
+                spent_outputs,
+                SignatureVersion::TapScript,
+                0,
+                &execdata,
+            );
+            if verify_schnorr(&signature, &sighash, pk).is_err() {
+                return false;
+            };
+            if !verify_taproot_commitment(
+                &Vec::from(wit[wit.len() - 1].clone()),
+                &tweak_pubkey,
+                &st,
+            ) {
+                return false;
+            };
+        };
     }
     true
 }
@@ -792,6 +900,18 @@ mod tests {
             hex::encode(sighash.as_bytes()),
             "f70f6ed81c9c6b70b79733db39a37a7e43727d322f8cf747f5ed6c6833ec775b"
         );
+    }
+
+    #[test]
+    fn test_check_taproot_tx() {
+        // script path
+        let tx_prev: Transaction = "020000000001014d954f5ab2fdda9070e51e9096dab6c67b6ba7b06eb53365335b55b0db893e20000000000000000000028096980000000000225120dc82a9c33d787242d80fb4535bcc8d90bb13843fea52c9e78bb43c541dd607b90000000000000000326a3035516a706f3772516e7751657479736167477a6334526a376f737758534c6d4d7141754332416255364c464646476a3801405c207eadfa01aa2402cd02a73f28fd5d85302c76bcfee45a2a460af9f5674ba7105ac7e13b858e54de8135f13c5166607c189ba50caa74809460a66a5d279c2d00000000".parse().unwrap();
+        let tx: Transaction = "020000000001014b8336c563851c3073fcf4aa454b2d3b35947020d16f66f18036fb1a7b2aa3ca00000000000000000001404b4c0000000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f03407f444bee6fecafc8cdc46536e790c0d6df31bb533a7613b1b5b0e515eab292fe7e60cf3a9f1976d313cbbd49ea00580eef594f3f3e9d7b436bd436741fc068cc222083f579dd2380bd31355d066086e1b4d46b518987c1f8a64d4c0101560280eae2ac61c1032513ab37143495fcf3bc088de5cdecb94f1c3d7c313075f14a9e35230bb824142b1d0be52980a4791a097a4b7a7df52a97dfe0b1b5023b97c0937a9ab884db9c0bc456a7da1e3879b4e78139e31603c6b6305dc8248e2ede5b4a5b5d45e3dd00000000".parse().unwrap();
+        assert!(check_taproot_tx(&tx, &vec![tx_prev.outputs[0].clone()]));
+        // key path
+        let tx_prev: Transaction = "020000000001011def6321e4ce48ad7ae210a97714bece4026eee96f304c608421f446061f9e56000000000000000000028096980000000000225120dc82a9c33d787242d80fb4535bcc8d90bb13843fea52c9e78bb43c541dd607b900b4c40400000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f01408d324ff1f3015e37017089df5139e235459f9c9d5e068ff35eca4aa22f89e244ac289db0e7c2df81d35f2f10af8c4b1572cf6fa8f6ce8ae2bdf4ab49c02202b300000000".parse().unwrap();
+        let tx: Transaction = "0200000000010136e0e1434cacdfa67192148a1b2f1839ada76f183da6476857f8d719d4c805b200000000000000000002404b4c0000000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f00093d0000000000225120dc82a9c33d787242d80fb4535bcc8d90bb13843fea52c9e78bb43c541dd607b90140910e001c23acd1f1426fc918c7de877da84f697b1d4f2af5793374b9489459634b9f73bf911b391455d5c8a2d12bf19268f7af4db4e774877de42bc151aa5a0000000000".parse().unwrap();
+        assert!(check_taproot_tx(&tx, &vec![tx_prev.outputs[0].clone()]));
     }
 
     fn run_test_sighash(tx: &str, script: &str, input_index: usize, hash_type: i32, result: &str) {

@@ -24,6 +24,7 @@ pub use self::script::{
     MAX_OPS_PER_SCRIPT, MAX_PUBKEYS_PER_MULTISIG, MAX_SCRIPT_ELEMENT_SIZE, MAX_SCRIPT_SIZE,
 };
 pub use self::sign::{
-    ScriptExecutionData, SignatureVersion, TransactionInputSigner, UnsignedTransactionInput,
+    check_taproot_tx, ScriptExecutionData, SignatureVersion, TransactionInputSigner,
+    UnsignedTransactionInput,
 };
 pub use self::verify::{NoopSignatureChecker, SignatureChecker, TransactionSignatureChecker};
