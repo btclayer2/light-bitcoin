@@ -410,7 +410,7 @@ impl TransactionInputSigner {
     pub fn signature_hash_schnorr(
         &self,
         input_index: usize,
-        spent_outputs: Vec<TransactionOutput>,
+        spent_outputs: &Vec<TransactionOutput>,
         sigversion: SignatureVersion,
         hash_type: u8,
         execdata: &ScriptExecutionData,
@@ -668,7 +668,7 @@ mod tests {
 
         let sighash = signer.signature_hash_schnorr(
             input_index,
-            vec![tx_prev.outputs[input_index].clone()],
+            &vec![tx_prev.outputs[input_index].clone()],
             SignatureVersion::TapScript,
             0,
             &execdata,
@@ -687,7 +687,7 @@ mod tests {
 
         let sighash = signer.signature_hash_schnorr(
             input_index,
-            vec![tx_prev.outputs[input_index].clone()],
+            &vec![tx_prev.outputs[input_index].clone()],
             SignatureVersion::Taproot,
             0,
             &execdata,
