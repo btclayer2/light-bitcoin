@@ -11,10 +11,10 @@ use light_bitcoin_serialization::Stream;
 
 use crate::builder::Builder;
 use crate::script::Script;
-use std::{
+
+use core::{
     cmp::Ordering,
     convert::{TryFrom, TryInto},
-    prelude::v1::Vec,
 };
 
 use crate::Opcode;
