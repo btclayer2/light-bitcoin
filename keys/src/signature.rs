@@ -168,6 +168,28 @@ impl TryFrom<[u8; 64]> for SchnorrSignature {
     }
 }
 
+impl TryFrom<&[u8]> for SchnorrSignature {
+    type Error = Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
+        if bytes.len() != 64 {
+            return Err(Error::InvalidSignature);
+        }
+        let mut keys = [0u8; 64];
+        keys.copy_from_slice(bytes);
+
+        let mut rx_bytes = [0u8; 32];
+        rx_bytes.copy_from_slice(&keys[0..32]);
+
+        let mut s_bytes = [0u8; 32];
+        s_bytes.copy_from_slice(&keys[32..64]);
+        let mut s = Scalar::default();
+        let _ = s.set_b32(&s_bytes);
+        let rx = rx_bytes.try_into()?;
+        Ok(SchnorrSignature { rx, s })
+    }
+}
+
 impl fmt::Debug for SchnorrSignature {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut bytes = [0u8; 64];

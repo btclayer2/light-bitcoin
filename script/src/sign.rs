@@ -73,19 +73,23 @@ impl Default for ScriptExecutionData {
     }
 }
 
+pub fn compute_leaf_hash(version: u8, script: &Script) -> H256 {
+    let mut stream = Stream::default();
+    stream.append(&version);
+    stream.append_list(&**script);
+    let out = stream.out();
+    let hash = sha2::Sha256::default()
+        .tagged(b"TapLeaf")
+        .add(&out[..])
+        .finalize();
+    H256::from_slice(hash.as_slice())
+}
+
 impl ScriptExecutionData {
     // Refer: https://github.com/bitcoin/bitcoin/blob/7fcf53f7b4524572d1d0c9a5fdc388e87eb02416/test/functional/test_framework/script.py#L745-L786
     pub fn with_script(&mut self, script: &Script) {
-        let mut stream = Stream::default();
-        stream.append(&0xc0_u8);
-        stream.append_list(&**script);
-        let out = stream.out();
         self.m_tapleaf_hash_init = true;
-        let hash = sha2::Sha256::default()
-            .tagged(b"TapLeaf")
-            .add(&out[..])
-            .finalize();
-        self.m_tapleaf_hash = H256::from_slice(hash.as_slice());
+        self.m_tapleaf_hash = compute_leaf_hash(0xc0, script);
     }
 
     pub fn with_annex(&mut self, annex: &Script) {
@@ -635,19 +639,8 @@ pub fn verify_taproot_commitment(control: &[u8], program: &XOnly, scirpt: &Scrip
     } else {
         return false;
     };
-    let script: Bytes = scirpt.clone().into();
-    let v = 0xfe & control[0];
-
-    let mut stream = Stream::default();
-    stream.append(&v);
-    stream.append_list(&**script);
-    let out = stream.out();
-    let hash = sha2::Sha256::default()
-        .tagged(b"TapLeaf")
-        .add(&out[..])
-        .finalize();
-    let merkle_root =
-        compute_taproot_merkle_root(Bytes::from(control), H256::from_slice(hash.as_slice()));
+    let tapleaf_hash = compute_leaf_hash(0xfe & control[0], scirpt);
+    let merkle_root = compute_taproot_merkle_root(Bytes::from(control), tapleaf_hash);
 
     let mut stream = Stream::default();
     stream.append_slice(&control[1..33]);
@@ -657,8 +650,12 @@ pub fn verify_taproot_commitment(control: &[u8], program: &XOnly, scirpt: &Scrip
         .tagged(b"TapTweak")
         .add(&out[..])
         .finalize();
+    let hash = hash.as_slice();
+    if hash.len() != 32 {
+        return false;
+    }
     let mut keys = [0u8; 32];
-    keys.copy_from_slice(hash.as_slice());
+    keys.copy_from_slice(hash);
     let mut t = Scalar::default();
     if bool::from(t.set_b32(&keys)) {
         return false;
@@ -697,9 +694,11 @@ pub fn check_taproot_tx(
         if !script_pubkey.is_pay_to_witness_taproot() {
             return Err(Error::NotTaprootWitness);
         }
-        let mut keys = [0u8; 32];
-        keys.copy_from_slice(&spent_outputs[i].script_pubkey[2..34]);
-        let tweak_pubkey = XOnly(keys);
+        let tweak_pubkey = if let Some(r) = script_pubkey.parse_witness_program() {
+            XOnly::try_from(r.1).map_err(|_| Error::NotTaprootWitness)?
+        } else {
+            return Err(Error::NotTaprootWitness);
+        };
 
         let mut execdata = ScriptExecutionData::default();
         let last_element: Bytes = if let Some(s) = tx.inputs[i].script_witness.last() {
@@ -728,9 +727,7 @@ pub fn check_taproot_tx(
             } else {
                 return Err(Error::WitnessProgramWrongLength);
             };
-            let mut keys = [0u8; 64];
-            keys.copy_from_slice(&wit_element);
-            let signature = if let Ok(s) = SchnorrSignature::try_from(keys) {
+            let signature = if let Ok(s) = SchnorrSignature::try_from(&wit_element[..]) {
                 s
             } else {
                 return Err(Error::InvalidSignature);
@@ -748,13 +745,12 @@ pub fn check_taproot_tx(
             };
         } else {
             // Simplify verification, just verify the format of witness is : [signature, script, control]
-            let mut keys = [0u8; 64];
-            keys.copy_from_slice(&Vec::from(wit[0].clone()));
-            let signature = if let Ok(s) = SchnorrSignature::try_from(keys) {
-                s
-            } else {
-                return Err(Error::InvalidSignature);
-            };
+            let signature =
+                if let Ok(s) = SchnorrSignature::try_from(&Vec::from(wit[0].clone())[..]) {
+                    s
+                } else {
+                    return Err(Error::InvalidSignature);
+                };
 
             if !(wit[wit.len() - 2].len() == 34
                 && wit[wit.len() - 2][0] == Opcode::OP_PUSHBYTES_32 as u8
