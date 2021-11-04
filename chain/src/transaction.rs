@@ -445,6 +445,11 @@ mod tests {
             serialize_with_flags(&transaction_with_witness, 0),
             serialize_with_flags(&transaction_with_witness, SERIALIZE_TRANSACTION_WITNESS)
         );
+        let tx : Transaction = "020000000001015dce8efe6cbd845587aa230a0b3667d4b52a45d3965d1607ab187de1f9d9d82b00000000000000000002a086010000000000225120dc82a9c33d787242d80fb4535bcc8d90bb13843fea52c9e78bb43c541dd607b900350c0000000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f0140708f206174a9e2963dd87d3afbb9f390fb320e2e9d4fdfc7b8bd7bc71a29c252026aa505ae71d4155ee3c13ce189ccba1fc0a26cfbcaa5f8b91bab377c2124eb00000000".parse().unwrap();
+        let transaction_output = TransactionOutputArray {
+            outputs: vec![tx.outputs[0].clone()],
+        };
+        assert_eq!( hex::encode(&serialize(&transaction_output)), "01a086010000000000225120dc82a9c33d787242d80fb4535bcc8d90bb13843fea52c9e78bb43c541dd607b9")
     }
 
     #[test]
