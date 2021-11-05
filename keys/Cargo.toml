@@ -29,7 +29,7 @@ serde = { version = "1.0", features = ["derive"], optional = true }
 digest = { version = "0.9.0", default-features = false }
 sha2 = { version = "0.9.5", default-features = false }
 # for no-std
-bitcoin-bech32 = { git = "https://github.com/hacpy/rust-bech32-bitcoin", branch = "master", default-features = false }
+bitcoin-bech32 = { git = "https://github.com/chainx-org/rust-bech32-bitcoin", branch = "master", default-features = false }
 
 light-bitcoin-crypto = { path = "../crypto", default-features = false }
 light-bitcoin-primitives = { path = "../primitives", default-features = false }

@@ -217,7 +217,7 @@ impl fmt::Display for Address {
                     h.0.to_vec(),
                     network,
                 )
-                .unwrap();
+                .map_err(|_| fmt::Error)?;
                 witness.to_string().fmt(f)
             }
             AddressTypes::WitnessV0KeyHash(h) => {
@@ -226,7 +226,7 @@ impl fmt::Display for Address {
                     h.0.to_vec(),
                     network,
                 )
-                .unwrap();
+                .map_err(|_| fmt::Error)?;
                 witness.to_string().fmt(f)
             }
             AddressTypes::WitnessV1Taproot(h) => {
@@ -235,7 +235,7 @@ impl fmt::Display for Address {
                     h.0.to_vec(),
                     network,
                 )
-                .unwrap();
+                .map_err(|_| fmt::Error)?;
                 witness.to_string().fmt(f)
             }
         }
