@@ -294,7 +294,7 @@ mod tests {
         let root = mast.calc_root().unwrap();
 
         assert_eq!(
-            "043d45212e3d4ce3db2c7ed74c51eaa3b2efbd29eac74d4673f2b1c90aaa5b9a",
+            "69e1de34d13d69fd894d708d656d0557cacaa18a093a6e86327a991d95c6c8e1",
             root.to_hex()
         );
     }
