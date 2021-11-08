@@ -6,7 +6,7 @@
 //! https://en.bitcoin.it/wiki/Address
 
 extern crate alloc;
-use alloc::string::ToString;
+use alloc::string::{String, ToString};
 use core::{convert::TryFrom, fmt, ops, str};
 
 use bitcoin_bech32::constants::Network as Bech32Network;
@@ -93,6 +93,15 @@ impl Deserializable for Type {
 pub enum Network {
     Mainnet,
     Testnet,
+}
+
+impl ToString for Network {
+    fn to_string(&self) -> String {
+        match self {
+            Network::Mainnet => "Mainnet".to_string(),
+            Network::Testnet => "Testnet".to_string(),
+        }
+    }
 }
 
 impl Default for Network {
