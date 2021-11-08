@@ -65,6 +65,13 @@ impl Default for Public {
     }
 }
 
+impl TryFrom<Public> for musig2::PublicKey {
+    type Error = Error;
+    fn try_from(p: Public) -> Result<Self, Self::Error> {
+        musig2::PublicKey::parse_slice(&p.to_vec()).map_err(|_| Error::InvalidPublic)
+    }
+}
+
 impl Public {
     pub fn from_slice(data: &[u8]) -> Result<Self, Error> {
         match data.len() {
