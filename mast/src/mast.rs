@@ -59,9 +59,9 @@ impl Mast {
             .collect::<Result<Vec<_>>>()?;
         let mut matches = vec![true];
 
-        if self.pubkeys.len() < 2 {
-            return Err(MastError::MastBuildError);
-        }
+        // if self.pubkeys.len() < 2 {
+        //     return Err(MastError::MastBuildError);
+        // }
         matches.extend(&vec![false; self.pubkeys.len() - 1]);
         let pmt = PartialMerkleTree::from_leaf_nodes(&leaf_nodes, &matches)?;
         let mut matches_vec: Vec<LeafNode> = vec![];
