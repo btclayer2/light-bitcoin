@@ -28,6 +28,7 @@ use musig2::{
     key::{PrivateKey, PublicKey},
     musig2::KeyAgg,
 };
+use rayon::prelude::*;
 
 const DEFAULT_TAPSCRIPT_VER: u8 = 0xc0;
 
@@ -233,22 +234,47 @@ fn generate_combine_index(n: usize, k: usize) -> Vec<Vec<usize>> {
 
 fn generate_combine_pubkey(pubkeys: Vec<PublicKey>, k: usize) -> Result<Vec<PublicKey>> {
     let all_indexs = generate_combine_index(pubkeys.len(), k);
-    let mut output: Vec<PublicKey> = vec![];
+    let mut pks = vec![];
     for indexs in all_indexs {
         let mut temp: Vec<PublicKey> = vec![];
         for index in indexs {
             temp.push(pubkeys[index - 1].clone())
         }
-        output.push(KeyAgg::key_aggregation_n(&temp)?.X_tilde)
+        pks.push(temp);
     }
+    let mut output = pks
+        .par_iter()
+        .map(|ps| Ok(KeyAgg::key_aggregation_n(&ps)?.X_tilde))
+        .collect::<Result<Vec<PublicKey>>>()?;
     output.sort_by_key(|a| a.x_coor());
     Ok(output)
 }
 
+pub fn compute_combine(n: usize, m: usize) -> usize {
+    let m = if m < (n - m) { m } else { n - m };
+    (n - m + 1..=n).product::<usize>() / (1..=m).product::<usize>()
+}
+
+pub fn compute_min_threshold(n: usize, max_value: usize) -> usize {
+    if n > max_value {
+        return n;
+    }
+    let half = n / 2;
+    for i in (half..=n).rev() {
+        if compute_combine(n, i) > max_value {
+            return i + 1;
+        }
+    }
+    1
+}
+
 #[cfg(test)]
 mod tests {
+    extern crate test;
+
     use super::*;
     use hashes::hex::ToHex;
+    use test::Bencher;
 
     fn convert_hex_to_pubkey(p: &str) -> PublicKey {
         let p = hex::decode(p).unwrap();
@@ -263,6 +289,13 @@ mod tests {
         } else {
             panic!("InvalidPublicKey");
         }
+    }
+
+    #[test]
+    fn test_combine_min_threshold() {
+        assert_eq!(compute_min_threshold(9, 200), 1);
+        assert_eq!(compute_min_threshold(10, 200), 7);
+        assert_eq!(compute_min_threshold(20, 200), 18);
     }
 
     #[test]
@@ -284,6 +317,30 @@ mod tests {
         );
     }
 
+    #[bench]
+    fn bench_generate_combine_index(b: &mut Bencher) {
+        let n = 20;
+        let m = 10;
+        println!("combine:{}", compute_combine(n, m));
+        b.iter(|| generate_combine_index(n, m));
+    }
+
+    #[bench]
+    fn bench_generate_combine_pubkey(b: &mut Bencher) {
+        let n = 10;
+        let m = 5;
+        println!("combine:{}", compute_combine(n, m));
+        let pubkey = convert_hex_to_pubkey("04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672");
+        let pks = vec![pubkey; n];
+        b.iter(|| {
+            generate_combine_pubkey(pks.clone(), m)
+                .unwrap()
+                .iter()
+                .map(|p| hex::encode(&p.serialize()))
+                .collect::<Vec<_>>()
+        });
+    }
+
     #[test]
     fn mast_generate_root_should_work() {
         let pubkey_a = convert_hex_to_pubkey("04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672");
@@ -297,6 +354,20 @@ mod tests {
             "69e1de34d13d69fd894d708d656d0557cacaa18a093a6e86327a991d95c6c8e1",
             root.to_hex()
         );
+    }
+
+    #[bench]
+    fn bench_generate_root(b: &mut Bencher) {
+        let n = 10;
+        let m = 5;
+        println!("combine:{}", compute_combine(n, m));
+        let pks = (1..n)
+            .map(|i| PublicKey::create_from_private_key(&PrivateKey::from_int(i as u32)))
+            .collect::<Vec<_>>();
+        b.iter(|| {
+            let mast = Mast::new(pks.clone(), m).unwrap();
+            let _root = mast.calc_root().unwrap();
+        });
     }
 
     #[test]
