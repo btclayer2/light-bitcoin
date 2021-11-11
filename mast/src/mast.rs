@@ -28,6 +28,8 @@ use musig2::{
     key::{PrivateKey, PublicKey},
     musig2::KeyAgg,
 };
+
+#[cfg(feature = "std")]
 use rayon::prelude::*;
 
 const DEFAULT_TAPSCRIPT_VER: u8 = 0xc0;
@@ -232,6 +234,7 @@ fn generate_combine_index(n: usize, k: usize) -> Vec<Vec<usize>> {
     ans
 }
 
+#[cfg(feature = "std")]
 fn generate_combine_pubkey(pubkeys: Vec<PublicKey>, k: usize) -> Result<Vec<PublicKey>> {
     let all_indexs = generate_combine_index(pubkeys.len(), k);
     let mut pks = vec![];
@@ -246,6 +249,21 @@ fn generate_combine_pubkey(pubkeys: Vec<PublicKey>, k: usize) -> Result<Vec<Publ
         .par_iter()
         .map(|ps| Ok(KeyAgg::key_aggregation_n(&ps)?.X_tilde))
         .collect::<Result<Vec<PublicKey>>>()?;
+    output.sort_by_key(|a| a.x_coor());
+    Ok(output)
+}
+
+#[cfg(not(feature = "std"))]
+fn generate_combine_pubkey(pubkeys: Vec<PublicKey>, k: usize) -> Result<Vec<PublicKey>> {
+    let all_indexs = generate_combine_index(pubkeys.len(), k);
+    let mut output: Vec<PublicKey> = vec![];
+    for indexs in all_indexs {
+        let mut temp: Vec<PublicKey> = vec![];
+        for index in indexs {
+            temp.push(pubkeys[index - 1].clone())
+        }
+        output.push(KeyAgg::key_aggregation_n(&temp)?.X_tilde)
+    }
     output.sort_by_key(|a| a.x_coor());
     Ok(output)
 }
@@ -321,15 +339,15 @@ mod tests {
     fn bench_generate_combine_index(b: &mut Bencher) {
         let n = 20;
         let m = 10;
-        println!("combine:{}", compute_combine(n, m));
+        // println!("combine:{}", compute_combine(n, m));
         b.iter(|| generate_combine_index(n, m));
     }
 
     #[bench]
     fn bench_generate_combine_pubkey(b: &mut Bencher) {
-        let n = 10;
-        let m = 5;
-        println!("combine:{}", compute_combine(n, m));
+        let n = 100;
+        let m = 99;
+        // println!("combine:{}", compute_combine(n, m));
         let pubkey = convert_hex_to_pubkey("04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672");
         let pks = vec![pubkey; n];
         b.iter(|| {
@@ -360,7 +378,7 @@ mod tests {
     fn bench_generate_root(b: &mut Bencher) {
         let n = 10;
         let m = 5;
-        println!("combine:{}", compute_combine(n, m));
+        // println!("combine:{}", compute_combine(n, m));
         let pks = (1..n)
             .map(|i| PublicKey::create_from_private_key(&PrivateKey::from_int(i as u32)))
             .collect::<Vec<_>>();

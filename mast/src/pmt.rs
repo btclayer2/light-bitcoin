@@ -300,7 +300,7 @@ mod tests {
     use hashes::hex::FromHex;
 
     #[cfg(not(feature = "std"))]
-    use alloc::{vec, vec::Vec};
+    use alloc::{format, vec, vec::Vec};
 
     #[test]
     fn pmt_proof_generate_correct_order() {
