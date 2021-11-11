@@ -21,6 +21,9 @@ light-bitcoin-keys = { path = "../keys", default-features = false }
 light-bitcoin-script = { path = "../script", default-features = false }
 light-bitcoin-serialization = { path = "../serialization", default-features = false }
 
+[dev-dependencies]
+criterion = { version = "0.3", default-features = false, features = ['html_reports', 'cargo_bench_support'] }
+
 [features]
 default = ['std']
 std = [
@@ -35,3 +38,8 @@ std = [
     "light-bitcoin-script/std",
     "light-bitcoin-serialization/std",
 ]
+
+[[bench]]
+name = "generate_address"
+path = "benches/generate_address.rs"
+harness = false

@@ -212,7 +212,7 @@ pub fn tweak_pubkey(inner_pubkey: &PublicKey, root: &MerkleNode) -> Result<Publi
     }
 }
 
-fn generate_combine_index(n: usize, k: usize) -> Vec<Vec<usize>> {
+pub fn generate_combine_index(n: usize, k: usize) -> Vec<Vec<usize>> {
     let mut temp: Vec<usize> = vec![];
     let mut ans: Vec<Vec<usize>> = vec![];
     for i in 1..=k {
@@ -235,7 +235,7 @@ fn generate_combine_index(n: usize, k: usize) -> Vec<Vec<usize>> {
 }
 
 #[cfg(feature = "std")]
-fn generate_combine_pubkey(pubkeys: Vec<PublicKey>, k: usize) -> Result<Vec<PublicKey>> {
+pub fn generate_combine_pubkey(pubkeys: Vec<PublicKey>, k: usize) -> Result<Vec<PublicKey>> {
     let all_indexs = generate_combine_index(pubkeys.len(), k);
     let mut pks = vec![];
     for indexs in all_indexs {
@@ -254,7 +254,7 @@ fn generate_combine_pubkey(pubkeys: Vec<PublicKey>, k: usize) -> Result<Vec<Publ
 }
 
 #[cfg(not(feature = "std"))]
-fn generate_combine_pubkey(pubkeys: Vec<PublicKey>, k: usize) -> Result<Vec<PublicKey>> {
+pub fn generate_combine_pubkey(pubkeys: Vec<PublicKey>, k: usize) -> Result<Vec<PublicKey>> {
     let all_indexs = generate_combine_index(pubkeys.len(), k);
     let mut output: Vec<PublicKey> = vec![];
     for indexs in all_indexs {
@@ -286,28 +286,25 @@ pub fn compute_min_threshold(n: usize, max_value: usize) -> usize {
     1
 }
 
+pub fn convert_hex_to_pubkey(p: &str) -> PublicKey {
+    let p = hex::decode(p).unwrap();
+    if p.len() == 65 {
+        let mut key = [0u8; 65];
+        key.copy_from_slice(&p);
+        PublicKey::parse(&key).unwrap()
+    } else if p.len() == 33 {
+        let mut key = [0u8; 33];
+        key.copy_from_slice(&p);
+        PublicKey::parse_compressed(&key).unwrap()
+    } else {
+        panic!("InvalidPublicKey");
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    extern crate test;
-
     use super::*;
     use hashes::hex::ToHex;
-    use test::Bencher;
-
-    fn convert_hex_to_pubkey(p: &str) -> PublicKey {
-        let p = hex::decode(p).unwrap();
-        if p.len() == 65 {
-            let mut key = [0u8; 65];
-            key.copy_from_slice(&p);
-            PublicKey::parse(&key).unwrap()
-        } else if p.len() == 33 {
-            let mut key = [0u8; 33];
-            key.copy_from_slice(&p);
-            PublicKey::parse_compressed(&key).unwrap()
-        } else {
-            panic!("InvalidPublicKey");
-        }
-    }
 
     #[test]
     fn test_combine_min_threshold() {
@@ -335,30 +332,6 @@ mod tests {
         );
     }
 
-    #[bench]
-    fn bench_generate_combine_index(b: &mut Bencher) {
-        let n = 20;
-        let m = 10;
-        // println!("combine:{}", compute_combine(n, m));
-        b.iter(|| generate_combine_index(n, m));
-    }
-
-    #[bench]
-    fn bench_generate_combine_pubkey(b: &mut Bencher) {
-        let n = 100;
-        let m = 99;
-        // println!("combine:{}", compute_combine(n, m));
-        let pubkey = convert_hex_to_pubkey("04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672");
-        let pks = vec![pubkey; n];
-        b.iter(|| {
-            generate_combine_pubkey(pks.clone(), m)
-                .unwrap()
-                .iter()
-                .map(|p| hex::encode(&p.serialize()))
-                .collect::<Vec<_>>()
-        });
-    }
-
     #[test]
     fn mast_generate_root_should_work() {
         let pubkey_a = convert_hex_to_pubkey("04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672");
@@ -372,20 +345,6 @@ mod tests {
             "69e1de34d13d69fd894d708d656d0557cacaa18a093a6e86327a991d95c6c8e1",
             root.to_hex()
         );
-    }
-
-    #[bench]
-    fn bench_generate_root(b: &mut Bencher) {
-        let n = 10;
-        let m = 5;
-        // println!("combine:{}", compute_combine(n, m));
-        let pks = (1..n)
-            .map(|i| PublicKey::create_from_private_key(&PrivateKey::from_int(i as u32)))
-            .collect::<Vec<_>>();
-        b.iter(|| {
-            let mast = Mast::new(pks.clone(), m).unwrap();
-            let _root = mast.calc_root().unwrap();
-        });
     }
 
     #[test]
