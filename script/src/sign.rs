@@ -871,7 +871,7 @@ mod tests {
 
         let sighash = signer.signature_hash_schnorr(
             input_index,
-            &vec![tx_prev.outputs[input_index].clone()],
+            &[tx_prev.outputs[input_index].clone()],
             SignatureVersion::TapScript,
             0,
             &execdata,
@@ -884,13 +884,13 @@ mod tests {
         let tx_prev: Transaction = "020000000001011def6321e4ce48ad7ae210a97714bece4026eee96f304c608421f446061f9e56000000000000000000028096980000000000225120dc82a9c33d787242d80fb4535bcc8d90bb13843fea52c9e78bb43c541dd607b900b4c40400000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f01408d324ff1f3015e37017089df5139e235459f9c9d5e068ff35eca4aa22f89e244ac289db0e7c2df81d35f2f10af8c4b1572cf6fa8f6ce8ae2bdf4ab49c02202b300000000".parse().unwrap();
         let tx: Transaction = "0200000000010136e0e1434cacdfa67192148a1b2f1839ada76f183da6476857f8d719d4c805b200000000000000000002404b4c0000000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f00093d0000000000225120dc82a9c33d787242d80fb4535bcc8d90bb13843fea52c9e78bb43c541dd607b90140910e001c23acd1f1426fc918c7de877da84f697b1d4f2af5793374b9489459634b9f73bf911b391455d5c8a2d12bf19268f7af4db4e774877de42bc151aa5a0000000000".parse().unwrap();
 
-        let signer: TransactionInputSigner = tx.clone().into();
+        let signer: TransactionInputSigner = tx.into();
         let input_index = 0;
         let execdata = ScriptExecutionData::default();
 
         let sighash = signer.signature_hash_schnorr(
             input_index,
-            &vec![tx_prev.outputs[input_index].clone()],
+            &[tx_prev.outputs[input_index].clone()],
             SignatureVersion::Taproot,
             0,
             &execdata,
@@ -907,14 +907,14 @@ mod tests {
         let tx_prev: Transaction = "020000000001014d954f5ab2fdda9070e51e9096dab6c67b6ba7b06eb53365335b55b0db893e20000000000000000000028096980000000000225120dc82a9c33d787242d80fb4535bcc8d90bb13843fea52c9e78bb43c541dd607b90000000000000000326a3035516a706f3772516e7751657479736167477a6334526a376f737758534c6d4d7141754332416255364c464646476a3801405c207eadfa01aa2402cd02a73f28fd5d85302c76bcfee45a2a460af9f5674ba7105ac7e13b858e54de8135f13c5166607c189ba50caa74809460a66a5d279c2d00000000".parse().unwrap();
         let tx: Transaction = "020000000001014b8336c563851c3073fcf4aa454b2d3b35947020d16f66f18036fb1a7b2aa3ca00000000000000000001404b4c0000000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f03407f444bee6fecafc8cdc46536e790c0d6df31bb533a7613b1b5b0e515eab292fe7e60cf3a9f1976d313cbbd49ea00580eef594f3f3e9d7b436bd436741fc068cc222083f579dd2380bd31355d066086e1b4d46b518987c1f8a64d4c0101560280eae2ac61c1032513ab37143495fcf3bc088de5cdecb94f1c3d7c313075f14a9e35230bb824142b1d0be52980a4791a097a4b7a7df52a97dfe0b1b5023b97c0937a9ab884db9c0bc456a7da1e3879b4e78139e31603c6b6305dc8248e2ede5b4a5b5d45e3dd00000000".parse().unwrap();
         assert_eq!(
-            check_taproot_tx(&tx, &vec![tx_prev.outputs[0].clone()]),
+            check_taproot_tx(&tx, &[tx_prev.outputs[0].clone()]),
             Ok(true)
         );
         // key path
         let tx_prev: Transaction = "020000000001011def6321e4ce48ad7ae210a97714bece4026eee96f304c608421f446061f9e56000000000000000000028096980000000000225120dc82a9c33d787242d80fb4535bcc8d90bb13843fea52c9e78bb43c541dd607b900b4c40400000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f01408d324ff1f3015e37017089df5139e235459f9c9d5e068ff35eca4aa22f89e244ac289db0e7c2df81d35f2f10af8c4b1572cf6fa8f6ce8ae2bdf4ab49c02202b300000000".parse().unwrap();
         let tx: Transaction = "0200000000010136e0e1434cacdfa67192148a1b2f1839ada76f183da6476857f8d719d4c805b200000000000000000002404b4c0000000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f00093d0000000000225120dc82a9c33d787242d80fb4535bcc8d90bb13843fea52c9e78bb43c541dd607b90140910e001c23acd1f1426fc918c7de877da84f697b1d4f2af5793374b9489459634b9f73bf911b391455d5c8a2d12bf19268f7af4db4e774877de42bc151aa5a0000000000".parse().unwrap();
         assert_eq!(
-            check_taproot_tx(&tx, &vec![tx_prev.outputs[0].clone()]),
+            check_taproot_tx(&tx, &[tx_prev.outputs[0].clone()]),
             Ok(true)
         );
     }

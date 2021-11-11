@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 #![allow(clippy::module_inception)]
 
+use core::cmp::min;
+
 use bitcoin_bech32::{constants::Network, u5, WitnessProgram};
 use light_bitcoin_script::{Builder, Opcode};
 use light_bitcoin_serialization::Stream;
@@ -58,7 +60,7 @@ impl Mast {
         let leaf_nodes = self
             .pubkeys
             .iter()
-            .map(|s| tagged_leaf(s))
+            .map(tagged_leaf)
             .collect::<Result<Vec<_>>>()?;
         let mut matches = vec![true];
 
@@ -91,7 +93,7 @@ impl Mast {
         let leaf_nodes = self
             .pubkeys
             .iter()
-            .map(|s| tagged_leaf(s))
+            .map(tagged_leaf)
             .collect::<Result<Vec<_>>>()?;
         let filter_proof = MerkleNode::from_inner(leaf_nodes[index].into_inner());
         Ok([
@@ -247,7 +249,7 @@ pub fn generate_combine_pubkey(pubkeys: Vec<PublicKey>, k: usize) -> Result<Vec<
     }
     let mut output = pks
         .par_iter()
-        .map(|ps| Ok(KeyAgg::key_aggregation_n(&ps)?.X_tilde))
+        .map(|ps| Ok(KeyAgg::key_aggregation_n(ps)?.X_tilde))
         .collect::<Result<Vec<PublicKey>>>()?;
     output.sort_by_key(|a| a.x_coor());
     Ok(output)
@@ -269,7 +271,7 @@ pub fn generate_combine_pubkey(pubkeys: Vec<PublicKey>, k: usize) -> Result<Vec<
 }
 
 pub fn compute_combine(n: usize, m: usize) -> usize {
-    let m = if m < (n - m) { m } else { n - m };
+    let m = min(m, n - m);
     (n - m + 1..=n).product::<usize>() / (1..=m).product::<usize>()
 }
 

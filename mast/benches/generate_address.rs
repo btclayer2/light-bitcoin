@@ -40,13 +40,14 @@ fn bench_generate_root(b: &mut Bencher) {
 }
 
 fn bench_generate_address(c: &mut Criterion) {
-    c.bench_function("bench_generate_combine_index", |b| {
-        bench_generate_combine_index(b)
-    });
-    c.bench_function("bench_generate_combine_pubkey", |b| {
-        bench_generate_combine_pubkey(b)
-    });
-    c.bench_function("bench_generate_root", |b| bench_generate_root(b));
+    c.bench_function("bench_generate_combine_index", bench_generate_combine_index);
+
+    c.bench_function(
+        "bench_generate_combine_pubkey",
+        bench_generate_combine_pubkey,
+    );
+
+    c.bench_function("bench_generate_root", bench_generate_root);
 }
 
 criterion_group!(benches, bench_generate_address);
