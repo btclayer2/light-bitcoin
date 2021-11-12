@@ -96,11 +96,16 @@ impl Mast {
             .map(tagged_leaf)
             .collect::<Result<Vec<_>>>()?;
         let filter_proof = MerkleNode::from_inner(leaf_nodes[index].into_inner());
+        let pmt = PartialMerkleTree::from_leaf_nodes(&leaf_nodes, &matches)?;
+        let mut matches_vec: Vec<LeafNode> = vec![];
+        let mut indexes_vec: Vec<u32> = vec![];
+        let root = pmt.extract_matches(&mut matches_vec, &mut indexes_vec)?;
+        let tweak = tweak_pubkey(&self.inner_pubkey, &root)?;
+        let first_bytes: u8 = DEFAULT_TAPSCRIPT_VER | if tweak.is_odd_y() { 0x01 } else { 0x00 };
         Ok([
+            vec![first_bytes],
             self.inner_pubkey.x_coor().to_vec(),
-            PartialMerkleTree::from_leaf_nodes(&leaf_nodes, &matches)?
-                .collected_hashes(filter_proof)
-                .concat(),
+            pmt.collected_hashes(filter_proof).concat(),
         ]
         .concat())
     }
@@ -362,7 +367,7 @@ mod tests {
 
         assert_eq!(
             hex::encode(&proof),
-            "f4152c91b2c78a3524e7858c72ffa360da59e7c3c4d67d6787cf1e3bfe1684c1e38e30c81fc61186d0ed3956b5e49bd175178a638d1410e64f7716697a7e0ccd",
+            "c0f4152c91b2c78a3524e7858c72ffa360da59e7c3c4d67d6787cf1e3bfe1684c1e38e30c81fc61186d0ed3956b5e49bd175178a638d1410e64f7716697a7e0ccd",
         )
     }
 
