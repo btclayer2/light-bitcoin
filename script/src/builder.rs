@@ -1,7 +1,7 @@
 //! Script builder
 
 use light_bitcoin_chain::{H160, H256};
-use light_bitcoin_keys::{AddressHash, XOnly};
+use light_bitcoin_keys::{Address, AddressHash, AddressTypes, Type, XOnly};
 use light_bitcoin_primitives::Bytes;
 
 use crate::num::Num;
@@ -57,6 +57,31 @@ impl Builder {
             .push_opcode(Opcode::OP_1)
             .push_bytes(&address.0)
             .into_script()
+    }
+
+    pub fn build_address_types(address: &Address) -> Script {
+        match address.kind {
+            Type::P2PKH => match address.hash {
+                AddressTypes::Legacy(h) => Self::build_p2pkh(&h),
+                _ => unreachable!(),
+            },
+            Type::P2SH => match address.hash {
+                AddressTypes::Legacy(h) => Self::build_p2sh(&h),
+                _ => unreachable!(),
+            },
+            Type::P2WPKH => match address.hash {
+                AddressTypes::WitnessV0KeyHash(h) => Self::build_p2wpkh(&h),
+                _ => unreachable!(),
+            },
+            Type::P2WSH => match address.hash {
+                AddressTypes::WitnessV0ScriptHash(h) => Self::build_p2wsh(&h),
+                _ => unreachable!(),
+            },
+            Type::P2TR => match address.hash {
+                AddressTypes::WitnessV1Taproot(h) => Self::build_p2tr(&h),
+                _ => unreachable!(),
+            },
+        }
     }
 
     /// Builds op_return script
