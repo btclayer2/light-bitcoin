@@ -134,8 +134,9 @@ pub fn sign_with_aux(
     msg: Message,
     aux: Message,
     seckey: SecretKey,
-    pubkey: PublicKey,
 ) -> Result<SchnorrSignature, Error> {
+    let pubkey = PublicKey::from_secret_key(&seckey);
+
     let mut pk: Affine = pubkey.into();
 
     pk.x.normalize();
@@ -213,8 +214,7 @@ mod tests {
         let a = h256(aux);
 
         let seckey = SecretKey::parse_slice(hex::decode(secret).unwrap().as_slice())?;
-        let pubkey = PublicKey::from_secret_key(&seckey);
-        let sig = sign_with_aux(m, a, seckey, pubkey)?;
+        let sig = sign_with_aux(m, a, seckey)?;
 
         Ok(sig.eq(&signature.try_into()?))
     }
