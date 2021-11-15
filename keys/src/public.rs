@@ -1,3 +1,4 @@
+use arrayref::array_mut_ref;
 use core::{
     convert::{TryFrom, TryInto},
     fmt, ops,
@@ -17,6 +18,7 @@ use crate::{
     tagged::HashInto,
     AddressHash, Message,
 };
+use secp256k1::curve::{Affine, Field};
 
 /// Secret public key
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
@@ -238,31 +240,45 @@ impl TryInto<secp256k1::PublicKey> for XOnly {
     type Error = Error;
 
     fn try_into(self) -> Result<secp256k1::PublicKey, Self::Error> {
-        let mut x = secp256k1::curve::Field::default();
-        let _ = x.set_b32(&self.0);
-        x.normalize();
-
-        let mut elem = secp256k1::curve::Affine::default();
-        elem.set_xquad(&x);
-        elem.y.normalize();
-        // determine the first byte of the compressed format public key
-        let tag = if elem.y.is_odd() {
-            // need to convert y to an even number
-            secp256k1::util::TAG_PUBKEY_EVEN
+        let mut elem = Field::default();
+        let mut affine = Affine::default();
+        if elem.set_b32(&self.0) && affine.set_xo_var(&elem, false) {
+            let mut ret = [0u8; 65];
+            ret[0] = 0x04;
+            affine.x.normalize_var();
+            affine.y.normalize_var();
+            affine.x.fill_b32(array_mut_ref!(ret, 1, 32));
+            affine.y.fill_b32(array_mut_ref!(ret, 33, 32));
+            Ok(secp256k1::PublicKey::parse(&ret)?)
         } else {
-            secp256k1::util::TAG_PUBKEY_ODD
-        };
-        // construct compressed public key
-        let mut c = [0u8; 33];
-        for (i, byte) in c.iter_mut().enumerate() {
-            if i == 0 {
-                *byte = tag;
-                continue;
-            }
-            *byte = x.b32()[i - 1];
+            Err(Error::XCoordinateNotExist)
         }
-        let p = secp256k1::PublicKey::parse_compressed(&c)?;
-        Ok(p)
+
+        // let mut x = secp256k1::curve::Field::default();
+        // let _ = x.set_b32(&self.0);
+        // x.normalize();
+        //
+        // let mut elem = secp256k1::curve::Affine::default();
+        // elem.set_xquad(&x);
+        // elem.y.normalize();
+        // // determine the first byte of the compressed format public key
+        // let tag = if elem.y.is_odd() {
+        //     // need to convert y to an even number
+        //     secp256k1::util::TAG_PUBKEY_EVEN
+        // } else {
+        //     secp256k1::util::TAG_PUBKEY_ODD
+        // };
+        // // construct compressed public key
+        // let mut c = [0u8; 33];
+        // for (i, byte) in c.iter_mut().enumerate() {
+        //     if i == 0 {
+        //         *byte = tag;
+        //         continue;
+        //     }
+        //     *byte = x.b32()[i - 1];
+        // }
+        // let p = secp256k1::PublicKey::parse_compressed(&c)?;
+        // Ok(p)
     }
 }
 

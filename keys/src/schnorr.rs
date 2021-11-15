@@ -47,9 +47,7 @@ pub fn verify_schnorr(
     // Note that the correctness of verification relies on the fact that
     // lift_x always returns a point with an even Y coordinate.
     P.y.normalize();
-    if P.y.is_odd() {
-        return Err(Error::InvalidPublic);
-    }
+    let mut P = if P.y.is_odd() { P.neg() } else { P };
 
     let mut pj = secp256k1::curve::Jacobian::default();
     pj.set_ge(&P);
@@ -254,7 +252,7 @@ mod tests {
         // public key not on the curve
         assert_eq!(
             check_verify(SIGNATURE_5, MESSAGE_5, PUBKEY_5),
-            Err(Error::InvalidPublic)
+            Err(Error::XCoordinateNotExist)
         );
         // has_even_y(R) is false
         assert_eq!(
@@ -299,7 +297,7 @@ mod tests {
         // public key is not a valid X coordinate because it exceeds the field size
         assert_eq!(
             check_verify(SIGNATURE_14, MESSAGE_5, PUBKEY_7),
-            Err(Error::InvalidPublic)
+            Err(Error::XCoordinateNotExist)
         );
     }
 }
