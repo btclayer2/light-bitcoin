@@ -16,6 +16,7 @@ std = [
   "light-bitcoin-primitives/std",
   "light-bitcoin-script/std",
   "light-bitcoin-serialization/std",
+  "light-bitcoin-mast/std",
 ]
 derive = ["light-bitcoin-serialization/derive"]
 
@@ -27,6 +28,7 @@ light-bitcoin-merkle = { path = "merkle", default-features = false }
 light-bitcoin-primitives = { path = "primitives", default-features = false }
 light-bitcoin-script = { path = "script", default-features = false }
 light-bitcoin-serialization = { path = "serialization", default-features = false }
+light-bitcoin-mast = { path = "mast", default-features = false }
 
 [workspace]
 members = [
@@ -38,4 +40,5 @@ members = [
   "script",
   "serialization",
   "serialization-derive",
+  "mast",
 ]

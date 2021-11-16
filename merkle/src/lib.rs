@@ -351,7 +351,7 @@ impl Deserializable for PartialMerkleTree {
 
 impl codec::Encode for PartialMerkleTree {
     fn encode(&self) -> Vec<u8> {
-        let value = serialize::<PartialMerkleTree>(&self);
+        let value = serialize::<PartialMerkleTree>(self);
         value.encode()
     }
 }

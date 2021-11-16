@@ -65,6 +65,14 @@ pub enum Error {
     WitnessMalleatedP2SH,
     WitnessUnexpected,
     WitnessPubKeyType,
+
+    // Taproot check errors
+    SpentOutputsNumDismatch,
+    NotTaprootWitness,
+    LastElementNotExist,
+    EmptyWitness,
+    InvalidSignature,
+    VerifyCommitment,
 }
 
 #[cfg(feature = "std")]
@@ -139,6 +147,16 @@ impl core::fmt::Display for Error {
             Error::WitnessMalleatedP2SH => "Witness requires only-redeemscript scriptSig".fmt(f),
             Error::WitnessUnexpected => "Witness provided for non-witness script".fmt(f),
             Error::WitnessPubKeyType => "Using non-compressed keys in segwit".fmt(f),
+
+            // Taproot check errors
+            Error::SpentOutputsNumDismatch => {
+                "Transaction inputs does not match spent outputs".fmt(f)
+            }
+            Error::NotTaprootWitness => "Not pay to taproot witness".fmt(f),
+            Error::LastElementNotExist => "Last element not exist in script witness".fmt(f),
+            Error::EmptyWitness => "Witness is empty".fmt(f),
+            Error::InvalidSignature => "Signature resolution failed".fmt(f),
+            Error::VerifyCommitment => "Failure to verify commitment".fmt(f),
         }
     }
 }

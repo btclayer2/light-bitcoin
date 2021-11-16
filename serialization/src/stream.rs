@@ -88,7 +88,7 @@ pub trait Serializable {
 }
 
 /// Stream used for serialization of Bitcoin structures
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Stream {
     buffer: Vec<u8>,
     flags: u32,

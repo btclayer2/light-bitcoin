@@ -9,6 +9,8 @@ license = "GPL-3.0"
 default = ["std"]
 std = [
   "hex/std",
+  "sha2/std",
+  "libsecp256k1/std",
 
   "light-bitcoin-chain/std",
   "light-bitcoin-crypto/std",
@@ -19,6 +21,8 @@ std = [
 
 [dependencies]
 hex = { version = "0.4", default-features = false }
+sha2 = { version = "0.9.5", default-features = false }
+libsecp256k1 = { version = "0.3.5", default-features = false, features = ["hmac"] }
 
 light-bitcoin-chain = { path = "../chain", default-features = false }
 light-bitcoin-crypto = { path = "../crypto", default-features = false }

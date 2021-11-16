@@ -69,7 +69,7 @@ impl BlockHeader {
 
 impl codec::Encode for BlockHeader {
     fn encode(&self) -> Vec<u8> {
-        let value = serialize::<BlockHeader>(&self);
+        let value = serialize::<BlockHeader>(self);
         value.encode()
     }
 }

@@ -1,0 +1,45 @@
+[package]
+name = "light-bitcoin-mast"
+version = "0.2.0"
+authors = ['The ChainX Authors']
+edition = "2018"
+license = "GPL-3.0"
+
+[dependencies]
+arrayref = { version = "0.3.6", default-features = false }
+core2 = { version = "0.3.0", default-features = false, features = ["alloc"] }
+digest = { version = "0.9.0", default-features = false }
+rayon = { version = "1.5.0", optional = true }
+sha2 = { version = "0.9.5", default-features = false }
+hex = { version = "0.4.3", default-features = false }
+bitcoin_hashes = { version = "0.10.0", default-features = false, features = ["alloc"] }
+
+bitcoin-bech32 = { git = "https://github.com/chainx-org/rust-bech32-bitcoin", branch = "master", default-features = false }
+musig2 = { git = "https://github.com/chainx-org/Musig2", branch = "lib", default-features = false }
+
+light-bitcoin-keys = { path = "../keys", default-features = false }
+light-bitcoin-script = { path = "../script", default-features = false }
+light-bitcoin-serialization = { path = "../serialization", default-features = false }
+
+[dev-dependencies]
+criterion = { version = "0.3", default-features = false, features = ['html_reports', 'cargo_bench_support'] }
+
+[features]
+default = ['std']
+std = [
+    "rayon",
+    "core2/std",
+    "digest/std",
+    "sha2/std",
+    "hex/std",
+    "bitcoin_hashes/std",
+    "musig2/std",
+    "light-bitcoin-keys/std",
+    "light-bitcoin-script/std",
+    "light-bitcoin-serialization/std",
+]
+
+[[bench]]
+name = "generate_address"
+path = "benches/generate_address.rs"
+harness = false

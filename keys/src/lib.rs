@@ -11,17 +11,21 @@ mod error;
 mod keypair;
 mod private;
 mod public;
+mod schnorr;
 mod signature;
+mod tagged;
 
 use light_bitcoin_primitives::*;
 
-pub use self::address::{Address, Network, Type};
+pub use self::address::{Address, AddressTypes, Network, Type};
 pub use self::display::DisplayLayout;
 pub use self::error::Error;
 pub use self::keypair::KeyPair;
 pub use self::private::Private;
-pub use self::public::Public;
-pub use self::signature::{CompactSignature, Signature};
+pub use self::public::{Public, XOnly};
+pub use self::schnorr::*;
+pub use self::signature::{CompactSignature, SchnorrSignature, Signature};
+pub use self::tagged::*;
 
 /// 20 bytes long hash derived from public `ripemd160(sha256(public))`
 pub type AddressHash = H160;

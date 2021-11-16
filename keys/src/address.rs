@@ -5,10 +5,14 @@
 //!
 //! https://en.bitcoin.it/wiki/Address
 
-use core::{fmt, ops, str};
+extern crate alloc;
+use alloc::string::{String, ToString};
+use core::{convert::TryFrom, fmt, ops, str};
 
+use bitcoin_bech32::constants::Network as Bech32Network;
+use bitcoin_bech32::{u5, WitnessProgram};
 use light_bitcoin_crypto::checksum;
-use light_bitcoin_primitives::io;
+use light_bitcoin_primitives::{io, H160, H256};
 use light_bitcoin_serialization::{Deserializable, Reader, Serializable, Stream};
 
 use codec::{Decode, Encode};
@@ -17,7 +21,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::display::DisplayLayout;
 use crate::error::Error;
-use crate::AddressHash;
+use crate::{AddressHash, XOnly};
 
 /// There are two address formats currently in use.
 /// https://bitcoin.org/en/developer-reference#address-conversion
@@ -33,6 +37,12 @@ pub enum Type {
     /// Newer P2SH type starting with the number 3, eg: 3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy.
     /// https://bitcoin.org/en/glossary/p2sh-address
     P2SH,
+    /// Pay to Witness PubKey Hash
+    P2WPKH,
+    /// Pay to Witness Script Hash
+    P2WSH,
+    /// Pay to Witness Taproot
+    P2TR,
 }
 
 impl Default for Type {
@@ -46,6 +56,9 @@ impl Type {
         match v {
             0 => Some(Type::P2PKH),
             1 => Some(Type::P2SH),
+            2 => Some(Type::P2WPKH),
+            3 => Some(Type::P2WSH),
+            4 => Some(Type::P2TR),
             _ => None,
         }
     }
@@ -56,6 +69,9 @@ impl Serializable for Type {
         let _stream = match *self {
             Type::P2PKH => s.append(&Type::P2PKH),
             Type::P2SH => s.append(&Type::P2SH),
+            Type::P2WPKH => s.append(&Type::P2WPKH),
+            Type::P2WSH => s.append(&Type::P2WSH),
+            Type::P2TR => s.append(&Type::P2TR),
         };
     }
 }
@@ -77,6 +93,15 @@ impl Deserializable for Type {
 pub enum Network {
     Mainnet,
     Testnet,
+}
+
+impl ToString for Network {
+    fn to_string(&self) -> String {
+        match self {
+            Network::Mainnet => "Mainnet".to_string(),
+            Network::Testnet => "Testnet".to_string(),
+        }
+    }
 }
 
 impl Default for Network {
@@ -115,6 +140,64 @@ impl Deserializable for Network {
     }
 }
 
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Encode, Decode)]
+pub enum AddressTypes {
+    Legacy(AddressHash),
+    WitnessV0ScriptHash(H256),
+    WitnessV0KeyHash(H160),
+    WitnessV1Taproot(XOnly),
+}
+
+impl Default for AddressTypes {
+    fn default() -> Self {
+        AddressTypes::Legacy(AddressHash::default())
+    }
+}
+
+impl Serializable for AddressTypes {
+    fn serialize(&self, s: &mut Stream) {
+        let _stream = match *self {
+            AddressTypes::Legacy(h) => s.append(&0).append(&h),
+            AddressTypes::WitnessV0ScriptHash(h) => s.append(&1).append(&h),
+            AddressTypes::WitnessV0KeyHash(h) => s.append(&2).append(&h),
+            AddressTypes::WitnessV1Taproot(h) => s.append(&3).append_slice(&h.0),
+        };
+    }
+}
+
+impl Deserializable for AddressTypes {
+    fn deserialize<T>(reader: &mut Reader<T>) -> Result<Self, io::Error>
+    where
+        Self: Sized,
+        T: io::Read,
+    {
+        let t: u32 = reader.read()?;
+        match t {
+            0 => {
+                let h: H160 = reader.read()?;
+                Ok(AddressTypes::Legacy(h))
+            }
+            1 => {
+                let h: H256 = reader.read()?;
+                Ok(AddressTypes::WitnessV0ScriptHash(h))
+            }
+            2 => {
+                let h: H160 = reader.read()?;
+                Ok(AddressTypes::WitnessV0KeyHash(h))
+            }
+            3 => {
+                let mut keys = [0u8; 32];
+                reader.read_slice(&mut keys)?;
+
+                Ok(AddressTypes::WitnessV1Taproot(XOnly(keys)))
+            }
+            _ => Err(io::Error::ReadMalformedData),
+        }
+    }
+}
+
 /// `AddressHash` with network identifier and format type
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Default)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -126,12 +209,45 @@ pub struct Address {
     /// The network of the address.
     pub network: Network,
     /// Public key hash.
-    pub hash: AddressHash,
+    pub hash: AddressTypes,
 }
 
 impl fmt::Display for Address {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        bs58::encode(self.layout().0).into_string().fmt(f)
+        let network = match self.network {
+            Network::Mainnet => Bech32Network::Bitcoin,
+            Network::Testnet => Bech32Network::Testnet,
+        };
+        match self.hash {
+            AddressTypes::Legacy(_) => bs58::encode(self.layout().0).into_string().fmt(f),
+            AddressTypes::WitnessV0ScriptHash(h) => {
+                let witness = WitnessProgram::new(
+                    u5::try_from_u8(0).map_err(|_| fmt::Error)?,
+                    h.0.to_vec(),
+                    network,
+                )
+                .map_err(|_| fmt::Error)?;
+                witness.to_string().fmt(f)
+            }
+            AddressTypes::WitnessV0KeyHash(h) => {
+                let witness = WitnessProgram::new(
+                    u5::try_from_u8(0).map_err(|_| fmt::Error)?,
+                    h.0.to_vec(),
+                    network,
+                )
+                .map_err(|_| fmt::Error)?;
+                witness.to_string().fmt(f)
+            }
+            AddressTypes::WitnessV1Taproot(h) => {
+                let witness = WitnessProgram::new(
+                    u5::try_from_u8(1).map_err(|_| fmt::Error)?,
+                    h.0.to_vec(),
+                    network,
+                )
+                .map_err(|_| fmt::Error)?;
+                witness.to_string().fmt(f)
+            }
+        }
     }
 }
 
@@ -139,10 +255,40 @@ impl str::FromStr for Address {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Error> {
-        let hex = bs58::decode(s)
-            .into_vec()
-            .map_err(|_| Error::InvalidAddress)?;
-        Address::from_layout(&hex)
+        if bs58::decode(s).into_vec().is_ok() {
+            let hex = bs58::decode(s)
+                .into_vec()
+                .map_err(|_| Error::InvalidAddress)?;
+            Address::from_layout(&hex)
+        } else {
+            let witness = WitnessProgram::from_str(s).map_err(|_| Error::InvalidAddress)?;
+            let version = witness.version().to_u8();
+            let network = match witness.network() {
+                Bech32Network::Bitcoin => Network::Mainnet,
+                _ => Network::Testnet,
+            };
+            let (kind, hash) = if version == 1 {
+                (
+                    Type::P2TR,
+                    AddressTypes::WitnessV1Taproot(XOnly::try_from(witness.program())?),
+                )
+            } else if witness.program().len() == 20 {
+                (
+                    Type::P2WPKH,
+                    AddressTypes::WitnessV0KeyHash(H160::from_slice(witness.program())),
+                )
+            } else {
+                (
+                    Type::P2WSH,
+                    AddressTypes::WitnessV0ScriptHash(H256::from_slice(witness.program())),
+                )
+            };
+            Ok(Self {
+                kind,
+                network,
+                hash,
+            })
+        }
     }
 }
 
@@ -168,9 +314,13 @@ impl DisplayLayout for Address {
             (Network::Mainnet, Type::P2SH) => 5,
             (Network::Testnet, Type::P2PKH) => 111,
             (Network::Testnet, Type::P2SH) => 196,
+            _ => todo!(),
         };
 
-        result[1..21].copy_from_slice(self.hash.as_bytes());
+        match self.hash {
+            AddressTypes::Legacy(h) => result[1..21].copy_from_slice(h.as_bytes()),
+            _ => todo!(),
+        };
         let cs = checksum(&result[0..21]);
         result[21..25].copy_from_slice(cs.as_bytes());
         AddressDisplayLayout(result)
@@ -201,23 +351,22 @@ impl DisplayLayout for Address {
         Ok(Address {
             kind,
             network,
-            hash,
+            hash: AddressTypes::Legacy(hash),
         })
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use light_bitcoin_primitives::h160;
-
     use super::*;
+    use light_bitcoin_primitives::h160;
 
     #[test]
     fn test_address_to_string() {
         let address = Address {
             kind: Type::P2PKH,
             network: Network::Mainnet,
-            hash: h160("3f4aa1fedf1f54eeb03b759deadb36676b184911"),
+            hash: AddressTypes::Legacy(h160("3f4aa1fedf1f54eeb03b759deadb36676b184911")),
         };
         assert_eq!(
             address.to_string(),
@@ -227,7 +376,7 @@ mod tests {
         let address = Address {
             kind: Type::P2SH,
             network: Network::Mainnet,
-            hash: h160("d246f700f4969106291a75ba85ad863cae68d667"),
+            hash: AddressTypes::Legacy(h160("d246f700f4969106291a75ba85ad863cae68d667")),
         };
         assert_eq!(
             address.to_string(),
@@ -240,7 +389,7 @@ mod tests {
         let address = Address {
             kind: Type::P2PKH,
             network: Network::Mainnet,
-            hash: h160("3f4aa1fedf1f54eeb03b759deadb36676b184911"),
+            hash: AddressTypes::Legacy(h160("3f4aa1fedf1f54eeb03b759deadb36676b184911")),
         };
         assert_eq!(
             address,
@@ -250,7 +399,7 @@ mod tests {
         let address = Address {
             kind: Type::P2SH,
             network: Network::Mainnet,
-            hash: h160("d246f700f4969106291a75ba85ad863cae68d667"),
+            hash: AddressTypes::Legacy(h160("d246f700f4969106291a75ba85ad863cae68d667")),
         };
         assert_eq!(
             address,
