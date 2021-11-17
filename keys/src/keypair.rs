@@ -10,7 +10,7 @@ use crate::private::Private;
 use crate::public::Public;
 use crate::Secret;
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Debug, Copy, Clone, Default)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Debug, Copy, Clone, Default, scale_info::TypeInfo)]
 pub struct KeyPair {
     private: Private,
     public: Public,

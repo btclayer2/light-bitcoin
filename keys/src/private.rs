@@ -14,7 +14,7 @@ use crate::signature::{CompactSignature, Signature};
 use crate::{Message, Secret};
 
 /// Secret with additional network identifier and format type
-#[derive(Ord, PartialOrd, Eq, PartialEq, Debug, Copy, Clone, Default)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Debug, Copy, Clone, Default, scale_info::TypeInfo)]
 pub struct Private {
     /// The network on which this key should be used.
     pub network: Network,

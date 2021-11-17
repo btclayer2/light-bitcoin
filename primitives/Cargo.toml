@@ -12,6 +12,7 @@ std = [
   "fixed-hash/std",
   "hex/std",
   "serde",
+  "scale-info/std",
   "impl-serde",
   "impl-codec/std",
   "primitive-types/std",
@@ -23,7 +24,8 @@ byteorder = { version = "1.3", default-features = false }
 fixed-hash = { version = "0.7", default-features = false }
 hex = { version = "0.4", default-features = false}
 serde = { version = "1.0", features = ["derive"], optional = true }
+scale-info = { version = "1.0", default-features = false, features = ["derive"] }
 
 impl-serde = { version = "0.3", optional = true }
-impl-codec = { version = "0.4", default-features = false }
-primitive-types = { version = "0.7", default-features = false, features = ["codec"] }
+impl-codec = { version = "0.5", default-features = false }
+primitive-types = { version = "0.10.1", default-features = false, features = ["codec", "scale-info"] }

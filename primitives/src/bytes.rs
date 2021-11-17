@@ -5,7 +5,7 @@ use alloc::{vec, vec::Vec};
 use core::{fmt, marker, ops, str};
 
 /// Wrapper around `Vec<u8>`
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Hash, Default)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Hash, Default, scale_info::TypeInfo)]
 pub struct Bytes(Vec<u8>);
 
 impl<'a> From<&'a [u8]> for Bytes {
@@ -150,7 +150,7 @@ impl<'de> serde::de::Visitor<'de> for BytesVisitor {
 }
 
 /// Wrapper around `Vec<u8>` which represent associated type
-#[derive(Default, PartialEq, Clone)]
+#[derive(Default, PartialEq, Clone, scale_info::TypeInfo)]
 pub struct TaggedBytes<T> {
     bytes: Bytes,
     label: marker::PhantomData<T>,

@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::U256;
 
 /// Compact representation of `U256`
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy, Default, Debug)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy, Default, Debug, scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Compact(u32);
 

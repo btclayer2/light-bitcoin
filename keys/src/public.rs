@@ -21,7 +21,7 @@ use crate::{
 use secp256k1::curve::{Affine, Field};
 
 /// Secret public key
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "std", serde(untagged))]
 #[derive(Encode, Decode)]
@@ -149,7 +149,7 @@ impl Public {
 ///
 /// X-only public keys become equivalent to a compressed public key
 /// that is the X-only key prefixed by the byte 0x02
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode)]
 pub struct XOnly(pub [u8; 32]);

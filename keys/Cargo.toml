@@ -10,9 +10,12 @@ default = ["std"]
 std = [
   "bs58/std",
   "codec/std",
+  "digest/std",
   "hex/std",
   "libsecp256k1/std",
+  "musig2/std",
   "serde",
+  "scale-info/std",
   "sha2/std",
 
   "light-bitcoin-crypto/std",
@@ -23,16 +26,16 @@ std = [
 [dependencies]
 arrayref = { version = "0.3.6" }
 bs58 = { version = "0.4", default-features = false, features = ["alloc"] }
-codec = { package = "parity-scale-codec", version = "1.3",  default-features = false, features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "2.0.0",  default-features = false, features = ["derive"] }
+digest = { version = "0.9.0", default-features = false }
 hex = { version = "0.4", default-features = false, features = ["alloc"] }
 libsecp256k1 = { version = "0.3.5", default-features = false, features = ["hmac"] }
 musig2 = { git = "https://github.com/chainx-org/Musig2", branch = "lib", default-features = false }
 serde = { version = "1.0", features = ["derive"], optional = true }
-digest = { version = "0.9.0", default-features = false }
+scale-info = { version = "1.0", default-features = false, features = ["derive"] }
 sha2 = { version = "0.9.5", default-features = false }
 # for no-std
 bitcoin-bech32 = { git = "https://github.com/chainx-org/rust-bech32-bitcoin", branch = "master", default-features = false }
-
 light-bitcoin-crypto = { path = "../crypto", default-features = false }
 light-bitcoin-primitives = { path = "../primitives", default-features = false }
 light-bitcoin-serialization = { path = "../serialization", default-features = false, features = ["derive"] }

@@ -20,7 +20,7 @@ const MAX_BLOCK_WEIGHT: u32 = 4_000_000;
 /// The minimum transaction weight for a valid serialized transaction
 const MIN_TRANSACTION_WEIGHT: u32 = 4 * 60;
 
-#[derive(Debug)]
+#[derive(Debug, scale_info::TypeInfo)]
 pub enum Error {
     /// When header merkle root don't match to the root calculated from the partial merkle tree
     MerkleRootMismatch,
@@ -85,7 +85,7 @@ impl From<&str> for Error {
 ///  - varint     number of bytes of flag bits (1-3 bytes)
 ///  - byte[]     flag bits, packed per 8 in a byte, least significant bit first (<= 2*N-1 bits)
 /// The size constraints follow from this.
-#[derive(PartialEq, Eq, Clone, Default)]
+#[derive(PartialEq, Eq, Clone, Default, scale_info::TypeInfo)]
 pub struct PartialMerkleTree {
     /// The total number of transactions in the block
     pub tx_count: u32,

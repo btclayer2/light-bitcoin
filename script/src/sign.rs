@@ -23,7 +23,7 @@ use secp256k1::{
     PublicKey,
 };
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, scale_info::TypeInfo)]
 pub enum SignatureVersion {
     Base,
     WitnessV0,
@@ -32,7 +32,7 @@ pub enum SignatureVersion {
     TapScript,
 }
 
-#[derive(Debug)]
+#[derive(Debug, scale_info::TypeInfo)]
 pub struct ScriptExecutionData {
     // Whether m_tapleaf_hash is initialized.
     pub m_tapleaf_hash_init: bool,
@@ -107,7 +107,7 @@ impl ScriptExecutionData {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, scale_info::TypeInfo)]
 #[repr(u8)]
 pub enum SighashBase {
     All = 1,
@@ -123,7 +123,7 @@ impl From<SighashBase> for u32 {
 
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::doc_markdown))]
 /// Signature hash type. [Documentation](https://en.bitcoin.it/wiki/OP_CHECKSIG#Procedure_for_Hashtype_SIGHASH_SINGLE)
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, scale_info::TypeInfo)]
 pub struct Sighash {
     pub base: SighashBase,
     pub anyone_can_pay: bool,
@@ -178,7 +178,7 @@ impl Sighash {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, scale_info::TypeInfo)]
 pub struct UnsignedTransactionInput {
     pub previous_output: OutPoint,
     pub sequence: u32,
@@ -194,7 +194,7 @@ impl From<TransactionInput> for UnsignedTransactionInput {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, scale_info::TypeInfo)]
 pub struct TransactionInputSigner {
     pub version: i32,
     pub inputs: Vec<UnsignedTransactionInput>,

@@ -6,7 +6,7 @@ use light_bitcoin_serialization::{Deserializable, Reader};
 use crate::read_and_hash::ReadAndHash;
 use crate::transaction::Transaction;
 
-#[derive(Ord, PartialOrd, Eq, Clone, Default)]
+#[derive(Ord, PartialOrd, Eq, Clone, Default, scale_info::TypeInfo)]
 pub struct IndexedTransaction {
     pub hash: H256,
     pub raw: Transaction,

@@ -14,7 +14,7 @@ use crate::indexed_transaction::IndexedTransaction;
 use crate::merkle_root::merkle_root;
 use crate::transaction::Transaction;
 
-#[derive(Ord, PartialOrd, Eq, Clone, Debug, Default, Deserializable)]
+#[derive(Ord, PartialOrd, Eq, Clone, Debug, Default, Deserializable, scale_info::TypeInfo)]
 pub struct IndexedBlock {
     pub header: IndexedBlockHeader,
     pub transactions: Vec<IndexedTransaction>,

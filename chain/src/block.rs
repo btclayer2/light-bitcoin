@@ -10,7 +10,7 @@ use crate::merkle_root::merkle_root;
 use crate::transaction::Transaction;
 
 /// A Bitcoin block, which is a collection of transactions with an attached proof of work.
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Default)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Default, scale_info::TypeInfo)]
 #[derive(Serializable, Deserializable)]
 pub struct Block {
     /// The block header

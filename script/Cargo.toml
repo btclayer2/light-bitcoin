@@ -23,6 +23,7 @@ std = [
 hex = { version = "0.4", default-features = false }
 sha2 = { version = "0.9.5", default-features = false }
 libsecp256k1 = { version = "0.3.5", default-features = false, features = ["hmac"] }
+scale-info = { version = "1.0", default-features = false, features = ["derive"] }
 
 light-bitcoin-chain = { path = "../chain", default-features = false }
 light-bitcoin-crypto = { path = "../crypto", default-features = false }
