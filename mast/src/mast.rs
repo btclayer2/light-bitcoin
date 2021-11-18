@@ -118,23 +118,28 @@ impl Mast {
 
     /// generate threshold signature address
     pub fn generate_address(&self, network: &str) -> Result<String> {
-        let network = match network.to_lowercase().as_str() {
-            "regtest" => Network::Regtest,
-            "testnet" => Network::Testnet,
-            "mainnet" => Network::Bitcoin,
-            "signet" => Network::Signet,
-            _ => Network::Bitcoin,
-        };
         let root = self.calc_root()?;
         let tweak = tweak_pubkey(&self.inner_pubkey, &root)?;
-        let witness = WitnessProgram::new(
-            u5::try_from_u8(1).map_err(|_| MastError::EncodeToBech32Error)?,
-            tweak.x_coor().to_vec(),
-            network,
-        )
-        .map_err(|_| MastError::EncodeToBech32Error)?;
-        Ok(witness.to_string())
+        generate_btc_address(&tweak, network)
     }
+}
+
+/// To generate btc address
+pub fn generate_btc_address(pubkey: &PublicKey, network: &str) -> Result<String> {
+    let network = match network.to_lowercase().as_str() {
+        "mainnet" => Network::Bitcoin,
+        "testnet" => Network::Testnet,
+        "signet" => Network::Signet,
+        "regtest" => Network::Regtest,
+        _ => Network::Bitcoin,
+    };
+    let witness = WitnessProgram::new(
+        u5::try_from_u8(1).map_err(|_| MastError::EncodeToBech32Error)?,
+        pubkey.x_coor().to_vec(),
+        network,
+    )
+    .map_err(|_| MastError::EncodeToBech32Error)?;
+    Ok(witness.to_string())
 }
 
 /// Calculate the leaf nodes from the pubkey
