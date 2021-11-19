@@ -5,7 +5,16 @@ use alloc::{vec, vec::Vec};
 use core::{fmt, marker, ops, str};
 
 /// Wrapper around `Vec<u8>`
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Hash, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Clone,
+    Hash,
+    Default,
+    scale_info::TypeInfo
+)]
 pub struct Bytes(Vec<u8>);
 
 impl<'a> From<&'a [u8]> for Bytes {

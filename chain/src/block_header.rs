@@ -11,7 +11,16 @@ use serde::{Deserialize, Serialize};
 
 /// A block header, which contains all the block's information except
 /// the actual transactions
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Copy,
+    Clone,
+    Default,
+    scale_info::TypeInfo
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Serializable, Deserializable)]
 pub struct BlockHeader {

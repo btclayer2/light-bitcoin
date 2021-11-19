@@ -18,9 +18,9 @@ use core::{
 };
 
 use crate::Opcode;
-use secp256k1::{
-    curve::{Affine, Jacobian, Scalar, ECMULT_CONTEXT},
-    PublicKey,
+use libsecp256k1::{
+    curve::{Affine, Jacobian, Scalar},
+    PublicKey, ECMULT_CONTEXT,
 };
 
 #[derive(Debug, PartialEq, Clone, Copy, scale_info::TypeInfo)]
@@ -666,7 +666,7 @@ pub fn verify_taproot_commitment(control: &[u8], program: &XOnly, scirpt: &Scrip
     p.y.normalize();
     let p = if p.y.is_odd() { p.neg() } else { p };
 
-    let mut pj = secp256k1::curve::Jacobian::default();
+    let mut pj = libsecp256k1::curve::Jacobian::default();
     pj.set_ge(&p);
 
     let mut rj = Jacobian::default();

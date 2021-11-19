@@ -9,7 +9,17 @@ use crate::opcode::Opcode;
 use crate::script::Script;
 
 /// Script builder
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Hash, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Clone,
+    Debug,
+    Hash,
+    Default,
+    scale_info::TypeInfo
+)]
 pub struct Builder {
     data: Bytes,
 }

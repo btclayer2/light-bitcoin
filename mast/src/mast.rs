@@ -4,13 +4,12 @@
 use core::cmp::min;
 
 use bitcoin_bech32::{constants::Network, u5, WitnessProgram};
-use light_bitcoin_script::{Builder, Opcode};
+use light_bitcoin_script::{Builder, Opcode, H256};
 use light_bitcoin_serialization::Stream;
 
 use super::{
     error::{MastError, Result},
     pmt::PartialMerkleTree,
-    LeafNode, MerkleNode,
 };
 
 #[cfg(not(feature = "std"))]
@@ -21,10 +20,7 @@ use alloc::{
 };
 
 use digest::Digest;
-use hashes::{
-    hex::{FromHex, ToHex},
-    Hash,
-};
+use hashes::hex::ToHex;
 use light_bitcoin_keys::{HashAdd, Tagged};
 use musig2::{
     key::{PrivateKey, PublicKey},
@@ -37,7 +33,7 @@ use rayon::prelude::*;
 const DEFAULT_TAPSCRIPT_VER: u8 = 0xc0;
 
 /// Data structure that represents a partial mast tree
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, scale_info::TypeInfo)]
 pub struct Mast {
     /// The threshold aggregate public key
     pubkeys: Vec<PublicKey>,
@@ -56,7 +52,7 @@ impl Mast {
     }
 
     /// calculate merkle root
-    pub fn calc_root(&self) -> Result<MerkleNode> {
+    pub fn calc_root(&self) -> Result<H256> {
         let leaf_nodes = self
             .pubkeys
             .iter()
@@ -69,7 +65,7 @@ impl Mast {
         // }
         matches.extend(&vec![false; self.pubkeys.len() - 1]);
         let pmt = PartialMerkleTree::from_leaf_nodes(&leaf_nodes, &matches)?;
-        let mut matches_vec: Vec<LeafNode> = vec![];
+        let mut matches_vec: Vec<H256> = vec![];
         let mut indexes_vec: Vec<u32> = vec![];
         pmt.extract_matches(&mut matches_vec, &mut indexes_vec)
     }
@@ -95,9 +91,9 @@ impl Mast {
             .iter()
             .map(tagged_leaf)
             .collect::<Result<Vec<_>>>()?;
-        let filter_proof = MerkleNode::from_inner(leaf_nodes[index].into_inner());
+        let filter_proof = leaf_nodes[index];
         let pmt = PartialMerkleTree::from_leaf_nodes(&leaf_nodes, &matches)?;
-        let mut matches_vec: Vec<LeafNode> = vec![];
+        let mut matches_vec: Vec<H256> = vec![];
         let mut indexes_vec: Vec<u32> = vec![];
         let root = pmt.extract_matches(&mut matches_vec, &mut indexes_vec)?;
         let tweak = tweak_pubkey(&self.inner_pubkey, &root)?;
@@ -105,7 +101,11 @@ impl Mast {
         Ok([
             vec![first_bytes],
             self.inner_pubkey.x_coor().to_vec(),
-            pmt.collected_hashes(filter_proof).concat(),
+            pmt.collected_hashes(filter_proof)
+                .iter()
+                .map(|d| d.as_bytes().to_vec())
+                .collect::<Vec<_>>()
+                .concat(),
         ]
         .concat())
     }
@@ -145,7 +145,7 @@ pub fn generate_btc_address(pubkey: &PublicKey, network: &str) -> Result<String>
 /// Calculate the leaf nodes from the pubkey
 ///
 /// tagged_hash("TapLeaf", bytes([leaf_version]) + ser_size(pubkey))
-pub fn tagged_leaf(pubkey: &PublicKey) -> Result<LeafNode> {
+pub fn tagged_leaf(pubkey: &PublicKey) -> Result<H256> {
     let mut stream = Stream::default();
 
     let version = DEFAULT_TAPSCRIPT_VER & 0xfe;
@@ -162,13 +162,13 @@ pub fn tagged_leaf(pubkey: &PublicKey) -> Result<LeafNode> {
         .tagged(b"TapLeaf")
         .add(&out[..])
         .finalize();
-    Ok(LeafNode::from_hex(&hash.to_hex())?)
+    Ok(H256::from_slice(&hash.to_vec()))
 }
 
 /// Calculate branch nodes from left and right children
 ///
 /// tagged_hash("TapBranch", left + right)). The left and right nodes are lexicographic order
-pub fn tagged_branch(left_node: MerkleNode, right_node: MerkleNode) -> Result<MerkleNode> {
+pub fn tagged_branch(left_node: H256, right_node: H256) -> Result<H256> {
     // If the hash of the left and right leaves is the same, it means that the total number of leaves is odd
     //
     // In this case, the parent hash is computed without copying
@@ -177,23 +177,20 @@ pub fn tagged_branch(left_node: MerkleNode, right_node: MerkleNode) -> Result<Me
         let mut x: Vec<u8> = vec![];
         let (left_node, right_node) = lexicographical_compare(left_node, right_node);
 
-        x.extend(left_node.to_vec().iter());
-        x.extend(right_node.to_vec().iter());
+        x.extend(left_node.as_bytes().iter());
+        x.extend(right_node.as_bytes().iter());
         let hash = sha2::Sha256::default()
             .tagged(b"TapBranch")
             .add(&x[..])
             .finalize();
-        Ok(MerkleNode::from_hex(&hash.to_hex())?)
+        Ok(H256::from_slice(&hash.to_vec()))
     } else {
         Ok(left_node)
     }
 }
 
 /// Lexicographic order of left and right nodes
-fn lexicographical_compare(
-    left_node: MerkleNode,
-    right_node: MerkleNode,
-) -> (MerkleNode, MerkleNode) {
+fn lexicographical_compare(left_node: H256, right_node: H256) -> (H256, H256) {
     if right_node.to_hex() < left_node.to_hex() {
         (right_node, left_node)
     } else {
@@ -202,11 +199,11 @@ fn lexicographical_compare(
 }
 
 /// Compute tweak public key
-pub fn tweak_pubkey(inner_pubkey: &PublicKey, root: &MerkleNode) -> Result<PublicKey> {
+pub fn tweak_pubkey(inner_pubkey: &PublicKey, root: &H256) -> Result<PublicKey> {
     // P + hash_tweak(P||root)G
     let mut stream = Stream::default();
     stream.append_slice(&inner_pubkey.x_coor().to_vec());
-    stream.append_slice(&root.to_vec());
+    stream.append_slice(root.as_bytes());
     let out = stream.out();
 
     let hash = sha2::Sha256::default()

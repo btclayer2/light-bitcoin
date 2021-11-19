@@ -14,7 +14,17 @@ use crate::signature::{CompactSignature, Signature};
 use crate::{Message, Secret};
 
 /// Secret with additional network identifier and format type
-#[derive(Ord, PartialOrd, Eq, PartialEq, Debug, Copy, Clone, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Debug,
+    Copy,
+    Clone,
+    Default,
+    scale_info::TypeInfo
+)]
 pub struct Private {
     /// The network on which this key should be used.
     pub network: Network,
@@ -43,16 +53,16 @@ impl str::FromStr for Private {
 
 impl Private {
     pub fn sign(&self, message: &Message) -> Result<Signature, Error> {
-        let secret = secp256k1::SecretKey::parse(self.secret.as_fixed_bytes())?;
-        let message = secp256k1::Message::parse(message.as_fixed_bytes());
-        let (signature, _recovery_id) = secp256k1::sign(&message, &secret);
+        let secret = libsecp256k1::SecretKey::parse(self.secret.as_fixed_bytes())?;
+        let message = libsecp256k1::Message::parse(message.as_fixed_bytes());
+        let (signature, _recovery_id) = libsecp256k1::sign(&message, &secret);
         Ok(signature.serialize_der().as_ref().to_vec().into())
     }
 
     pub fn sign_compact(&self, message: &Message) -> Result<CompactSignature, Error> {
-        let secret = secp256k1::SecretKey::parse(self.secret.as_fixed_bytes())?;
-        let message = secp256k1::Message::parse(message.as_fixed_bytes());
-        let (signature, recovery_id) = secp256k1::sign(&message, &secret);
+        let secret = libsecp256k1::SecretKey::parse(self.secret.as_fixed_bytes())?;
+        let message = libsecp256k1::Message::parse(message.as_fixed_bytes());
+        let (signature, recovery_id) = libsecp256k1::sign(&message, &secret);
         let recovery_id = recovery_id.serialize();
         let data = signature.serialize();
 

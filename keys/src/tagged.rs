@@ -11,7 +11,7 @@ use digest::{
     generic_array::typenum::{PartialDiv, Unsigned},
     BlockInput, Digest,
 };
-use secp256k1::curve::Scalar;
+use libsecp256k1::curve::Scalar;
 /// Extension trait to "tag" a hash as described in [BIP-340].
 ///
 /// [BIP-340]: https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki

@@ -8,7 +8,7 @@ use core::{
     convert::{TryFrom, TryInto},
     fmt, ops, str,
 };
-use secp256k1::curve::Scalar;
+use libsecp256k1::curve::Scalar;
 
 use light_bitcoin_primitives::H520;
 
@@ -76,7 +76,16 @@ impl<'a> From<&'a [u8]> for Signature {
 }
 
 /// Recovery ID (1 byte) + Compact signature (64 bytes)
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Copy,
+    Clone,
+    Default,
+    scale_info::TypeInfo
+)]
 pub struct CompactSignature(H520);
 
 impl fmt::Debug for CompactSignature {

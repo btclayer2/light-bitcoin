@@ -7,7 +7,16 @@ use crate::flags::VerificationFlags;
 /// Script opcodes.
 #[repr(u8)]
 #[allow(non_camel_case_types)]
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Copy,
+    Clone,
+    Debug,
+    scale_info::TypeInfo
+)]
 pub enum Opcode {
     // push value
     OP_0 = 0x00,

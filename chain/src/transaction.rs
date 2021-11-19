@@ -74,7 +74,16 @@ impl OutPoint {
 }
 
 /// A transaction input, which defines old coins to be consumed
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Clone,
+    Debug,
+    Default,
+    scale_info::TypeInfo
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct TransactionInput {
     /// The reference to the previous output that is being used an an input
@@ -166,7 +175,16 @@ impl Default for TransactionOutput {
 }
 
 /// A Bitcoin transaction, which describes an authenticated movement of coins.
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Clone,
+    Debug,
+    Default,
+    scale_info::TypeInfo
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Transaction {
     /// The protocol version, is currently expected to be 1 or 2 (BIP 68).
