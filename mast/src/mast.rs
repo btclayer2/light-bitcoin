@@ -40,13 +40,13 @@ const DEFAULT_TAPSCRIPT_VER: u8 = 0xc0;
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Mast {
     /// The threshold aggregate public key
-    pubkeys: Vec<PublicKey>,
+    pub pubkeys: Vec<PublicKey>,
     /// The aggregate pubkey of all person
-    inner_pubkey: PublicKey,
+    pub inner_pubkey: PublicKey,
     /// The personal public key
-    person_pubkeys: Vec<PublicKey>,
+    pub person_pubkeys: Vec<PublicKey>,
     /// The index of the person_pubkeys corresponding to each pubkeys
-    indexs: Vec<Vec<usize>>,
+    pub indexs: Vec<Vec<usize>>,
 }
 
 impl Mast {
@@ -67,7 +67,7 @@ impl Mast {
     }
 
     /// Obtain the mapping of aggregate public key to personal public key
-    pub fn agg_pubkeys_to_personal(self) -> Vec<(PublicKey, Vec<PublicKey>)> {
+    pub fn agg_pubkeys_to_personal(&self) -> Vec<(PublicKey, Vec<PublicKey>)> {
         self.pubkeys
             .iter()
             .enumerate()
