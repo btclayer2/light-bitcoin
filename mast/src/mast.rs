@@ -66,6 +66,21 @@ impl Mast {
         })
     }
 
+    /// Obtain the mapping of aggregate public key to personal public key
+    pub fn agg_pubkeys_to_personal(self) -> Vec<(PublicKey, Vec<PublicKey>)> {
+        self.pubkeys
+            .iter()
+            .enumerate()
+            .map(|(i, p)| {
+                let mut person_pubkey_combine = vec![];
+                for index in self.indexs[i].iter() {
+                    person_pubkey_combine.push(self.person_pubkeys[index - 1].clone())
+                }
+                (p.clone(), person_pubkey_combine)
+            })
+            .collect::<Vec<_>>()
+    }
+
     /// calculate merkle root
     pub fn calc_root(&self) -> Result<MerkleNode> {
         let leaf_nodes = self
@@ -359,6 +374,38 @@ mod tests {
                 "04e7c92d2ef4294389c385fedd5387fba806687f5aba1c7ba285093dacd69354d9b4f9ea87450c75954ade455677475e92fb5e303db36753c2ea20e47d3e939662",
             ]
         );
+    }
+
+    #[test]
+    fn test_agg_pubkeys_to_personal() {
+        let pubkey_a = convert_hex_to_pubkey("04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672");
+        let pubkey_b = convert_hex_to_pubkey("04dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba6592ce19b946c4ee58546f5251d441a065ea50735606985e5b228788bec4e582898");
+        let pubkey_c = convert_hex_to_pubkey("04dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8f594bb5f72b37faae396a4259ea64ed5e6fdeb2a51c6467582b275925fab1394");
+        let person_pubkeys = vec![pubkey_a, pubkey_b, pubkey_c];
+        let mast = Mast::new(person_pubkeys, 2).unwrap();
+
+        assert_eq!(
+            mast.agg_pubkeys_to_personal()
+                .iter()
+                .map(|p| {
+                    (
+                        hex::encode(&p.0.serialize()),
+                        p.1.iter()
+                            .map(|q| hex::encode(&q.serialize()))
+                            .collect::<Vec<_>>(),
+                    )
+                })
+                .collect::<Vec<_>>(),
+            vec![("0443498bc300426635cd1876077e3993bec1168d6c6fa1138f893ce41a5f51bf0a22a2a7a85830e1f9facf02488328be04ece354730e19ce2766d5dca1478483cd".to_owned(),
+                  vec!["04dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba6592ce19b946c4ee58546f5251d441a065ea50735606985e5b228788bec4e582898".to_owned(),
+                      "04dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8f594bb5f72b37faae396a4259ea64ed5e6fdeb2a51c6467582b275925fab1394".to_owned()]),
+                 ("04be1979e5e167d216a1229315844990606c2aba2d582472492a9eec7c9466460a286a71973e72f8d057235855253707ba73b5436d6170e702edf2ed5df46722b2".to_owned(),
+                  vec!["04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672".to_owned(),
+                      "04dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8f594bb5f72b37faae396a4259ea64ed5e6fdeb2a51c6467582b275925fab1394".to_owned()]),
+                 ("04e7c92d2ef4294389c385fedd5387fba806687f5aba1c7ba285093dacd69354d9b4f9ea87450c75954ade455677475e92fb5e303db36753c2ea20e47d3e939662".to_owned(),
+                  vec!["04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672".to_owned(),
+                      "04dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba6592ce19b946c4ee58546f5251d441a065ea50735606985e5b228788bec4e582898".to_owned()])]
+        )
     }
 
     #[test]
