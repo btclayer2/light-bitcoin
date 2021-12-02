@@ -12,8 +12,8 @@ fn bench_generate_combine_index(b: &mut Bencher) {
 }
 
 fn bench_generate_combine_pubkey(b: &mut Bencher) {
-    let n = 100;
-    let m = 99;
+    let n = 350;
+    let m = 349;
     // println!("combine:{}", compute_combine(n, m));
     let pubkey = convert_hex_to_pubkey("04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672");
     let pks = vec![pubkey; n];
@@ -21,7 +21,7 @@ fn bench_generate_combine_pubkey(b: &mut Bencher) {
         generate_combine_pubkey(pks.clone(), m)
             .unwrap()
             .iter()
-            .map(|p| hex::encode(&p.serialize()))
+            .map(|p| hex::encode(&p.0.serialize()))
             .collect::<Vec<_>>()
     });
 }

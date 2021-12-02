@@ -142,7 +142,7 @@ pub fn sign_with_aux(
 
     let pkx = XOnly::from(&mut pk.x);
 
-    let sk: Scalar = seckey.clone().into();
+    let sk: Scalar = seckey.into();
     let sec = if pk.y.is_odd() { sk.neg() } else { sk };
 
     // Get nonce k and nonce point R

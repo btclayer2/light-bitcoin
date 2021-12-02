@@ -41,17 +41,28 @@ const DEFAULT_TAPSCRIPT_VER: u8 = 0xc0;
 pub struct Mast {
     /// The threshold aggregate public key
     pubkeys: Vec<PublicKey>,
-    /// The pubkey of all person
+    /// The aggregate pubkey of all person
     inner_pubkey: PublicKey,
+    /// The personal public key
+    person_pubkeys: Vec<PublicKey>,
+    /// The index of the person_pubkeys corresponding to each pubkeys
+    indexs: Vec<Vec<usize>>,
 }
 
 impl Mast {
     /// Create a mast instance
     pub fn new(person_pubkeys: Vec<PublicKey>, threshold: usize) -> Result<Self> {
         let inner_pubkey = KeyAgg::key_aggregation_n(&person_pubkeys)?.X_tilde;
+        let (pubkeys, indexs): (Vec<PublicKey>, Vec<Vec<usize>>) =
+            generate_combine_pubkey(person_pubkeys.clone(), threshold)?
+                .into_iter()
+                .unzip();
+
         Ok(Mast {
-            pubkeys: generate_combine_pubkey(person_pubkeys, threshold)?,
+            pubkeys,
             inner_pubkey,
+            person_pubkeys,
+            indexs,
         })
     }
 
@@ -247,36 +258,42 @@ pub fn generate_combine_index(n: usize, k: usize) -> Vec<Vec<usize>> {
 }
 
 #[cfg(feature = "std")]
-pub fn generate_combine_pubkey(pubkeys: Vec<PublicKey>, k: usize) -> Result<Vec<PublicKey>> {
+pub fn generate_combine_pubkey(
+    pubkeys: Vec<PublicKey>,
+    k: usize,
+) -> Result<Vec<(PublicKey, Vec<usize>)>> {
     let all_indexs = generate_combine_index(pubkeys.len(), k);
     let mut pks = vec![];
     for indexs in all_indexs {
         let mut temp: Vec<PublicKey> = vec![];
-        for index in indexs {
+        for index in indexs.iter() {
             temp.push(pubkeys[index - 1].clone())
         }
-        pks.push(temp);
+        pks.push((temp, indexs));
     }
     let mut output = pks
         .par_iter()
-        .map(|ps| Ok(KeyAgg::key_aggregation_n(ps)?.X_tilde))
-        .collect::<Result<Vec<PublicKey>>>()?;
-    output.sort_by_key(|a| a.x_coor());
+        .map(|ps| Ok((KeyAgg::key_aggregation_n(&ps.0)?.X_tilde, ps.1.clone())))
+        .collect::<Result<Vec<(PublicKey, Vec<usize>)>>>()?;
+    output.sort_by_key(|a| a.0.x_coor());
     Ok(output)
 }
 
 #[cfg(not(feature = "std"))]
-pub fn generate_combine_pubkey(pubkeys: Vec<PublicKey>, k: usize) -> Result<Vec<PublicKey>> {
+pub fn generate_combine_pubkey(
+    pubkeys: Vec<PublicKey>,
+    k: usize,
+) -> Result<Vec<(PublicKey, Vec<usize>)>> {
     let all_indexs = generate_combine_index(pubkeys.len(), k);
-    let mut output: Vec<PublicKey> = vec![];
+    let mut output: Vec<(PublicKey, Vec<usize>)> = vec![];
     for indexs in all_indexs {
         let mut temp: Vec<PublicKey> = vec![];
-        for index in indexs {
+        for index in indexs.iter() {
             temp.push(pubkeys[index - 1].clone())
         }
-        output.push(KeyAgg::key_aggregation_n(&temp)?.X_tilde)
+        output.push((KeyAgg::key_aggregation_n(&temp)?.X_tilde, indexs))
     }
-    output.sort_by_key(|a| a.x_coor());
+    output.sort_by_key(|a| a.0.x_coor());
     Ok(output)
 }
 
@@ -334,7 +351,7 @@ mod tests {
             generate_combine_pubkey(vec![pubkey_a, pubkey_b, pubkey_c], 2)
                 .unwrap()
                 .iter()
-                .map(|p| hex::encode(&p.serialize()))
+                .map(|p| hex::encode(&p.0.serialize()))
                 .collect::<Vec<_>>(),
             vec![
                 "0443498bc300426635cd1876077e3993bec1168d6c6fa1138f893ce41a5f51bf0a22a2a7a85830e1f9facf02488328be04ece354730e19ce2766d5dca1478483cd",
