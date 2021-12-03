@@ -74,7 +74,16 @@ impl OutPoint {
 }
 
 /// A transaction input, which defines old coins to be consumed
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Clone,
+    Debug,
+    Default,
+    scale_info::TypeInfo
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct TransactionInput {
     /// The reference to the previous output that is being used an an input
@@ -149,7 +158,16 @@ pub struct TransactionOutput {
     pub script_pubkey: Bytes,
 }
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Clone,
+    Debug,
+    Default,
+    scale_info::TypeInfo
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Serializable, Deserializable)]
 pub struct TransactionOutputArray {
@@ -165,8 +183,34 @@ impl Default for TransactionOutput {
     }
 }
 
+/// The output value of the previous transactions must be used to construct the taproot transaction
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Clone,
+    Debug,
+    Default,
+    scale_info::TypeInfo
+)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct ConstructTransaction {
+    pub pre_outputs: TransactionOutputArray,
+    pub cur_transaction: Transaction,
+}
+
 /// A Bitcoin transaction, which describes an authenticated movement of coins.
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Clone,
+    Debug,
+    Default,
+    scale_info::TypeInfo
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Transaction {
     /// The protocol version, is currently expected to be 1 or 2 (BIP 68).
