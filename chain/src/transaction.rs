@@ -195,9 +195,19 @@ impl Default for TransactionOutput {
     scale_info::TypeInfo
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serializable, Deserializable)]
 pub struct ConstructTransaction {
     pub pre_outputs: TransactionOutputArray,
     pub cur_transaction: Transaction,
+}
+
+impl str::FromStr for ConstructTransaction {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let bytes = hex::decode(s).map_err(|_| "hex decode error")?;
+        deserialize(bytes.as_slice()).map_err(|_| "deserialize error")
+    }
 }
 
 /// A Bitcoin transaction, which describes an authenticated movement of coins.
