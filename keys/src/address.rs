@@ -7,7 +7,7 @@
 
 extern crate alloc;
 use alloc::string::{String, ToString};
-use core::{convert::TryFrom, fmt, ops, str};
+use core::{convert::TryFrom, fmt, ops, str, str::FromStr};
 
 use bitcoin_bech32::constants::Network as Bech32Network;
 use bitcoin_bech32::{u5, WitnessProgram};
@@ -25,7 +25,16 @@ use crate::{AddressHash, XOnly};
 
 /// There are two address formats currently in use.
 /// https://bitcoin.org/en/developer-reference#address-conversion
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Copy,
+    Clone,
+    Debug,
+    scale_info::TypeInfo
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode)]
 pub enum Type {
@@ -87,7 +96,16 @@ impl Deserializable for Type {
     }
 }
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Copy,
+    Clone,
+    Debug,
+    scale_info::TypeInfo
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode)]
 pub enum Network {
@@ -140,7 +158,16 @@ impl Deserializable for Network {
     }
 }
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Copy,
+    Clone,
+    Debug,
+    scale_info::TypeInfo
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode)]
 pub enum AddressTypes {
@@ -199,7 +226,17 @@ impl Deserializable for AddressTypes {
 }
 
 /// `AddressHash` with network identifier and format type
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Copy,
+    Clone,
+    Debug,
+    Default,
+    scale_info::TypeInfo
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Serializable, Deserializable)]
 #[derive(Encode, Decode)]
@@ -251,48 +288,67 @@ impl fmt::Display for Address {
     }
 }
 
+fn bs58_decode(s: &str) -> Result<Address, Error> {
+    let hex = bs58::decode(s)
+        .into_vec()
+        .map_err(|_| Error::InvalidAddress)?;
+    Address::from_layout(&hex)
+}
+
+fn bech32_decode(s: &str) -> Result<Address, Error> {
+    let witness = WitnessProgram::from_str(s).map_err(|_| Error::InvalidAddress)?;
+    let version = witness.version().to_u8();
+    let network = match witness.network() {
+        Bech32Network::Bitcoin => Network::Mainnet,
+        _ => Network::Testnet,
+    };
+    let (kind, hash) = if version == 1 {
+        (
+            Type::P2TR,
+            AddressTypes::WitnessV1Taproot(XOnly::try_from(witness.program())?),
+        )
+    } else if witness.program().len() == 20 {
+        (
+            Type::P2WPKH,
+            AddressTypes::WitnessV0KeyHash(H160::from_slice(witness.program())),
+        )
+    } else {
+        (
+            Type::P2WSH,
+            AddressTypes::WitnessV0ScriptHash(H256::from_slice(witness.program())),
+        )
+    };
+    Ok(Address {
+        kind,
+        network,
+        hash,
+    })
+}
+
 impl str::FromStr for Address {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Error> {
-        if bs58::decode(s).into_vec().is_ok() {
-            let hex = bs58::decode(s)
-                .into_vec()
-                .map_err(|_| Error::InvalidAddress)?;
-            Address::from_layout(&hex)
+        let data = bs58_decode(s);
+        if data.is_ok() {
+            data
         } else {
-            let witness = WitnessProgram::from_str(s).map_err(|_| Error::InvalidAddress)?;
-            let version = witness.version().to_u8();
-            let network = match witness.network() {
-                Bech32Network::Bitcoin => Network::Mainnet,
-                _ => Network::Testnet,
-            };
-            let (kind, hash) = if version == 1 {
-                (
-                    Type::P2TR,
-                    AddressTypes::WitnessV1Taproot(XOnly::try_from(witness.program())?),
-                )
-            } else if witness.program().len() == 20 {
-                (
-                    Type::P2WPKH,
-                    AddressTypes::WitnessV0KeyHash(H160::from_slice(witness.program())),
-                )
-            } else {
-                (
-                    Type::P2WSH,
-                    AddressTypes::WitnessV0ScriptHash(H256::from_slice(witness.program())),
-                )
-            };
-            Ok(Self {
-                kind,
-                network,
-                hash,
-            })
+            bech32_decode(s)
         }
     }
 }
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Copy,
+    Clone,
+    Debug,
+    Default,
+    scale_info::TypeInfo
+)]
 pub struct AddressDisplayLayout([u8; 25]);
 
 impl ops::Deref for AddressDisplayLayout {
