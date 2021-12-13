@@ -297,11 +297,11 @@ pub fn generate_combine_pubkey(
     k: usize,
 ) -> Result<Vec<(PublicKey, Vec<u32>)>> {
     let all_indexs = generate_combine_index(pubkeys.len(), k);
-    let mut output: Vec<(PublicKey, Vec<usize>)> = vec![];
+    let mut output: Vec<(PublicKey, Vec<u32>)> = vec![];
     for indexs in all_indexs {
         let mut temp: Vec<PublicKey> = vec![];
         for index in indexs.iter() {
-            temp.push(pubkeys[index - 1].clone())
+            temp.push(pubkeys[*index as usize - 1].clone())
         }
         output.push((KeyAgg::key_aggregation_n(&temp)?.X_tilde, indexs))
     }

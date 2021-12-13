@@ -20,7 +20,8 @@ const MAX_BLOCK_WEIGHT: u32 = 4_000_000;
 /// The minimum transaction weight for a valid serialized transaction
 const MIN_TRANSACTION_WEIGHT: u32 = 4 * 60;
 
-#[derive(Debug, Decode, Encode, scale_info::TypeInfo)]
+#[derive(Debug, scale_info::TypeInfo)]
+#[cfg_attr(feature = "std", derive(Decode, Encode))]
 pub enum Error {
     /// When header merkle root don't match to the root calculated from the partial merkle tree
     MerkleRootMismatch,
