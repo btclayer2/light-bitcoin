@@ -2,8 +2,8 @@
 
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
+use codec::{Decode, Encode};
 use core::{fmt, str};
-
 use light_bitcoin_crypto::checksum;
 use light_bitcoin_primitives::H520;
 
@@ -23,6 +23,8 @@ use crate::{Message, Secret};
     Copy,
     Clone,
     Default,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 pub struct Private {

@@ -2,6 +2,7 @@
 
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
+use codec::{Decode, Encode};
 use core::{fmt, ops, str};
 use light_bitcoin_keys::{self as keys, AddressHash, AddressTypes, Public, XOnly};
 use light_bitcoin_primitives::{Bytes, H160, H256};
@@ -22,7 +23,7 @@ pub const MAX_PUBKEYS_PER_MULTISIG: usize = 20;
 pub const MAX_SCRIPT_SIZE: usize = 10000;
 
 /// Classified script type
-#[derive(PartialEq, Debug, scale_info::TypeInfo)]
+#[derive(PartialEq, Debug, Decode, Encode, scale_info::TypeInfo)]
 pub enum ScriptType {
     NonStandard,
     PubKey,
@@ -37,7 +38,7 @@ pub enum ScriptType {
 }
 
 /// Address from Script
-#[derive(PartialEq, Debug, scale_info::TypeInfo)]
+#[derive(PartialEq, Debug, Decode, Encode, scale_info::TypeInfo)]
 pub struct ScriptAddress {
     /// The type of the address.
     pub kind: keys::Type,
@@ -88,7 +89,7 @@ impl ScriptAddress {
 }
 
 /// Serialized script, used inside transaction inputs and outputs.
-#[derive(Clone, PartialEq, Debug, scale_info::TypeInfo)]
+#[derive(Clone, PartialEq, Debug, Decode, Encode, scale_info::TypeInfo)]
 pub struct Script {
     data: Bytes,
 }

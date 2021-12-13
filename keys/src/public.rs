@@ -21,10 +21,19 @@ use crate::{
 use libsecp256k1::curve::{Affine, Field};
 
 /// Secret public key
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Copy,
+    Clone,
+    Decode,
+    Encode,
+    scale_info::TypeInfo
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "std", serde(untagged))]
-#[derive(Encode, Decode)]
 pub enum Public {
     /// Normal version of public key
     Normal(H520),
@@ -157,10 +166,11 @@ impl Public {
     Copy,
     Clone,
     Debug,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode)]
 pub struct XOnly(pub [u8; 32]);
 
 impl XOnly {

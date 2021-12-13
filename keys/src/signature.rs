@@ -4,6 +4,7 @@
 
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use codec::{Decode, Encode, EncodeLike};
 use core::{
     convert::{TryFrom, TryInto},
     fmt, ops, str,
@@ -14,7 +15,17 @@ use light_bitcoin_primitives::H520;
 
 use crate::{error::Error, public::XOnly};
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Clone,
+    Default,
+    Decode,
+    Encode,
+    scale_info::TypeInfo
+)]
 pub struct Signature(Vec<u8>);
 
 impl fmt::Debug for Signature {
@@ -84,6 +95,8 @@ impl<'a> From<&'a [u8]> for Signature {
     Copy,
     Clone,
     Default,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 pub struct CompactSignature(H520);
@@ -149,6 +162,24 @@ impl From<CompactSignature> for H520 {
 pub struct SchnorrSignature {
     pub rx: XOnly,
     pub s: Scalar,
+}
+
+impl Encode for SchnorrSignature {
+    fn encode(&self) -> Vec<u8> {
+        let value: [u8; 64] = self.clone().into();
+        value.to_vec()
+    }
+}
+
+impl EncodeLike for SchnorrSignature {}
+
+impl Decode for SchnorrSignature {
+    fn decode<I: codec::Input>(value: &mut I) -> Result<Self, codec::Error> {
+        let value: Vec<u8> = codec::Decode::decode(value)?;
+        (&value[..])
+            .try_into()
+            .map_err(|_| "deserialize TransactionInput error".into())
+    }
 }
 
 impl TryFrom<&str> for SchnorrSignature {

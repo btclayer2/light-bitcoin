@@ -23,7 +23,8 @@ pub use self::block::Block;
 pub use self::block_header::BlockHeader;
 pub use self::merkle_root::{merkle_node_hash, merkle_root};
 pub use self::transaction::{
-    OutPoint, Transaction, TransactionInput, TransactionOutput, TransactionOutputArray,
+    ConstructTransaction, OutPoint, Transaction, TransactionInput, TransactionOutput,
+    TransactionOutputArray,
 };
 
 pub use self::indexed_block::IndexedBlock;

@@ -2,6 +2,7 @@
 
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
+use codec::{Decode, Encode};
 use core::{fmt, marker, ops, str};
 
 /// Wrapper around `Vec<u8>`
@@ -13,6 +14,8 @@ use core::{fmt, marker, ops, str};
     Clone,
     Hash,
     Default,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 pub struct Bytes(Vec<u8>);
@@ -159,7 +162,7 @@ impl<'de> serde::de::Visitor<'de> for BytesVisitor {
 }
 
 /// Wrapper around `Vec<u8>` which represent associated type
-#[derive(Default, PartialEq, Clone, scale_info::TypeInfo)]
+#[derive(Default, PartialEq, Clone, Decode, Encode, scale_info::TypeInfo)]
 pub struct TaggedBytes<T> {
     bytes: Bytes,
     label: marker::PhantomData<T>,

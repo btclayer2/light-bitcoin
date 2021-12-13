@@ -1,9 +1,9 @@
 //! Compact representation of `U256`
 
+use crate::U256;
+use codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
-
-use crate::U256;
 
 /// Compact representation of `U256`
 #[derive(
@@ -15,6 +15,8 @@ use crate::U256;
     Copy,
     Default,
     Debug,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]

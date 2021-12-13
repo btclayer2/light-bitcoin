@@ -1,5 +1,5 @@
 //! Script interpreter verification flags
-
+use codec::{Decode, Encode};
 /// Script interpreter verification flags
 #[derive(
     Ord,
@@ -10,6 +10,8 @@
     Clone,
     Debug,
     Default,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 pub struct VerificationFlags {

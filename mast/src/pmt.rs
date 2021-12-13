@@ -5,9 +5,9 @@ use super::{
     error::{MastError, Result},
     mast::tagged_branch,
 };
-
 #[cfg(not(feature = "std"))]
 use alloc::{borrow::ToOwned, vec, vec::Vec};
+use codec::{Decode, Encode};
 use light_bitcoin_script::H256;
 
 /// Data structure that represents a partial merkle tree.
@@ -45,7 +45,7 @@ use light_bitcoin_script::H256;
 ///  - varint     number of heights   (1-3 bytes)
 ///  - uint256[]  the height of hashes (<= 4*N bytes)
 /// The size constraints follow from this.
-#[derive(PartialEq, Eq, Clone, Debug, scale_info::TypeInfo)]
+#[derive(PartialEq, Eq, Clone, Debug, Decode, Encode, scale_info::TypeInfo)]
 pub struct PartialMerkleTree {
     /// The total number of leaf nodes in the tree
     num_leaf_nodes: u32,

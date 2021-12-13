@@ -1,6 +1,6 @@
+use codec::{Decode, Encode};
 use hex::FromHexError;
-
-#[derive(Debug, PartialEq, scale_info::TypeInfo)]
+#[derive(Debug, PartialEq, Decode, Encode, scale_info::TypeInfo)]
 pub enum Error {
     // public key
     InvalidPublic,

@@ -1,5 +1,5 @@
 //! Script opcodes.
-
+use codec::{Decode, Encode};
 use core::fmt;
 
 use crate::flags::VerificationFlags;
@@ -15,6 +15,8 @@ use crate::flags::VerificationFlags;
     Copy,
     Clone,
     Debug,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 pub enum Opcode {

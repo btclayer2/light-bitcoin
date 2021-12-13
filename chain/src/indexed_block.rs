@@ -1,7 +1,7 @@
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
+use codec::{Decode, Encode};
 use core::str;
-
 use light_bitcoin_primitives::H256;
 use light_bitcoin_serialization::{
     deserialize, serialized_list_size, serialized_list_size_with_flags, Deserializable,
@@ -21,6 +21,8 @@ use crate::transaction::Transaction;
     Clone,
     Debug,
     Default,
+    Decode,
+    Encode,
     Deserializable,
     scale_info::TypeInfo
 )]

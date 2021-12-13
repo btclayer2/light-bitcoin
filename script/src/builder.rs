@@ -1,12 +1,12 @@
 //! Script builder
 
-use light_bitcoin_chain::{H160, H256};
-use light_bitcoin_keys::{Address, AddressHash, AddressTypes, Type, XOnly};
-use light_bitcoin_primitives::Bytes;
-
 use crate::num::Num;
 use crate::opcode::Opcode;
 use crate::script::Script;
+use codec::{Decode, Encode};
+use light_bitcoin_chain::{H160, H256};
+use light_bitcoin_keys::{Address, AddressHash, AddressTypes, Type, XOnly};
+use light_bitcoin_primitives::Bytes;
 
 /// Script builder
 #[derive(
@@ -18,6 +18,8 @@ use crate::script::Script;
     Debug,
     Hash,
     Default,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 pub struct Builder {

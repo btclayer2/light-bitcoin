@@ -2,7 +2,7 @@
 
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
-
+use codec::{Decode, Encode};
 use light_bitcoin_chain::{OutPoint, Transaction, TransactionInput, TransactionOutput};
 use light_bitcoin_crypto::{dhash256, sha256, Digest};
 use light_bitcoin_keys::{verify_schnorr, HashAdd, KeyPair, SchnorrSignature, Tagged, XOnly};
@@ -23,7 +23,7 @@ use libsecp256k1::{
     PublicKey, ECMULT_CONTEXT,
 };
 
-#[derive(Debug, PartialEq, Clone, Copy, scale_info::TypeInfo)]
+#[derive(Debug, PartialEq, Decode, Encode, Clone, Copy, scale_info::TypeInfo)]
 pub enum SignatureVersion {
     Base,
     WitnessV0,
@@ -32,7 +32,7 @@ pub enum SignatureVersion {
     TapScript,
 }
 
-#[derive(Debug, scale_info::TypeInfo)]
+#[derive(Debug, Decode, Encode, scale_info::TypeInfo)]
 pub struct ScriptExecutionData {
     // Whether m_tapleaf_hash is initialized.
     pub m_tapleaf_hash_init: bool,
@@ -107,7 +107,7 @@ impl ScriptExecutionData {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy, scale_info::TypeInfo)]
+#[derive(Debug, PartialEq, Clone, Copy, Decode, Encode, scale_info::TypeInfo)]
 #[repr(u8)]
 pub enum SighashBase {
     All = 1,
@@ -123,7 +123,7 @@ impl From<SighashBase> for u32 {
 
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::doc_markdown))]
 /// Signature hash type. [Documentation](https://en.bitcoin.it/wiki/OP_CHECKSIG#Procedure_for_Hashtype_SIGHASH_SINGLE)
-#[derive(Debug, PartialEq, Clone, Copy, scale_info::TypeInfo)]
+#[derive(Debug, PartialEq, Clone, Copy, Decode, Encode, scale_info::TypeInfo)]
 pub struct Sighash {
     pub base: SighashBase,
     pub anyone_can_pay: bool,
@@ -178,7 +178,7 @@ impl Sighash {
     }
 }
 
-#[derive(Debug, scale_info::TypeInfo)]
+#[derive(Debug, Decode, Encode, scale_info::TypeInfo)]
 pub struct UnsignedTransactionInput {
     pub previous_output: OutPoint,
     pub sequence: u32,
@@ -194,7 +194,7 @@ impl From<TransactionInput> for UnsignedTransactionInput {
     }
 }
 
-#[derive(Debug, scale_info::TypeInfo)]
+#[derive(Debug, Decode, Encode, scale_info::TypeInfo)]
 pub struct TransactionInputSigner {
     pub version: i32,
     pub inputs: Vec<UnsignedTransactionInput>,

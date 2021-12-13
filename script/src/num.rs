@@ -2,8 +2,8 @@
 
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
+use codec::{Decode, Encode};
 use core::ops;
-
 use light_bitcoin_primitives::Bytes;
 
 use crate::error::Error;
@@ -25,6 +25,8 @@ use crate::error::Error;
     Clone,
     Debug,
     Default,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 pub struct Num {

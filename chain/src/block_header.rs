@@ -1,7 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use core::{fmt, str};
-
 use light_bitcoin_crypto::dhash256;
 use light_bitcoin_primitives::{hash_rev, Compact, H256};
 use light_bitcoin_serialization::{deserialize, serialize, Deserializable, Reader, Serializable};

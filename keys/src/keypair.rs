@@ -2,13 +2,13 @@
 
 use core::fmt;
 
-use light_bitcoin_primitives::{H264, H520};
-
 use crate::address::{Address, AddressTypes, Network, Type};
 use crate::error::Error;
 use crate::private::Private;
 use crate::public::Public;
 use crate::Secret;
+use codec::{Decode, Encode};
+use light_bitcoin_primitives::{H264, H520};
 
 #[derive(
     Ord,
@@ -19,6 +19,8 @@ use crate::Secret;
     Copy,
     Clone,
     Default,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 pub struct KeyPair {

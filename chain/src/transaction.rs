@@ -3,8 +3,8 @@
 
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
+use codec::{Decode, Encode};
 use core::{fmt, str};
-
 use light_bitcoin_crypto::dhash256;
 use light_bitcoin_primitives::{hash_rev, io, Bytes, H256};
 use light_bitcoin_serialization::{
@@ -158,7 +158,16 @@ pub struct TransactionOutput {
     pub script_pubkey: Bytes,
 }
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Clone,
+    Debug,
+    Default,
+    scale_info::TypeInfo
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Serializable, Deserializable)]
 pub struct TransactionOutputArray {
@@ -171,6 +180,35 @@ impl Default for TransactionOutput {
             value: 0xffff_ffff_ffff_ffffu64,
             script_pubkey: Bytes::default(),
         }
+    }
+}
+
+/// The output value of the previous transactions must be used to construct the taproot transaction
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Clone,
+    Debug,
+    Default,
+    Decode,
+    Encode,
+    scale_info::TypeInfo
+)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serializable, Deserializable)]
+pub struct ConstructTransaction {
+    pub pre_outputs: TransactionOutputArray,
+    pub cur_transaction: Transaction,
+}
+
+impl str::FromStr for ConstructTransaction {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let bytes = hex::decode(s).map_err(|_| "hex decode error")?;
+        deserialize(bytes.as_slice()).map_err(|_| "deserialize error")
     }
 }
 
@@ -349,6 +387,71 @@ impl Deserializable for Transaction {
             outputs,
             lock_time: reader.read()?,
         })
+    }
+}
+
+impl codec::Encode for TransactionOutputArray {
+    fn encode(&self) -> Vec<u8> {
+        let value = serialize::<TransactionOutputArray>(self);
+        value.encode()
+    }
+}
+
+impl codec::EncodeLike for TransactionOutputArray {}
+
+impl codec::Decode for TransactionOutputArray {
+    fn decode<I: codec::Input>(value: &mut I) -> Result<Self, codec::Error> {
+        let value: Vec<u8> = codec::Decode::decode(value)?;
+        deserialize(Reader::new(&value))
+            .map_err(|_| "deserialize TransactionOutputArray error".into())
+    }
+}
+
+impl codec::Encode for TransactionOutput {
+    fn encode(&self) -> Vec<u8> {
+        let value = serialize::<TransactionOutput>(self);
+        value.encode()
+    }
+}
+
+impl codec::EncodeLike for TransactionOutput {}
+
+impl codec::Decode for TransactionOutput {
+    fn decode<I: codec::Input>(value: &mut I) -> Result<Self, codec::Error> {
+        let value: Vec<u8> = codec::Decode::decode(value)?;
+        deserialize(Reader::new(&value)).map_err(|_| "deserialize TransactionOutput error".into())
+    }
+}
+
+impl codec::Encode for TransactionInput {
+    fn encode(&self) -> Vec<u8> {
+        let value = serialize::<TransactionInput>(self);
+        value.encode()
+    }
+}
+
+impl codec::EncodeLike for TransactionInput {}
+
+impl codec::Decode for TransactionInput {
+    fn decode<I: codec::Input>(value: &mut I) -> Result<Self, codec::Error> {
+        let value: Vec<u8> = codec::Decode::decode(value)?;
+        deserialize(Reader::new(&value)).map_err(|_| "deserialize TransactionInput error".into())
+    }
+}
+
+impl codec::Encode for OutPoint {
+    fn encode(&self) -> Vec<u8> {
+        let value = serialize::<OutPoint>(self);
+        value.encode()
+    }
+}
+
+impl codec::EncodeLike for OutPoint {}
+
+impl codec::Decode for OutPoint {
+    fn decode<I: codec::Input>(value: &mut I) -> Result<Self, codec::Error> {
+        let value: Vec<u8> = codec::Decode::decode(value)?;
+        deserialize(Reader::new(&value)).map_err(|_| "deserialize OutPoint error".into())
     }
 }
 

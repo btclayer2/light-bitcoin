@@ -154,7 +154,7 @@ pub fn sign_with_aux(
     // Generate s = k + tagged_hash("BIP0340/challenge", R_x|P_x|msg) * d
     let rx = XOnly::from(&mut R.x);
     let h = schnorrsig_challenge(&rx, &pkx, &msg);
-    let s = k_even + h * seckey.into();
+    let s = k_even + h * sec;
 
     // Generate sig = R_x|s
     Ok(SchnorrSignature { rx, s })
@@ -242,7 +242,7 @@ mod tests {
         );
         assert_eq!(
             check_sign(SECRET_3, MESSAGE_3, AUX_3, SIGNATURE_3),
-            Ok(false)
+            Ok(true)
         );
     }
 
