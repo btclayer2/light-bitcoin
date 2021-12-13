@@ -421,6 +421,38 @@ impl codec::Decode for TransactionOutput {
     }
 }
 
+impl codec::Encode for TransactionInput {
+    fn encode(&self) -> Vec<u8> {
+        let value = serialize::<TransactionInput>(self);
+        value.encode()
+    }
+}
+
+impl codec::EncodeLike for TransactionInput {}
+
+impl codec::Decode for TransactionInput {
+    fn decode<I: codec::Input>(value: &mut I) -> Result<Self, codec::Error> {
+        let value: Vec<u8> = codec::Decode::decode(value)?;
+        deserialize(Reader::new(&value)).map_err(|_| "deserialize TransactionInput error".into())
+    }
+}
+
+impl codec::Encode for OutPoint {
+    fn encode(&self) -> Vec<u8> {
+        let value = serialize::<OutPoint>(self);
+        value.encode()
+    }
+}
+
+impl codec::EncodeLike for OutPoint {}
+
+impl codec::Decode for OutPoint {
+    fn decode<I: codec::Input>(value: &mut I) -> Result<Self, codec::Error> {
+        let value: Vec<u8> = codec::Decode::decode(value)?;
+        deserialize(Reader::new(&value)).map_err(|_| "deserialize OutPoint error".into())
+    }
+}
+
 impl codec::Encode for Transaction {
     fn encode(&self) -> Vec<u8> {
         let value = serialize::<Transaction>(self);

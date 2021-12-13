@@ -2,7 +2,7 @@
 
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
-
+use codec::{Decode, Encode};
 use light_bitcoin_chain::{OutPoint, Transaction, TransactionInput, TransactionOutput};
 use light_bitcoin_crypto::{dhash256, sha256, Digest};
 use light_bitcoin_keys::{verify_schnorr, HashAdd, KeyPair, SchnorrSignature, Tagged, XOnly};
@@ -23,7 +23,7 @@ use secp256k1::{
     PublicKey,
 };
 
-#[derive(Debug, PartialEq, Clone, Copy, scale_info::TypeInfo)]
+#[derive(Debug, PartialEq, Decode, Encode, Clone, Copy, scale_info::TypeInfo)]
 pub enum SignatureVersion {
     Base,
     WitnessV0,
@@ -32,7 +32,7 @@ pub enum SignatureVersion {
     TapScript,
 }
 
-#[derive(Debug, scale_info::TypeInfo)]
+#[derive(Debug, Decode, Encode, scale_info::TypeInfo)]
 pub struct ScriptExecutionData {
     // Whether m_tapleaf_hash is initialized.
     pub m_tapleaf_hash_init: bool,
@@ -178,7 +178,7 @@ impl Sighash {
     }
 }
 
-#[derive(Debug, scale_info::TypeInfo)]
+#[derive(Debug, Decode, Encode, scale_info::TypeInfo)]
 pub struct UnsignedTransactionInput {
     pub previous_output: OutPoint,
     pub sequence: u32,
@@ -194,7 +194,7 @@ impl From<TransactionInput> for UnsignedTransactionInput {
     }
 }
 
-#[derive(Debug, scale_info::TypeInfo)]
+#[derive(Debug, Decode, Encode, scale_info::TypeInfo)]
 pub struct TransactionInputSigner {
     pub version: i32,
     pub inputs: Vec<UnsignedTransactionInput>,

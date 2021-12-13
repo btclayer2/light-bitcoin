@@ -2,6 +2,7 @@
 
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use codec::{Decode, Encode};
 use core::borrow::Borrow;
 
 use light_bitcoin_primitives::io::{self, Write};
@@ -88,7 +89,7 @@ pub trait Serializable {
 }
 
 /// Stream used for serialization of Bitcoin structures
-#[derive(Default, Clone)]
+#[derive(Default, Decode, Encode, Clone, scale_info::TypeInfo)]
 pub struct Stream {
     buffer: Vec<u8>,
     flags: u32,

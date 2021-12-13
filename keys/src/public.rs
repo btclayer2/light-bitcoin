@@ -149,7 +149,16 @@ impl Public {
 ///
 /// X-only public keys become equivalent to a compressed public key
 /// that is the X-only key prefixed by the byte 0x02
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Copy,
+    Clone,
+    Debug,
+    scale_info::TypeInfo
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode)]
 pub struct XOnly(pub [u8; 32]);
