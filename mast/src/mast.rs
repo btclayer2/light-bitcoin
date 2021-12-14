@@ -47,7 +47,7 @@ pub struct Mast {
 
 impl Mast {
     /// Create a mast instance
-    pub fn new(person_pubkeys: Vec<PublicKey>, threshold: usize) -> Result<Self> {
+    pub fn new(person_pubkeys: Vec<PublicKey>, threshold: u32) -> Result<Self> {
         let inner_pubkey = KeyAgg::key_aggregation_n(&person_pubkeys)?.X_tilde;
         let (pubkeys, indexs): (Vec<PublicKey>, Vec<Vec<u32>>) =
             generate_combine_pubkey(person_pubkeys.clone(), threshold)?
@@ -247,7 +247,7 @@ pub fn tweak_pubkey(inner_pubkey: &PublicKey, root: &H256) -> Result<PublicKey> 
     }
 }
 
-pub fn generate_combine_index(n: usize, k: usize) -> Vec<Vec<u32>> {
+pub fn generate_combine_index(n: u32, k: u32) -> Vec<Vec<u32>> {
     let mut temp: Vec<u32> = vec![];
     let mut ans: Vec<Vec<u32>> = vec![];
     for i in 1..=k {
@@ -256,11 +256,11 @@ pub fn generate_combine_index(n: usize, k: usize) -> Vec<Vec<u32>> {
     temp.push(n as u32 + 1);
 
     let mut j: usize = 0;
-    while j < k {
-        ans.push(temp[..k].to_vec());
+    while j < k as usize {
+        ans.push(temp[..k as usize].to_vec());
         j = 0;
 
-        while j < k && temp[j] + 1 == temp[j + 1] {
+        while j < k as usize && temp[j] + 1 == temp[j + 1] {
             temp[j] = j as u32 + 1;
             j += 1;
         }
@@ -272,9 +272,9 @@ pub fn generate_combine_index(n: usize, k: usize) -> Vec<Vec<u32>> {
 #[cfg(feature = "std")]
 pub fn generate_combine_pubkey(
     pubkeys: Vec<PublicKey>,
-    k: usize,
+    k: u32,
 ) -> Result<Vec<(PublicKey, Vec<u32>)>> {
-    let all_indexs = generate_combine_index(pubkeys.len(), k);
+    let all_indexs = generate_combine_index(pubkeys.len() as u32, k);
     let mut pks = vec![];
     for indexs in all_indexs {
         let mut temp: Vec<PublicKey> = vec![];
@@ -294,9 +294,9 @@ pub fn generate_combine_pubkey(
 #[cfg(not(feature = "std"))]
 pub fn generate_combine_pubkey(
     pubkeys: Vec<PublicKey>,
-    k: usize,
+    k: u32,
 ) -> Result<Vec<(PublicKey, Vec<u32>)>> {
-    let all_indexs = generate_combine_index(pubkeys.len(), k);
+    let all_indexs = generate_combine_index(pubkeys.len() as u32, k);
     let mut output: Vec<(PublicKey, Vec<u32>)> = vec![];
     for indexs in all_indexs {
         let mut temp: Vec<PublicKey> = vec![];
@@ -309,12 +309,12 @@ pub fn generate_combine_pubkey(
     Ok(output)
 }
 
-pub fn compute_combine(n: usize, m: usize) -> usize {
+pub fn compute_combine(n: u32, m: u32) -> u32 {
     let m = min(m, n - m);
-    (n - m + 1..=n).product::<usize>() / (1..=m).product::<usize>()
+    (n - m + 1..=n).product::<u32>() / (1..=m).product::<u32>()
 }
 
-pub fn compute_min_threshold(n: usize, max_value: usize) -> usize {
+pub fn compute_min_threshold(n: u32, max_value: u32) -> u32 {
     if n > max_value {
         return n;
     }

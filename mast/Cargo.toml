@@ -17,7 +17,7 @@ hex = { version = "0.4.3", default-features = false }
 bitcoin_hashes = { version = "0.10.0", default-features = false, features = ["alloc"] }
 
 bitcoin-bech32 = { git = "https://github.com/chainx-org/rust-bech32-bitcoin", branch = "master", default-features = false }
-musig2 = { git = "https://github.com/chainx-org/Musig2", branch = "scale-info", default-features = false }
+musig2 = { path="../../Musig2", default-features = false }
 
 light-bitcoin-keys = { path = "../keys", default-features = false }
 light-bitcoin-script = { path = "../script", default-features = false }
