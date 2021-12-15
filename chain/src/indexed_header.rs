@@ -1,12 +1,22 @@
+use codec::{Decode, Encode};
 use core::fmt;
-
 use light_bitcoin_primitives::{hash_rev, io, H256};
 use light_bitcoin_serialization::{Deserializable, Reader};
 
 use crate::block_header::BlockHeader;
 use crate::read_and_hash::ReadAndHash;
 
-#[derive(Ord, PartialOrd, Eq, Copy, Clone, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    Copy,
+    Clone,
+    Default,
+    Decode,
+    Encode,
+    scale_info::TypeInfo
+)]
 pub struct IndexedBlockHeader {
     pub hash: H256,
     pub raw: BlockHeader,

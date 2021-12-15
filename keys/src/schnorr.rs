@@ -15,9 +15,9 @@ use crate::{
     Error, Message,
 };
 use digest::Digest;
-use secp256k1::{
-    curve::{Affine, Jacobian, Scalar, ECMULT_CONTEXT},
-    PublicKey, SecretKey,
+use libsecp256k1::{
+    curve::{Affine, Jacobian, Scalar},
+    PublicKey, SecretKey, ECMULT_CONTEXT,
 };
 
 /// Verify a schnorr signature
@@ -49,7 +49,7 @@ pub fn verify_schnorr(
     P.y.normalize();
     let mut P = if P.y.is_odd() { P.neg() } else { P };
 
-    let mut pj = secp256k1::curve::Jacobian::default();
+    let mut pj = libsecp256k1::curve::Jacobian::default();
     pj.set_ge(&P);
 
     let pkx = (&mut P.x).into();

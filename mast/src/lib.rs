@@ -3,7 +3,6 @@
 #[cfg(not(feature = "std"))]
 extern crate alloc;
 
-#[macro_use]
 pub extern crate bitcoin_hashes as hashes;
 
 pub mod error;
@@ -24,20 +23,3 @@ use alloc::{
     format,
     string::{String, ToString},
 };
-
-use hashes::{hash_newtype, sha256d, Hash};
-
-hash_newtype!(
-    LeafNode,
-    sha256d::Hash,
-    32,
-    doc = "The leaf node of Merkle tree.",
-    false
-);
-hash_newtype!(
-    MerkleNode,
-    sha256d::Hash,
-    32,
-    doc = "The node of Merkle tree, include leaf node.",
-    false
-);

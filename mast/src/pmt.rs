@@ -4,12 +4,11 @@
 use super::{
     error::{MastError, Result},
     mast::tagged_branch,
-    LeafNode, MerkleNode,
 };
-use hashes::Hash;
-
 #[cfg(not(feature = "std"))]
 use alloc::{borrow::ToOwned, vec, vec::Vec};
+use codec::{Decode, Encode};
+use light_bitcoin_script::H256;
 
 /// Data structure that represents a partial merkle tree.
 ///
@@ -46,14 +45,14 @@ use alloc::{borrow::ToOwned, vec, vec::Vec};
 ///  - varint     number of heights   (1-3 bytes)
 ///  - uint256[]  the height of hashes (<= 4*N bytes)
 /// The size constraints follow from this.
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Decode, Encode, scale_info::TypeInfo)]
 pub struct PartialMerkleTree {
     /// The total number of leaf nodes in the tree
     num_leaf_nodes: u32,
     /// node-is-parent-of-matched-leaf_node bits
     bits: Vec<bool>,
     /// pubkey hash and internal hashes
-    hashes: Vec<MerkleNode>,
+    hashes: Vec<H256>,
     /// The height of hashes
     heights: Vec<u32>,
 }
@@ -65,7 +64,7 @@ impl PartialMerkleTree {
     ///
     /// Panics when `leaf_nodes` is empty or when `matches` has a different length
     /// ```
-    pub fn from_leaf_nodes(leaf_nodes: &[LeafNode], matches: &[bool]) -> Result<Self> {
+    pub fn from_leaf_nodes(leaf_nodes: &[H256], matches: &[bool]) -> Result<Self> {
         // We can never have zero leaf_nodes in a merkle node
         assert_ne!(leaf_nodes.len(), 0);
         assert_eq!(leaf_nodes.len(), matches.len());
@@ -90,11 +89,7 @@ impl PartialMerkleTree {
     /// Extract the matching leaf_node's represented by this partial merkle tree
     /// and their respective indices within the partial tree.
     /// returns the merkle root, or error in case of failure
-    pub fn extract_matches(
-        &self,
-        matches: &mut Vec<LeafNode>,
-        indexes: &mut Vec<u32>,
-    ) -> Result<MerkleNode> {
+    pub fn extract_matches(&self, matches: &mut Vec<H256>, indexes: &mut Vec<u32>) -> Result<H256> {
         matches.clear();
         indexes.clear();
         // An empty set will not work
@@ -138,7 +133,7 @@ impl PartialMerkleTree {
                 "Not all hashes were consumed".to_owned(),
             ));
         }
-        Ok(MerkleNode::from_inner(hash_merkle_root.into_inner()))
+        Ok(hash_merkle_root)
     }
 
     /// Helper function to efficiently calculate the number of nodes at given height
@@ -158,12 +153,10 @@ impl PartialMerkleTree {
     }
 
     /// Calculate the hash of a node in the merkle tree (at leaf level: the leaf_node's themselves)
-    fn calc_hash(&self, height: u32, pos: u32, leaf_nodes: &[LeafNode]) -> Result<MerkleNode> {
+    fn calc_hash(&self, height: u32, pos: u32, leaf_nodes: &[H256]) -> Result<H256> {
         if height == 0 {
             // Hash at height 0 is the leaf_node itself
-            Ok(MerkleNode::from_inner(
-                leaf_nodes[pos as usize].into_inner(),
-            ))
+            Ok(leaf_nodes[pos as usize])
         } else {
             // Calculate left hash
             let left = self.calc_hash(height - 1, pos * 2, leaf_nodes)?;
@@ -184,7 +177,7 @@ impl PartialMerkleTree {
         &mut self,
         height: u32,
         pos: u32,
-        leaf_nodes: &[LeafNode],
+        leaf_nodes: &[H256],
         matches: &[bool],
     ) -> Result<()> {
         // Determine whether this node is the parent of at least one matched leaf_node
@@ -221,9 +214,9 @@ impl PartialMerkleTree {
         pos: u32,
         bits_used: &mut u32,
         hash_used: &mut u32,
-        matches: &mut Vec<LeafNode>,
+        matches: &mut Vec<H256>,
         indexes: &mut Vec<u32>,
-    ) -> Result<MerkleNode> {
+    ) -> Result<H256> {
         if *bits_used as usize >= self.bits.len() {
             return Err(MastError::InvalidMast(
                 "Overflowed the bits array".to_owned(),
@@ -242,7 +235,7 @@ impl PartialMerkleTree {
             *hash_used += 1;
             if height == 0 && parent_of_match {
                 // in case of height 0, we have a matched leaf_node
-                matches.push(LeafNode::from_inner(hash.into_inner()));
+                matches.push(hash);
                 indexes.push(pos);
             }
             Ok(hash)
@@ -282,7 +275,7 @@ impl PartialMerkleTree {
         }
     }
 
-    pub fn collected_hashes(&self, filter_proof: MerkleNode) -> Vec<MerkleNode> {
+    pub fn collected_hashes(&self, filter_proof: H256) -> Vec<H256> {
         let mut zipped = self
             .hashes
             .iter()
@@ -297,16 +290,15 @@ impl PartialMerkleTree {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hashes::hex::FromHex;
-
     #[cfg(not(feature = "std"))]
     use alloc::{format, vec, vec::Vec};
+    use core::str::FromStr;
 
     #[test]
     fn pmt_proof_generate_correct_order() {
-        let leaf_nodes: Vec<LeafNode> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        let leaf_nodes: Vec<H256> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
             .iter()
-            .map(|i| LeafNode::from_hex(&format!("{:064x}", i)).unwrap())
+            .map(|i| H256::from_str(&format!("{:064x}", i)).unwrap())
             .collect();
 
         let matches = vec![
@@ -319,7 +311,7 @@ mod tests {
             .extract_matches(&mut matches_vec, &mut indexes)
             .unwrap();
 
-        let filter_proof = MerkleNode::from_inner(leaf_nodes[11].into_inner());
+        let filter_proof = leaf_nodes[11];
         let proofs = tree.collected_hashes(filter_proof);
         let mut root1 = filter_proof;
         for i in proofs.iter() {

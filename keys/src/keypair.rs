@@ -2,15 +2,27 @@
 
 use core::fmt;
 
-use light_bitcoin_primitives::{H264, H520};
-
 use crate::address::{Address, AddressTypes, Network, Type};
 use crate::error::Error;
 use crate::private::Private;
 use crate::public::Public;
 use crate::Secret;
+use codec::{Decode, Encode};
+use light_bitcoin_primitives::{H264, H520};
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Debug, Copy, Clone, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Debug,
+    Copy,
+    Clone,
+    Default,
+    Decode,
+    Encode,
+    scale_info::TypeInfo
+)]
 pub struct KeyPair {
     private: Private,
     public: Public,
@@ -32,8 +44,8 @@ impl KeyPair {
     }
 
     pub fn from_private(private: Private) -> Result<KeyPair, Error> {
-        let secret_key = secp256k1::SecretKey::parse(private.secret.as_fixed_bytes())?;
-        let pub_key = secp256k1::PublicKey::from_secret_key(&secret_key);
+        let secret_key = libsecp256k1::SecretKey::parse(private.secret.as_fixed_bytes())?;
+        let pub_key = libsecp256k1::PublicKey::from_secret_key(&secret_key);
         let public = if private.compressed {
             let public = H264::from_slice(&pub_key.serialize_compressed());
             Public::Compressed(public)
@@ -46,11 +58,11 @@ impl KeyPair {
     }
 
     pub fn from_keypair(
-        sec: secp256k1::SecretKey,
-        public: secp256k1::PublicKey,
+        sec: libsecp256k1::SecretKey,
+        public: libsecp256k1::PublicKey,
         network: Network,
     ) -> Self {
-        let sec: secp256k1::curve::Scalar = sec.into();
+        let sec: libsecp256k1::curve::Scalar = sec.into();
         let sec = sec.b32();
         let secret = Secret::from_slice(&sec[..]);
         let serialized = public.serialize();

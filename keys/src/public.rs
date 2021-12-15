@@ -18,13 +18,22 @@ use crate::{
     tagged::HashInto,
     AddressHash, Message,
 };
-use secp256k1::curve::{Affine, Field};
+use libsecp256k1::curve::{Affine, Field};
 
 /// Secret public key
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Copy,
+    Clone,
+    Decode,
+    Encode,
+    scale_info::TypeInfo
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "std", serde(untagged))]
-#[derive(Encode, Decode)]
 pub enum Public {
     /// Normal version of public key
     Normal(H520),
@@ -89,22 +98,22 @@ impl Public {
 
     pub fn verify(&self, message: &Message, signature: &Signature) -> Result<bool, Error> {
         let public = match self {
-            Public::Normal(pubkey) => secp256k1::PublicKey::parse(pubkey.as_fixed_bytes())?,
+            Public::Normal(pubkey) => libsecp256k1::PublicKey::parse(pubkey.as_fixed_bytes())?,
             Public::Compressed(pubkey) => {
-                secp256k1::PublicKey::parse_compressed(pubkey.as_fixed_bytes())?
+                libsecp256k1::PublicKey::parse_compressed(pubkey.as_fixed_bytes())?
             }
         };
-        let mut signature = secp256k1::Signature::parse_der_lax(&**signature)?;
+        let mut signature = libsecp256k1::Signature::parse_der_lax(&**signature)?;
         signature.normalize_s();
-        let message = secp256k1::Message::parse(message.as_fixed_bytes());
-        Ok(secp256k1::verify(&message, &signature, &public))
+        let message = libsecp256k1::Message::parse(message.as_fixed_bytes());
+        Ok(libsecp256k1::verify(&message, &signature, &public))
     }
 
     pub fn verify_schnorr(&self, message: &Message, signature: [u8; 64]) -> Result<bool, Error> {
         let public = match self {
-            Public::Normal(pubkey) => secp256k1::PublicKey::parse(pubkey.as_fixed_bytes())?,
+            Public::Normal(pubkey) => libsecp256k1::PublicKey::parse(pubkey.as_fixed_bytes())?,
             Public::Compressed(pubkey) => {
-                secp256k1::PublicKey::parse_compressed(pubkey.as_fixed_bytes())?
+                libsecp256k1::PublicKey::parse_compressed(pubkey.as_fixed_bytes())?
             }
         };
         let xonly = public.try_into()?;
@@ -114,24 +123,24 @@ impl Public {
 
     pub fn verify_compact(&self, message: &Message, signature: &[u8; 64]) -> Result<bool, Error> {
         let public = match self {
-            Public::Normal(pubkey) => secp256k1::PublicKey::parse(pubkey.as_fixed_bytes())?,
+            Public::Normal(pubkey) => libsecp256k1::PublicKey::parse(pubkey.as_fixed_bytes())?,
             Public::Compressed(pubkey) => {
-                secp256k1::PublicKey::parse_compressed(pubkey.as_fixed_bytes())?
+                libsecp256k1::PublicKey::parse_compressed(pubkey.as_fixed_bytes())?
             }
         };
-        let signature = secp256k1::Signature::parse(signature);
-        let message = secp256k1::Message::parse(message.as_fixed_bytes());
-        Ok(secp256k1::verify(&message, &signature, &public))
+        let signature = libsecp256k1::Signature::parse_standard(signature)?;
+        let message = libsecp256k1::Message::parse(message.as_fixed_bytes());
+        Ok(libsecp256k1::verify(&message, &signature, &public))
     }
 
     pub fn recover_compact(message: &Message, signature: &CompactSignature) -> Result<Self, Error> {
         let recovery_id = (signature[0] - 27) & 3;
         let compressed = (signature[0] - 27) & 4 != 0;
-        let recovery_id = secp256k1::RecoveryId::parse(recovery_id)?;
+        let recovery_id = libsecp256k1::RecoveryId::parse(recovery_id)?;
         let sign = H512::from_slice(&signature[1..65]);
-        let signature = secp256k1::Signature::parse(sign.as_fixed_bytes());
-        let message = secp256k1::Message::parse(message.as_fixed_bytes());
-        let pub_key = secp256k1::recover(&message, &signature, &recovery_id)?;
+        let signature = libsecp256k1::Signature::parse_standard(sign.as_fixed_bytes())?;
+        let message = libsecp256k1::Message::parse(message.as_fixed_bytes());
+        let pub_key = libsecp256k1::recover(&message, &signature, &recovery_id)?;
 
         let public = if compressed {
             let public = H264::from_slice(&pub_key.serialize_compressed());
@@ -157,16 +166,17 @@ impl Public {
     Copy,
     Clone,
     Debug,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode)]
 pub struct XOnly(pub [u8; 32]);
 
 impl XOnly {
     pub fn on_curve(&self) -> Result<bool, Error> {
-        let mut elem = secp256k1::curve::Field::default();
-        let mut affine_coords = secp256k1::curve::Affine::default();
+        let mut elem = libsecp256k1::curve::Field::default();
+        let mut affine_coords = libsecp256k1::curve::Affine::default();
         if elem.set_b32(&self.0) && affine_coords.set_xquad(&elem) {
             Ok(true)
         } else {
@@ -182,8 +192,8 @@ impl XOnly {
 }
 
 /// Convert [`Field`] to [`XOnly`]
-impl From<&mut secp256k1::curve::Field> for XOnly {
-    fn from(field: &mut secp256k1::curve::Field) -> Self {
+impl From<&mut libsecp256k1::curve::Field> for XOnly {
+    fn from(field: &mut libsecp256k1::curve::Field) -> Self {
         field.normalize();
         let slice = field.b32();
         Self(slice)
@@ -218,8 +228,8 @@ impl TryFrom<[u8; 32]> for XOnly {
     type Error = Error;
 
     fn try_from(value: [u8; 32]) -> Result<Self, Self::Error> {
-        let mut elem = secp256k1::curve::Field::default();
-        let mut affine_coords = secp256k1::curve::Affine::default();
+        let mut elem = libsecp256k1::curve::Field::default();
+        let mut affine_coords = libsecp256k1::curve::Affine::default();
         if elem.set_b32(&value) && affine_coords.set_xquad(&elem) {
             Ok(Self(value))
         } else {
@@ -234,10 +244,10 @@ impl TryFrom<[u8; 32]> for XOnly {
 /// need to be converted by dropping the first byte.
 ///
 /// [BIP340]: https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki#public-key-conversion
-impl TryFrom<secp256k1::PublicKey> for XOnly {
+impl TryFrom<libsecp256k1::PublicKey> for XOnly {
     type Error = Error;
 
-    fn try_from(pubkey: secp256k1::PublicKey) -> Result<Self, Self::Error> {
+    fn try_from(pubkey: libsecp256k1::PublicKey) -> Result<Self, Self::Error> {
         let conmpressed = pubkey.serialize_compressed();
         let (_, right) = conmpressed.split_at(1);
         right.try_into()
@@ -245,10 +255,10 @@ impl TryFrom<secp256k1::PublicKey> for XOnly {
 }
 
 /// Convert [`XOnly`] to [`PublicKey`]
-impl TryInto<secp256k1::PublicKey> for XOnly {
+impl TryInto<libsecp256k1::PublicKey> for XOnly {
     type Error = Error;
 
-    fn try_into(self) -> Result<secp256k1::PublicKey, Self::Error> {
+    fn try_into(self) -> Result<libsecp256k1::PublicKey, Self::Error> {
         let mut elem = Field::default();
         let mut affine = Affine::default();
         if elem.set_b32(&self.0) && affine.set_xo_var(&elem, false) {
@@ -258,24 +268,24 @@ impl TryInto<secp256k1::PublicKey> for XOnly {
             affine.y.normalize_var();
             affine.x.fill_b32(array_mut_ref!(ret, 1, 32));
             affine.y.fill_b32(array_mut_ref!(ret, 33, 32));
-            Ok(secp256k1::PublicKey::parse(&ret)?)
+            Ok(libsecp256k1::PublicKey::parse(&ret)?)
         } else {
             Err(Error::XCoordinateNotExist)
         }
 
-        // let mut x = secp256k1::curve::Field::default();
+        // let mut x = libsecp256k1::curve::Field::default();
         // let _ = x.set_b32(&self.0);
         // x.normalize();
         //
-        // let mut elem = secp256k1::curve::Affine::default();
+        // let mut elem = libsecp256k1::curve::Affine::default();
         // elem.set_xquad(&x);
         // elem.y.normalize();
         // // determine the first byte of the compressed format public key
         // let tag = if elem.y.is_odd() {
         //     // need to convert y to an even number
-        //     secp256k1::util::TAG_PUBKEY_EVEN
+        //     libsecp256k1::util::TAG_PUBKEY_EVEN
         // } else {
-        //     secp256k1::util::TAG_PUBKEY_ODD
+        //     libsecp256k1::util::TAG_PUBKEY_ODD
         // };
         // // construct compressed public key
         // let mut c = [0u8; 33];
@@ -286,7 +296,7 @@ impl TryInto<secp256k1::PublicKey> for XOnly {
         //     }
         //     *byte = x.b32()[i - 1];
         // }
-        // let p = secp256k1::PublicKey::parse_compressed(&c)?;
+        // let p = libsecp256k1::PublicKey::parse_compressed(&c)?;
         // Ok(p)
     }
 }

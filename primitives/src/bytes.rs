@@ -162,7 +162,7 @@ impl<'de> serde::de::Visitor<'de> for BytesVisitor {
 }
 
 /// Wrapper around `Vec<u8>` which represent associated type
-#[derive(Default, PartialEq, Clone, scale_info::TypeInfo)]
+#[derive(Default, PartialEq, Clone, Decode, Encode, scale_info::TypeInfo)]
 pub struct TaggedBytes<T> {
     bytes: Bytes,
     label: marker::PhantomData<T>,

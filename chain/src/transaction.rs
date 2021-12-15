@@ -3,8 +3,8 @@
 
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
+use codec::{Decode, Encode};
 use core::{fmt, str};
-
 use light_bitcoin_crypto::dhash256;
 use light_bitcoin_primitives::{hash_rev, io, Bytes, H256};
 use light_bitcoin_serialization::{
@@ -192,6 +192,8 @@ impl Default for TransactionOutput {
     Clone,
     Debug,
     Default,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]

@@ -7,8 +7,8 @@ extern crate alloc;
 
 #[cfg(not(feature = "std"))]
 use alloc::{string::String, vec, vec::Vec};
+use codec::{Decode, Encode};
 use core::fmt;
-
 use light_bitcoin_chain::merkle_node_hash;
 use light_bitcoin_primitives::{hash_rev, io, H256};
 use light_bitcoin_serialization::{
@@ -21,6 +21,7 @@ const MAX_BLOCK_WEIGHT: u32 = 4_000_000;
 const MIN_TRANSACTION_WEIGHT: u32 = 4 * 60;
 
 #[derive(Debug, scale_info::TypeInfo)]
+#[cfg_attr(feature = "std", derive(Decode, Encode))]
 pub enum Error {
     /// When header merkle root don't match to the root calculated from the partial merkle tree
     MerkleRootMismatch,

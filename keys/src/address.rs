@@ -33,10 +33,11 @@ use crate::{AddressHash, XOnly};
     Copy,
     Clone,
     Debug,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode)]
 pub enum Type {
     /// Pay to PubKey Hash
     /// Common P2PKH which begin with the number 1, eg: 1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2.
@@ -104,10 +105,11 @@ impl Deserializable for Type {
     Copy,
     Clone,
     Debug,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode)]
 pub enum Network {
     Mainnet,
     Testnet,
@@ -166,10 +168,11 @@ impl Deserializable for Network {
     Copy,
     Clone,
     Debug,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode)]
 pub enum AddressTypes {
     Legacy(AddressHash),
     WitnessV0ScriptHash(H256),
@@ -235,11 +238,12 @@ impl Deserializable for AddressTypes {
     Clone,
     Debug,
     Default,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Serializable, Deserializable)]
-#[derive(Encode, Decode)]
 pub struct Address {
     /// The type of the address.
     pub kind: Type,
@@ -347,6 +351,8 @@ impl str::FromStr for Address {
     Clone,
     Debug,
     Default,
+    Decode,
+    Encode,
     scale_info::TypeInfo
 )]
 pub struct AddressDisplayLayout([u8; 25]);

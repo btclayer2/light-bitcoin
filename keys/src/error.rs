@@ -1,7 +1,6 @@
-
+use codec::{Decode, Encode};
 use hex::FromHexError;
-
-#[derive(Debug, PartialEq, scale_info::TypeInfo)]
+#[derive(Debug, PartialEq, Decode, Encode, scale_info::TypeInfo)]
 pub enum Error {
     // public key
     InvalidPublic,
@@ -53,13 +52,13 @@ impl core::fmt::Display for Error {
     }
 }
 
-impl From<secp256k1::Error> for Error {
-    fn from(e: secp256k1::Error) -> Self {
+impl From<libsecp256k1::Error> for Error {
+    fn from(e: libsecp256k1::Error) -> Self {
         match e {
-            secp256k1::Error::InvalidSignature => Error::InvalidSignature,
-            secp256k1::Error::InvalidPublicKey => Error::InvalidPublic,
-            secp256k1::Error::InvalidSecretKey => Error::InvalidSecret,
-            secp256k1::Error::InvalidMessage => Error::InvalidMessage,
+            libsecp256k1::Error::InvalidSignature => Error::InvalidSignature,
+            libsecp256k1::Error::InvalidPublicKey => Error::InvalidPublic,
+            libsecp256k1::Error::InvalidSecretKey => Error::InvalidSecret,
+            libsecp256k1::Error::InvalidMessage => Error::InvalidMessage,
             _ => Error::InvalidSignature,
         }
     }

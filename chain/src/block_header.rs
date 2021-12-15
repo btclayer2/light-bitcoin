@@ -1,7 +1,6 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use core::{fmt, str};
-
 use light_bitcoin_crypto::dhash256;
 use light_bitcoin_primitives::{hash_rev, Compact, H256};
 use light_bitcoin_serialization::{deserialize, serialize, Deserializable, Reader, Serializable};
@@ -11,7 +10,16 @@ use serde::{Deserialize, Serialize};
 
 /// A block header, which contains all the block's information except
 /// the actual transactions
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Copy,
+    Clone,
+    Default,
+    scale_info::TypeInfo
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Serializable, Deserializable)]
 pub struct BlockHeader {

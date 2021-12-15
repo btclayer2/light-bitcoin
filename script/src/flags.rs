@@ -1,7 +1,19 @@
 //! Script interpreter verification flags
-
+use codec::{Decode, Encode};
 /// Script interpreter verification flags
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Copy,
+    Clone,
+    Debug,
+    Default,
+    Decode,
+    Encode,
+    scale_info::TypeInfo
+)]
 pub struct VerificationFlags {
     pub none: bool,
 

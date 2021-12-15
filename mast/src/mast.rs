@@ -1,16 +1,15 @@
 #![allow(dead_code)]
 #![allow(clippy::module_inception)]
 
-use core::cmp::min;
-
 use bitcoin_bech32::{constants::Network, u5, WitnessProgram};
-use light_bitcoin_script::{Builder, Opcode};
+use codec::{Decode, Encode};
+use core::cmp::min;
+use light_bitcoin_script::{Builder, Opcode, H256};
 use light_bitcoin_serialization::Stream;
 
 use super::{
     error::{MastError, Result},
     pmt::PartialMerkleTree,
-    LeafNode, MerkleNode,
 };
 
 #[cfg(not(feature = "std"))]
@@ -21,10 +20,7 @@ use alloc::{
 };
 
 use digest::Digest;
-use hashes::{
-    hex::{FromHex, ToHex},
-    Hash,
-};
+use hashes::hex::ToHex;
 use light_bitcoin_keys::{HashAdd, Tagged};
 use musig2::{
     key::{PrivateKey, PublicKey},
@@ -37,7 +33,7 @@ use rayon::prelude::*;
 const DEFAULT_TAPSCRIPT_VER: u8 = 0xc0;
 
 /// Data structure that represents a partial mast tree
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Decode, Encode, scale_info::TypeInfo)]
 pub struct Mast {
     /// The threshold aggregate public key
     pub pubkeys: Vec<PublicKey>,
@@ -46,14 +42,14 @@ pub struct Mast {
     /// The personal public key
     pub person_pubkeys: Vec<PublicKey>,
     /// The index of the person_pubkeys corresponding to each pubkeys
-    pub indexs: Vec<Vec<usize>>,
+    pub indexs: Vec<Vec<u32>>,
 }
 
 impl Mast {
     /// Create a mast instance
-    pub fn new(person_pubkeys: Vec<PublicKey>, threshold: usize) -> Result<Self> {
+    pub fn new(person_pubkeys: Vec<PublicKey>, threshold: u32) -> Result<Self> {
         let inner_pubkey = KeyAgg::key_aggregation_n(&person_pubkeys)?.X_tilde;
-        let (pubkeys, indexs): (Vec<PublicKey>, Vec<Vec<usize>>) =
+        let (pubkeys, indexs): (Vec<PublicKey>, Vec<Vec<u32>>) =
             generate_combine_pubkey(person_pubkeys.clone(), threshold)?
                 .into_iter()
                 .unzip();
@@ -74,7 +70,7 @@ impl Mast {
             .map(|(i, p)| {
                 let mut person_pubkey_combine = vec![];
                 for index in self.indexs[i].iter() {
-                    person_pubkey_combine.push(self.person_pubkeys[index - 1].clone())
+                    person_pubkey_combine.push(self.person_pubkeys[*index as usize - 1].clone())
                 }
                 (p.clone(), person_pubkey_combine)
             })
@@ -82,7 +78,7 @@ impl Mast {
     }
 
     /// calculate merkle root
-    pub fn calc_root(&self) -> Result<MerkleNode> {
+    pub fn calc_root(&self) -> Result<H256> {
         let leaf_nodes = self
             .pubkeys
             .iter()
@@ -95,7 +91,7 @@ impl Mast {
         // }
         matches.extend(&vec![false; self.pubkeys.len() - 1]);
         let pmt = PartialMerkleTree::from_leaf_nodes(&leaf_nodes, &matches)?;
-        let mut matches_vec: Vec<LeafNode> = vec![];
+        let mut matches_vec: Vec<H256> = vec![];
         let mut indexes_vec: Vec<u32> = vec![];
         pmt.extract_matches(&mut matches_vec, &mut indexes_vec)
     }
@@ -121,9 +117,9 @@ impl Mast {
             .iter()
             .map(tagged_leaf)
             .collect::<Result<Vec<_>>>()?;
-        let filter_proof = MerkleNode::from_inner(leaf_nodes[index].into_inner());
+        let filter_proof = leaf_nodes[index];
         let pmt = PartialMerkleTree::from_leaf_nodes(&leaf_nodes, &matches)?;
-        let mut matches_vec: Vec<LeafNode> = vec![];
+        let mut matches_vec: Vec<H256> = vec![];
         let mut indexes_vec: Vec<u32> = vec![];
         let root = pmt.extract_matches(&mut matches_vec, &mut indexes_vec)?;
         let tweak = tweak_pubkey(&self.inner_pubkey, &root)?;
@@ -131,7 +127,11 @@ impl Mast {
         Ok([
             vec![first_bytes],
             self.inner_pubkey.x_coor().to_vec(),
-            pmt.collected_hashes(filter_proof).concat(),
+            pmt.collected_hashes(filter_proof)
+                .iter()
+                .map(|d| d.as_bytes().to_vec())
+                .collect::<Vec<_>>()
+                .concat(),
         ]
         .concat())
     }
@@ -171,7 +171,7 @@ pub fn generate_btc_address(pubkey: &PublicKey, network: &str) -> Result<String>
 /// Calculate the leaf nodes from the pubkey
 ///
 /// tagged_hash("TapLeaf", bytes([leaf_version]) + ser_size(pubkey))
-pub fn tagged_leaf(pubkey: &PublicKey) -> Result<LeafNode> {
+pub fn tagged_leaf(pubkey: &PublicKey) -> Result<H256> {
     let mut stream = Stream::default();
 
     let version = DEFAULT_TAPSCRIPT_VER & 0xfe;
@@ -188,13 +188,13 @@ pub fn tagged_leaf(pubkey: &PublicKey) -> Result<LeafNode> {
         .tagged(b"TapLeaf")
         .add(&out[..])
         .finalize();
-    Ok(LeafNode::from_hex(&hash.to_hex())?)
+    Ok(H256::from_slice(&hash.to_vec()))
 }
 
 /// Calculate branch nodes from left and right children
 ///
 /// tagged_hash("TapBranch", left + right)). The left and right nodes are lexicographic order
-pub fn tagged_branch(left_node: MerkleNode, right_node: MerkleNode) -> Result<MerkleNode> {
+pub fn tagged_branch(left_node: H256, right_node: H256) -> Result<H256> {
     // If the hash of the left and right leaves is the same, it means that the total number of leaves is odd
     //
     // In this case, the parent hash is computed without copying
@@ -203,23 +203,20 @@ pub fn tagged_branch(left_node: MerkleNode, right_node: MerkleNode) -> Result<Me
         let mut x: Vec<u8> = vec![];
         let (left_node, right_node) = lexicographical_compare(left_node, right_node);
 
-        x.extend(left_node.to_vec().iter());
-        x.extend(right_node.to_vec().iter());
+        x.extend(left_node.as_bytes().iter());
+        x.extend(right_node.as_bytes().iter());
         let hash = sha2::Sha256::default()
             .tagged(b"TapBranch")
             .add(&x[..])
             .finalize();
-        Ok(MerkleNode::from_hex(&hash.to_hex())?)
+        Ok(H256::from_slice(&hash.to_vec()))
     } else {
         Ok(left_node)
     }
 }
 
 /// Lexicographic order of left and right nodes
-fn lexicographical_compare(
-    left_node: MerkleNode,
-    right_node: MerkleNode,
-) -> (MerkleNode, MerkleNode) {
+fn lexicographical_compare(left_node: H256, right_node: H256) -> (H256, H256) {
     if right_node.to_hex() < left_node.to_hex() {
         (right_node, left_node)
     } else {
@@ -228,11 +225,11 @@ fn lexicographical_compare(
 }
 
 /// Compute tweak public key
-pub fn tweak_pubkey(inner_pubkey: &PublicKey, root: &MerkleNode) -> Result<PublicKey> {
+pub fn tweak_pubkey(inner_pubkey: &PublicKey, root: &H256) -> Result<PublicKey> {
     // P + hash_tweak(P||root)G
     let mut stream = Stream::default();
     stream.append_slice(&inner_pubkey.x_coor().to_vec());
-    stream.append_slice(&root.to_vec());
+    stream.append_slice(root.as_bytes());
     let out = stream.out();
 
     let hash = sha2::Sha256::default()
@@ -250,21 +247,21 @@ pub fn tweak_pubkey(inner_pubkey: &PublicKey, root: &MerkleNode) -> Result<Publi
     }
 }
 
-pub fn generate_combine_index(n: usize, k: usize) -> Vec<Vec<usize>> {
-    let mut temp: Vec<usize> = vec![];
-    let mut ans: Vec<Vec<usize>> = vec![];
+pub fn generate_combine_index(n: u32, k: u32) -> Vec<Vec<u32>> {
+    let mut temp: Vec<u32> = vec![];
+    let mut ans: Vec<Vec<u32>> = vec![];
     for i in 1..=k {
-        temp.push(i)
+        temp.push(i as u32)
     }
-    temp.push(n + 1);
+    temp.push(n as u32 + 1);
 
     let mut j: usize = 0;
-    while j < k {
+    while j < k as usize {
         ans.push(temp[..k as usize].to_vec());
         j = 0;
 
-        while j < k && temp[j] + 1 == temp[j + 1] {
-            temp[j] = j + 1;
+        while j < k as usize && temp[j] + 1 == temp[j + 1] {
+            temp[j] = j as u32 + 1;
             j += 1;
         }
         temp[j] += 1;
@@ -275,21 +272,21 @@ pub fn generate_combine_index(n: usize, k: usize) -> Vec<Vec<usize>> {
 #[cfg(feature = "std")]
 pub fn generate_combine_pubkey(
     pubkeys: Vec<PublicKey>,
-    k: usize,
-) -> Result<Vec<(PublicKey, Vec<usize>)>> {
-    let all_indexs = generate_combine_index(pubkeys.len(), k);
+    k: u32,
+) -> Result<Vec<(PublicKey, Vec<u32>)>> {
+    let all_indexs = generate_combine_index(pubkeys.len() as u32, k);
     let mut pks = vec![];
     for indexs in all_indexs {
         let mut temp: Vec<PublicKey> = vec![];
         for index in indexs.iter() {
-            temp.push(pubkeys[index - 1].clone())
+            temp.push(pubkeys[*index as usize - 1].clone())
         }
         pks.push((temp, indexs));
     }
     let mut output = pks
         .par_iter()
         .map(|ps| Ok((KeyAgg::key_aggregation_n(&ps.0)?.X_tilde, ps.1.clone())))
-        .collect::<Result<Vec<(PublicKey, Vec<usize>)>>>()?;
+        .collect::<Result<Vec<(PublicKey, Vec<u32>)>>>()?;
     output.sort_by_key(|a| a.0.x_coor());
     Ok(output)
 }
@@ -297,14 +294,14 @@ pub fn generate_combine_pubkey(
 #[cfg(not(feature = "std"))]
 pub fn generate_combine_pubkey(
     pubkeys: Vec<PublicKey>,
-    k: usize,
-) -> Result<Vec<(PublicKey, Vec<usize>)>> {
-    let all_indexs = generate_combine_index(pubkeys.len(), k);
-    let mut output: Vec<(PublicKey, Vec<usize>)> = vec![];
+    k: u32,
+) -> Result<Vec<(PublicKey, Vec<u32>)>> {
+    let all_indexs = generate_combine_index(pubkeys.len() as u32, k);
+    let mut output: Vec<(PublicKey, Vec<u32>)> = vec![];
     for indexs in all_indexs {
         let mut temp: Vec<PublicKey> = vec![];
         for index in indexs.iter() {
-            temp.push(pubkeys[index - 1].clone())
+            temp.push(pubkeys[*index as usize - 1].clone())
         }
         output.push((KeyAgg::key_aggregation_n(&temp)?.X_tilde, indexs))
     }
@@ -312,12 +309,12 @@ pub fn generate_combine_pubkey(
     Ok(output)
 }
 
-pub fn compute_combine(n: usize, m: usize) -> usize {
+pub fn compute_combine(n: u32, m: u32) -> u32 {
     let m = min(m, n - m);
-    (n - m + 1..=n).product::<usize>() / (1..=m).product::<usize>()
+    (n - m + 1..=n).product::<u32>() / (1..=m).product::<u32>()
 }
 
-pub fn compute_min_threshold(n: usize, max_value: usize) -> usize {
+pub fn compute_min_threshold(n: u32, max_value: u32) -> u32 {
     if n > max_value {
         return n;
     }

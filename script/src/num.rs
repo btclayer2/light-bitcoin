@@ -2,8 +2,8 @@
 
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
+use codec::{Decode, Encode};
 use core::ops;
-
 use light_bitcoin_primitives::Bytes;
 
 use crate::error::Error;
@@ -16,7 +16,19 @@ use crate::error::Error;
 /// numeric operation). `CScriptNum` enforces those semantics by storing results as
 /// an int64 and allowing out-of-range values to be returned as a vector of bytes but
 /// throwing an exception if arithmetic is done or the result is interpreted as an integer.
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug, Default, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Copy,
+    Clone,
+    Debug,
+    Default,
+    Decode,
+    Encode,
+    scale_info::TypeInfo
+)]
 pub struct Num {
     value: i64,
 }

@@ -18,9 +18,9 @@ use core::{
 };
 
 use crate::Opcode;
-use secp256k1::{
-    curve::{Affine, Jacobian, Scalar, ECMULT_CONTEXT},
-    PublicKey,
+use libsecp256k1::{
+    curve::{Affine, Jacobian, Scalar},
+    PublicKey, ECMULT_CONTEXT,
 };
 
 #[derive(Debug, PartialEq, Decode, Encode, Clone, Copy, scale_info::TypeInfo)]
@@ -107,7 +107,7 @@ impl ScriptExecutionData {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy, scale_info::TypeInfo)]
+#[derive(Debug, PartialEq, Clone, Copy, Decode, Encode, scale_info::TypeInfo)]
 #[repr(u8)]
 pub enum SighashBase {
     All = 1,
@@ -123,7 +123,7 @@ impl From<SighashBase> for u32 {
 
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::doc_markdown))]
 /// Signature hash type. [Documentation](https://en.bitcoin.it/wiki/OP_CHECKSIG#Procedure_for_Hashtype_SIGHASH_SINGLE)
-#[derive(Debug, PartialEq, Clone, Copy, scale_info::TypeInfo)]
+#[derive(Debug, PartialEq, Clone, Copy, Decode, Encode, scale_info::TypeInfo)]
 pub struct Sighash {
     pub base: SighashBase,
     pub anyone_can_pay: bool,
@@ -666,7 +666,7 @@ pub fn verify_taproot_commitment(control: &[u8], program: &XOnly, scirpt: &Scrip
     p.y.normalize();
     let p = if p.y.is_odd() { p.neg() } else { p };
 
-    let mut pj = secp256k1::curve::Jacobian::default();
+    let mut pj = libsecp256k1::curve::Jacobian::default();
     pj.set_ge(&p);
 
     let mut rj = Jacobian::default();

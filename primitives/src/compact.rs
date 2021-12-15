@@ -1,12 +1,24 @@
 //! Compact representation of `U256`
 
+use crate::U256;
+use codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-use crate::U256;
-
 /// Compact representation of `U256`
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy, Default, Debug, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Clone,
+    Copy,
+    Default,
+    Debug,
+    Decode,
+    Encode,
+    scale_info::TypeInfo
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Compact(u32);
 

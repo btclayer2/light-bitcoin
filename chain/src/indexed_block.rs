@@ -1,7 +1,7 @@
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
+use codec::{Decode, Encode};
 use core::str;
-
 use light_bitcoin_primitives::H256;
 use light_bitcoin_serialization::{
     deserialize, serialized_list_size, serialized_list_size_with_flags, Deserializable,
@@ -14,7 +14,18 @@ use crate::indexed_transaction::IndexedTransaction;
 use crate::merkle_root::merkle_root;
 use crate::transaction::Transaction;
 
-#[derive(Ord, PartialOrd, Eq, Clone, Debug, Default, Deserializable, scale_info::TypeInfo)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    Clone,
+    Debug,
+    Default,
+    Decode,
+    Encode,
+    Deserializable,
+    scale_info::TypeInfo
+)]
 pub struct IndexedBlock {
     pub header: IndexedBlockHeader,
     pub transactions: Vec<IndexedTransaction>,

@@ -29,8 +29,8 @@ bs58 = { version = "0.4", default-features = false, features = ["alloc"] }
 codec = { package = "parity-scale-codec", version = "2.3.1",  default-features = false, features = ["derive"] }
 digest = { version = "0.9.0", default-features = false }
 hex = { version = "0.4", default-features = false, features = ["alloc"] }
-libsecp256k1 = { version = "0.3.5", default-features = false, features = ["hmac"] }
-musig2 = { git = "https://github.com/chainx-org/Musig2", branch = "lib", default-features = false }
+libsecp256k1 = { git = "https://github.com/chainx-org/libsecp256k1.git", default-features = false, features = ["hmac", "static-context"] }
+musig2 = { path="../../Musig2", default-features = false }
 serde = { version = "1.0", features = ["derive"], optional = true }
 scale-info = { version = "1.0", default-features = false, features = ["derive"] }
 sha2 = { version = "0.9.5", default-features = false }
