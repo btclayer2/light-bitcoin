@@ -91,6 +91,15 @@ impl TryFrom<musig2::PublicKey> for Public {
 }
 
 impl Public {
+    pub fn to_compressed(self) -> Result<Self, Error> {
+        if let Public::Normal(_) = self {
+            let p: musig2::PublicKey = self.try_into()?;
+            p.try_into()
+        } else {
+            Ok(self)
+        }
+    }
+
     pub fn from_slice(data: &[u8]) -> Result<Self, Error> {
         match data.len() {
             33 => Ok(Public::Compressed(H264::from_slice(data))),
