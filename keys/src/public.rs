@@ -83,6 +83,13 @@ impl TryFrom<Public> for musig2::PublicKey {
     }
 }
 
+impl TryFrom<musig2::PublicKey> for Public {
+    type Error = Error;
+    fn try_from(p: musig2::PublicKey) -> Result<Self, Self::Error> {
+        Public::from_slice(&p.serialize())
+    }
+}
+
 impl Public {
     pub fn from_slice(data: &[u8]) -> Result<Self, Error> {
         match data.len() {
