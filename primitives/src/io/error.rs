@@ -23,6 +23,7 @@ pub enum Error {
 
     ReadMalformedData,
     UnreadData,
+    OutOfLength,
 }
 
 #[cfg(feature = "std")]
@@ -59,6 +60,8 @@ impl Error {
 
             Error::ReadMalformedData => "read malformed data",
             Error::UnreadData => "unread data",
+
+            Error::OutOfLength => "out of length",
         }
     }
 }
