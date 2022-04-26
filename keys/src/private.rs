@@ -87,6 +87,8 @@ impl DisplayLayout for Private {
         let network_byte = match self.network {
             Network::Mainnet => 128,
             Network::Testnet => 239,
+            Network::DogeCoinMainnet => 158,
+            Network::DogeCoinTestnet => 241,
         };
 
         result.push(network_byte);
@@ -121,6 +123,8 @@ impl DisplayLayout for Private {
         let network = match data[0] {
             128 => Network::Mainnet,
             239 => Network::Testnet,
+            158 => Network::DogeCoinMainnet,
+            241 => Network::DogeCoinTestnet,
             _ => return Err(Error::InvalidPrivate),
         };
 

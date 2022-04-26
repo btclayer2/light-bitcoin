@@ -111,8 +111,14 @@ impl Deserializable for Type {
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum Network {
+    // Bitcoin Mainnet
     Mainnet,
+    // Bitcoin Testnet
     Testnet,
+    // Dogecoin Regtest
+    DogeCoinMainnet,
+    // Dogecoin Testnet
+    DogeCoinTestnet,
 }
 
 impl ToString for Network {
@@ -120,6 +126,8 @@ impl ToString for Network {
         match self {
             Network::Mainnet => "Mainnet".to_string(),
             Network::Testnet => "Testnet".to_string(),
+            Network::DogeCoinMainnet => "Dogecoin Mainnet".to_string(),
+            Network::DogeCoinTestnet => "Dogecoin Testnet".to_string(),
         }
     }
 }
@@ -135,6 +143,8 @@ impl Network {
         match v {
             0 => Some(Network::Mainnet),
             1 => Some(Network::Testnet),
+            2 => Some(Network::DogeCoinMainnet),
+            3 => Some(Network::DogeCoinTestnet),
             _ => None,
         }
     }
@@ -145,6 +155,8 @@ impl Serializable for Network {
         let _stream = match *self {
             Network::Mainnet => s.append(&Network::Mainnet),
             Network::Testnet => s.append(&Network::Testnet),
+            Network::DogeCoinMainnet => s.append(&Network::DogeCoinMainnet),
+            Network::DogeCoinTestnet => s.append(&Network::DogeCoinTestnet),
         };
     }
 }
@@ -257,7 +269,7 @@ impl fmt::Display for Address {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let network = match self.network {
             Network::Mainnet => Bech32Network::Bitcoin,
-            Network::Testnet => Bech32Network::Testnet,
+            _ => Bech32Network::Testnet,
         };
         match self.hash {
             AddressTypes::Legacy(_) => bs58::encode(self.layout().0).into_string().fmt(f),
@@ -376,6 +388,10 @@ impl DisplayLayout for Address {
             (Network::Mainnet, Type::P2SH) => 5,
             (Network::Testnet, Type::P2PKH) => 111,
             (Network::Testnet, Type::P2SH) => 196,
+            (Network::DogeCoinMainnet, Type::P2PKH) => 30,
+            (Network::DogeCoinMainnet, Type::P2SH) => 22,
+            (Network::DogeCoinTestnet, Type::P2PKH) => 113,
+            (Network::DogeCoinTestnet, Type::P2SH) => 196,
             _ => todo!(),
         };
 
@@ -405,7 +421,10 @@ impl DisplayLayout for Address {
             0 => (Network::Mainnet, Type::P2PKH),
             5 => (Network::Mainnet, Type::P2SH),
             111 => (Network::Testnet, Type::P2PKH),
-            196 => (Network::Testnet, Type::P2SH),
+            30 => (Network::DogeCoinMainnet, Type::P2PKH),
+            22 => (Network::DogeCoinMainnet, Type::P2SH),
+            113 => (Network::DogeCoinTestnet, Type::P2PKH),
+            196 => (Network::DogeCoinTestnet, Type::P2SH),
             _ => return Err(Error::InvalidAddress),
         };
 
@@ -427,22 +446,22 @@ mod tests {
     fn test_address_to_string() {
         let address = Address {
             kind: Type::P2PKH,
-            network: Network::Mainnet,
-            hash: AddressTypes::Legacy(h160("3f4aa1fedf1f54eeb03b759deadb36676b184911")),
+            network: Network::DogeCoinMainnet,
+            hash: AddressTypes::Legacy(h160("4ecd07e6f2683d43e82c8191b5414d1387eeb1dd")),
         };
         assert_eq!(
             address.to_string(),
-            "16meyfSoQV6twkAAxPe51RtMVz7PGRmWna".to_string(),
+            "DCKks1rtZnCHJMvpHTqQTDvYs6sah7K6J1".to_string(),
         );
 
         let address = Address {
             kind: Type::P2SH,
-            network: Network::Mainnet,
-            hash: AddressTypes::Legacy(h160("d246f700f4969106291a75ba85ad863cae68d667")),
+            network: Network::DogeCoinMainnet,
+            hash: AddressTypes::Legacy(h160("38a2935dbb241efa8144dc10559a7ac9bba33664")),
         };
         assert_eq!(
             address.to_string(),
-            "3LrrqZ2LtZxAcroVaYKgM6yDeRszV2sY1r".to_string(),
+            "9wbjG5xnc1MPEZX5kK7YQPqx9t8GVvYq6G".to_string(),
         );
     }
 
@@ -450,22 +469,22 @@ mod tests {
     fn test_address_from_str() {
         let address = Address {
             kind: Type::P2PKH,
-            network: Network::Mainnet,
-            hash: AddressTypes::Legacy(h160("3f4aa1fedf1f54eeb03b759deadb36676b184911")),
+            network: Network::DogeCoinMainnet,
+            hash: AddressTypes::Legacy(h160("4ecd07e6f2683d43e82c8191b5414d1387eeb1dd")),
         };
         assert_eq!(
             address,
-            "16meyfSoQV6twkAAxPe51RtMVz7PGRmWna".parse().unwrap()
+            "DCKks1rtZnCHJMvpHTqQTDvYs6sah7K6J1".parse().unwrap()
         );
 
         let address = Address {
             kind: Type::P2SH,
-            network: Network::Mainnet,
-            hash: AddressTypes::Legacy(h160("d246f700f4969106291a75ba85ad863cae68d667")),
+            network: Network::DogeCoinMainnet,
+            hash: AddressTypes::Legacy(h160("38a2935dbb241efa8144dc10559a7ac9bba33664")),
         };
         assert_eq!(
             address,
-            "3LrrqZ2LtZxAcroVaYKgM6yDeRszV2sY1r".parse().unwrap()
+            "9wbjG5xnc1MPEZX5kK7YQPqx9t8GVvYq6G".parse().unwrap()
         );
     }
 }
