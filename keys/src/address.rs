@@ -115,7 +115,7 @@ pub enum Network {
     Mainnet,
     // Bitcoin Testnet
     Testnet,
-    // Dogecoin Regtest
+    // Dogecoin Mainnet
     DogeCoinMainnet,
     // Dogecoin Testnet
     DogeCoinTestnet,
