@@ -2,7 +2,7 @@
 name = "light-bitcoin-keys"
 version = "0.2.0"
 authors = ["The ChainX Authors"]
-edition = "2018"
+edition = "2021"
 license = "GPL-3.0"
 
 [features]
@@ -26,13 +26,13 @@ std = [
 [dependencies]
 arrayref = { version = "0.3.6" }
 bs58 = { version = "0.4", default-features = false, features = ["alloc"] }
-codec = { package = "parity-scale-codec", version = "2.3.1",  default-features = false, features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "3.0.0",  default-features = false, features = ["derive"] }
 digest = { version = "0.9.0", default-features = false }
 hex = { version = "0.4", default-features = false, features = ["alloc"] }
 libsecp256k1 = { git = "https://github.com/chainx-org/libsecp256k1.git", default-features = false, features = ["hmac", "static-context"] }
-musig2 = { git = "https://github.com/chainx-org/Musig2", branch = "lib", default-features = false }
+musig2 = { git = "https://github.com/chainx-org/Musig2", branch = "upgrade-2021", default-features = false }
 serde = { version = "1.0", features = ["derive"], optional = true }
-scale-info = { version = "1.0", default-features = false, features = ["derive"] }
+scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
 sha2 = { version = "0.9.5", default-features = false }
 # for no-std
 bitcoin-bech32 = { git = "https://github.com/chainx-org/rust-bech32-bitcoin", branch = "master", default-features = false }

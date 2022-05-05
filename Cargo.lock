@@ -83,10 +83,22 @@ version = "0.20.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7774144344a4faa177370406a7ff5f1da24303817368584c6206c8303eb07848"
 dependencies = [
- "funty",
- "radium",
+ "funty 1.1.0",
+ "radium 0.6.2",
  "tap",
- "wyz",
+ "wyz 0.2.0",
+]
+
+[[package]]
+name = "bitvec"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1489fcb93a5bb47da0462ca93ad252ad6af2145cce58d10d46a83931ba9f016b"
+dependencies = [
+ "funty 2.0.0",
+ "radium 0.7.0",
+ "tap",
+ "wyz 0.5.0",
 ]
 
 [[package]]
@@ -341,6 +353,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fed34cd105917e91daa4da6b3728c47b068749d6a62c59811f06ed2ac71d9da7"
 
 [[package]]
+name = "funty"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e6d5a32815ae3f33302d95fdcb2ce17862f8c65363dcfd29360480ba1001fc9c"
+
+[[package]]
 name = "generic-array"
 version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -414,11 +432,11 @@ dependencies = [
 
 [[package]]
 name = "impl-codec"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "161ebdfec3c8e3b52bf61c4f3550a1eea4f9579d10dc1b936f3171ebdcd6c443"
+checksum = "ba6a270039626615617f3f36d15fc827041df3b78c439da2cadfa47455a77f2f"
 dependencies = [
- "parity-scale-codec",
+ "parity-scale-codec 3.1.2",
 ]
 
 [[package]]
@@ -489,15 +507,33 @@ checksum = "1b03d17f364a3a042d5e5d46b053bbbf82c92c9430c592dd4c064dc6ee997125"
 [[package]]
 name = "libsecp256k1"
 version = "0.7.0"
+source = "git+https://github.com/chainx-org/libsecp256k1?branch=upgrade-2021#7dc70232c6d8e1d3a746c1eaeb701410b61609c2"
+dependencies = [
+ "arrayref",
+ "base64",
+ "digest",
+ "hmac-drbg",
+ "libsecp256k1-core 0.3.0 (git+https://github.com/chainx-org/libsecp256k1?branch=upgrade-2021)",
+ "libsecp256k1-gen-ecmult 0.3.0 (git+https://github.com/chainx-org/libsecp256k1?branch=upgrade-2021)",
+ "libsecp256k1-gen-genmult 0.3.0 (git+https://github.com/chainx-org/libsecp256k1?branch=upgrade-2021)",
+ "rand",
+ "serde",
+ "sha2",
+ "typenum",
+]
+
+[[package]]
+name = "libsecp256k1"
+version = "0.7.0"
 source = "git+https://github.com/chainx-org/libsecp256k1.git#b208f8a32831de8c48d15ed9e90ed807f3fe2275"
 dependencies = [
  "arrayref",
  "base64",
  "digest",
  "hmac-drbg",
- "libsecp256k1-core",
- "libsecp256k1-gen-ecmult",
- "libsecp256k1-gen-genmult",
+ "libsecp256k1-core 0.3.0 (git+https://github.com/chainx-org/libsecp256k1.git)",
+ "libsecp256k1-gen-ecmult 0.3.0 (git+https://github.com/chainx-org/libsecp256k1.git)",
+ "libsecp256k1-gen-genmult 0.3.0 (git+https://github.com/chainx-org/libsecp256k1.git)",
  "rand",
  "serde",
  "sha2",
@@ -507,13 +543,33 @@ dependencies = [
 [[package]]
 name = "libsecp256k1-core"
 version = "0.3.0"
+source = "git+https://github.com/chainx-org/libsecp256k1?branch=upgrade-2021#7dc70232c6d8e1d3a746c1eaeb701410b61609c2"
+dependencies = [
+ "crunchy",
+ "digest",
+ "parity-scale-codec 3.1.2",
+ "scale-info 2.1.1",
+ "subtle",
+]
+
+[[package]]
+name = "libsecp256k1-core"
+version = "0.3.0"
 source = "git+https://github.com/chainx-org/libsecp256k1.git#b208f8a32831de8c48d15ed9e90ed807f3fe2275"
 dependencies = [
  "crunchy",
  "digest",
- "parity-scale-codec",
- "scale-info",
+ "parity-scale-codec 2.3.1",
+ "scale-info 1.0.0",
  "subtle",
+]
+
+[[package]]
+name = "libsecp256k1-gen-ecmult"
+version = "0.3.0"
+source = "git+https://github.com/chainx-org/libsecp256k1?branch=upgrade-2021#7dc70232c6d8e1d3a746c1eaeb701410b61609c2"
+dependencies = [
+ "libsecp256k1-core 0.3.0 (git+https://github.com/chainx-org/libsecp256k1?branch=upgrade-2021)",
 ]
 
 [[package]]
@@ -521,7 +577,15 @@ name = "libsecp256k1-gen-ecmult"
 version = "0.3.0"
 source = "git+https://github.com/chainx-org/libsecp256k1.git#b208f8a32831de8c48d15ed9e90ed807f3fe2275"
 dependencies = [
- "libsecp256k1-core",
+ "libsecp256k1-core 0.3.0 (git+https://github.com/chainx-org/libsecp256k1.git)",
+]
+
+[[package]]
+name = "libsecp256k1-gen-genmult"
+version = "0.3.0"
+source = "git+https://github.com/chainx-org/libsecp256k1?branch=upgrade-2021#7dc70232c6d8e1d3a746c1eaeb701410b61609c2"
+dependencies = [
+ "libsecp256k1-core 0.3.0 (git+https://github.com/chainx-org/libsecp256k1?branch=upgrade-2021)",
 ]
 
 [[package]]
@@ -529,7 +593,7 @@ name = "libsecp256k1-gen-genmult"
 version = "0.3.0"
 source = "git+https://github.com/chainx-org/libsecp256k1.git#b208f8a32831de8c48d15ed9e90ed807f3fe2275"
 dependencies = [
- "libsecp256k1-core",
+ "libsecp256k1-core 0.3.0 (git+https://github.com/chainx-org/libsecp256k1.git)",
 ]
 
 [[package]]
@@ -555,8 +619,8 @@ dependencies = [
  "light-bitcoin-crypto",
  "light-bitcoin-primitives",
  "light-bitcoin-serialization",
- "parity-scale-codec",
- "scale-info",
+ "parity-scale-codec 3.1.2",
+ "scale-info 2.1.1",
  "serde",
 ]
 
@@ -581,13 +645,13 @@ dependencies = [
  "bs58",
  "digest",
  "hex",
- "libsecp256k1",
+ "libsecp256k1 0.7.0 (git+https://github.com/chainx-org/libsecp256k1.git)",
  "light-bitcoin-crypto",
  "light-bitcoin-primitives",
  "light-bitcoin-serialization",
  "musig2",
- "parity-scale-codec",
- "scale-info",
+ "parity-scale-codec 3.1.2",
+ "scale-info 2.1.1",
  "serde",
  "serde_json",
  "sha2",
@@ -608,9 +672,9 @@ dependencies = [
  "light-bitcoin-script",
  "light-bitcoin-serialization",
  "musig2",
- "parity-scale-codec",
+ "parity-scale-codec 3.1.2",
  "rayon",
- "scale-info",
+ "scale-info 2.1.1",
  "sha2",
 ]
 
@@ -624,9 +688,9 @@ dependencies = [
  "light-bitcoin-crypto",
  "light-bitcoin-primitives",
  "light-bitcoin-serialization",
- "parity-scale-codec",
+ "parity-scale-codec 3.1.2",
  "rand",
- "scale-info",
+ "scale-info 2.1.1",
 ]
 
 [[package]]
@@ -638,9 +702,9 @@ dependencies = [
  "hex",
  "impl-codec",
  "impl-serde",
- "parity-scale-codec",
+ "parity-scale-codec 3.1.2",
  "primitive-types",
- "scale-info",
+ "scale-info 2.1.1",
  "serde",
 ]
 
@@ -649,14 +713,14 @@ name = "light-bitcoin-script"
 version = "0.2.0"
 dependencies = [
  "hex",
- "libsecp256k1",
+ "libsecp256k1 0.7.0 (git+https://github.com/chainx-org/libsecp256k1.git)",
  "light-bitcoin-chain",
  "light-bitcoin-crypto",
  "light-bitcoin-keys",
  "light-bitcoin-primitives",
  "light-bitcoin-serialization",
- "parity-scale-codec",
- "scale-info",
+ "parity-scale-codec 3.1.2",
+ "scale-info 2.1.1",
  "sha2",
 ]
 
@@ -666,8 +730,8 @@ version = "0.2.0"
 dependencies = [
  "light-bitcoin-primitives",
  "light-bitcoin-serialization-derive",
- "parity-scale-codec",
- "scale-info",
+ "parity-scale-codec 3.1.2",
+ "scale-info 2.1.1",
 ]
 
 [[package]]
@@ -707,18 +771,18 @@ dependencies = [
 [[package]]
 name = "musig2"
 version = "0.1.0"
-source = "git+https://github.com/chainx-org/Musig2?branch=lib#6b850aa16a6c8df1e593ea52ab82cbb660e11d15"
+source = "git+https://github.com/chainx-org/Musig2?branch=upgrade-2021#27f06152c31da210f0c27f06c43dc5bc655e4d93"
 dependencies = [
  "arrayref",
  "digest",
  "hex",
  "lazy_static",
- "libsecp256k1",
+ "libsecp256k1 0.7.0 (git+https://github.com/chainx-org/libsecp256k1?branch=upgrade-2021)",
  "log",
- "parity-scale-codec",
+ "parity-scale-codec 3.1.2",
  "rand",
  "rand_core",
- "scale-info",
+ "scale-info 2.1.1",
  "serde",
  "sha2",
 ]
@@ -767,10 +831,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "373b1a4c1338d9cd3d1fa53b3a11bdab5ab6bd80a20f7f7becd76953ae2be909"
 dependencies = [
  "arrayvec",
- "bitvec",
+ "bitvec 0.20.4",
  "byte-slice-cast",
  "impl-trait-for-tuples",
- "parity-scale-codec-derive",
+ "parity-scale-codec-derive 2.3.1",
+ "serde",
+]
+
+[[package]]
+name = "parity-scale-codec"
+version = "3.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8b44461635bbb1a0300f100a841e571e7d919c81c73075ef5d152ffdb521066"
+dependencies = [
+ "arrayvec",
+ "bitvec 1.0.0",
+ "byte-slice-cast",
+ "impl-trait-for-tuples",
+ "parity-scale-codec-derive 3.1.2",
  "serde",
 ]
 
@@ -779,6 +857,18 @@ name = "parity-scale-codec-derive"
 version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1557010476e0595c9b568d16dcfb81b93cdeb157612726f5170d31aa707bed27"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "parity-scale-codec-derive"
+version = "3.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c45ed1f39709f5a89338fab50e59816b2e8815f5bb58276e7ddf9afd495f73f8"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -822,14 +912,14 @@ checksum = "eb9f9e6e233e5c4a35559a617bf40a4ec447db2e84c20b55a6f83167b7e57872"
 
 [[package]]
 name = "primitive-types"
-version = "0.10.1"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05e4722c697a58a99d5d06a08c30821d7c082a4632198de1eaa5a6c22ef42373"
+checksum = "e28720988bff275df1f51b171e1b2a18c30d194c4d2b61defdacecd625a5d94a"
 dependencies = [
  "fixed-hash",
  "impl-codec",
  "impl-serde",
- "scale-info",
+ "scale-info 2.1.1",
  "uint",
 ]
 
@@ -866,6 +956,12 @@ name = "radium"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "643f8f41a8ebc4c5dc4515c82bb8abd397b527fc20fd681b7c011c2aee5d44fb"
+
+[[package]]
+name = "radium"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc33ff2d4973d518d823d61aa239014831e521c75da58e3df4840d3f47749d09"
 
 [[package]]
 name = "rand"
@@ -1000,11 +1096,23 @@ version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c55b744399c25532d63a0d2789b109df8d46fc93752d46b0782991a931a782f"
 dependencies = [
- "bitvec",
  "cfg-if",
  "derive_more",
- "parity-scale-codec",
- "scale-info-derive",
+ "parity-scale-codec 2.3.1",
+ "scale-info-derive 1.0.0",
+]
+
+[[package]]
+name = "scale-info"
+version = "2.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8980cafbe98a7ee7a9cc16b32ebce542c77883f512d83fbf2ddc8f6a85ea74c9"
+dependencies = [
+ "bitvec 1.0.0",
+ "cfg-if",
+ "derive_more",
+ "parity-scale-codec 3.1.2",
+ "scale-info-derive 2.1.1",
 ]
 
 [[package]]
@@ -1012,6 +1120,18 @@ name = "scale-info-derive"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baeb2780690380592f86205aa4ee49815feb2acad8c2f59e6dd207148c3f1fcd"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "scale-info-derive"
+version = "2.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4260c630e8a8a33429d1688eff2f163f24c65a4e1b1578ef6b565061336e4b6f"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -1340,3 +1460,12 @@ name = "wyz"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85e60b0d1b5f99db2556934e21937020776a5d31520bf169e851ac44e6420214"
+
+[[package]]
+name = "wyz"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "30b31594f29d27036c383b53b59ed3476874d518f0efb151b27a4c275141390e"
+dependencies = [
+ "tap",
+]
