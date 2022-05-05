@@ -1,8 +1,9 @@
 use criterion::{criterion_group, criterion_main, Bencher, Criterion};
 use light_bitcoin_mast::{
-    convert_hex_to_pubkey, generate_combine_index, generate_combine_pubkey, Mast,
+    convert_hex_to_pubkey, generate_combine_index, generate_combine_pubkey,
+    key::{PrivateKey, PublicKey},
+    Mast,
 };
-use musig2::{PrivateKey, PublicKey};
 
 fn bench_generate_combine_index(b: &mut Bencher) {
     let n = 20;

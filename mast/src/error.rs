@@ -17,10 +17,22 @@ pub enum MastError {
     FromHexError(String),
     // Mainly used to handle io errors of encode
     IoError(String),
-    /// Error which may occur by musig2
-    Musig2Error(String),
     /// Error which encode to bench32
     EncodeToBech32Error,
+    /// Invalid public key
+    InvalidPublicKey,
+    /// Invalid private key
+    InvalidPrivateKey,
+    /// Invalid input length
+    InvalidInputLength,
+    /// Invalid hex character
+    InvalidHexCharacter,
+    /// Xcoordinate not exist
+    XCoordinateNotExist,
+    /// Invalid string length
+    InvalidStringLength,
+    /// Invalid Pubkeys length
+    InvalidPubkeysLength,
 }
 
 impl From<io::Error> for MastError {
@@ -56,12 +68,6 @@ impl From<hashes::hex::Error> for MastError {
                 MastError::FromHexError(format!("InvalidLength {},{}", a, b))
             }
         }
-    }
-}
-
-impl From<musig2::error::Error> for MastError {
-    fn from(e: musig2::error::Error) -> Self {
-        MastError::Musig2Error(format!("Musig2Error({:?})", e))
     }
 }
 

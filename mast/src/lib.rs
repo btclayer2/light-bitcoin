@@ -6,8 +6,11 @@ extern crate alloc;
 pub extern crate bitcoin_hashes as hashes;
 
 pub mod error;
+pub mod key;
 pub mod mast;
 pub mod pmt;
+pub mod signature;
+pub mod taggedhash;
 
 pub use crate::mast::*;
 

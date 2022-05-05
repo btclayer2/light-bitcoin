@@ -19,13 +19,10 @@ use alloc::{
     vec::Vec,
 };
 
+use crate::key::{KeyAgg, PrivateKey, PublicKey};
 use digest::Digest;
 use hashes::hex::ToHex;
 use light_bitcoin_keys::{HashAdd, Tagged};
-use musig2::{
-    key::{PrivateKey, PublicKey},
-    musig2::KeyAgg,
-};
 
 #[cfg(feature = "std")]
 use rayon::prelude::*;
@@ -48,7 +45,7 @@ pub struct Mast {
 impl Mast {
     /// Create a mast instance
     pub fn new(person_pubkeys: Vec<PublicKey>, threshold: u32) -> Result<Self> {
-        let inner_pubkey = KeyAgg::key_aggregation_n(&person_pubkeys)?.X_tilde;
+        let inner_pubkey = KeyAgg::key_aggregation_n(&person_pubkeys)?.x_tilde;
         let (pubkeys, indexs): (Vec<PublicKey>, Vec<Vec<u32>>) =
             generate_combine_pubkey(person_pubkeys.clone(), threshold)?
                 .into_iter()
@@ -285,7 +282,7 @@ pub fn generate_combine_pubkey(
     }
     let mut output = pks
         .par_iter()
-        .map(|ps| Ok((KeyAgg::key_aggregation_n(&ps.0)?.X_tilde, ps.1.clone())))
+        .map(|ps| Ok((KeyAgg::key_aggregation_n(&ps.0)?.x_tilde, ps.1.clone())))
         .collect::<Result<Vec<(PublicKey, Vec<u32>)>>>()?;
     output.sort_by_key(|a| a.0.x_coor());
     Ok(output)
@@ -303,7 +300,7 @@ pub fn generate_combine_pubkey(
         for index in indexs.iter() {
             temp.push(pubkeys[*index as usize - 1].clone())
         }
-        output.push((KeyAgg::key_aggregation_n(&temp)?.X_tilde, indexs))
+        output.push((KeyAgg::key_aggregation_n(&temp)?.x_tilde, indexs))
     }
     output.sort_by_key(|a| a.0.x_coor());
     Ok(output)
