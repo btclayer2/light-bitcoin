@@ -19,6 +19,7 @@ std = [
   "light-bitcoin-mast/std",
 ]
 derive = ["light-bitcoin-serialization/derive"]
+getrandom = ['light-bitcoin-mast/getrandom']
 
 [dependencies]
 light-bitcoin-chain = { path = "chain", default-features = false }

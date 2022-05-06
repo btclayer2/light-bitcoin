@@ -47,6 +47,7 @@ std = [
     "light-bitcoin-script/std",
     "light-bitcoin-serialization/std",
 ]
+getrandom = ['rand_core/getrandom']
 
 [[bench]]
 name = "generate_address"

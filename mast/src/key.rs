@@ -423,7 +423,7 @@ impl PrivateKey {
     }
 
     #[cfg(feature = "getrandom")]
-    pub fn generate_random() -> Result<Self, Error> {
+    pub fn generate_random() -> Result<Self, MastError> {
         let mut key: [u8; 32] = [0u8; 32];
         OsRng.fill_bytes(&mut key);
         Self::parse(&key)
