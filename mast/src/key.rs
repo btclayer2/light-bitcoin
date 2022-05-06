@@ -430,6 +430,37 @@ impl PrivateKey {
     }
 }
 
+/// Represents a public-private key pair, Decode, Encode, scale_info::TypeInfo
+#[derive(Debug, Clone, Decode, Encode, scale_info::TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct KeyPair {
+    pub public_key: PublicKey,
+    pub private_key: PrivateKey,
+}
+
+impl KeyPair {
+    /// Corresponding to the `KeyGen()` function in the paper.
+    #[cfg(feature = "getrandom")]
+    pub fn create() -> Result<KeyPair, MastError> {
+        let private_key = PrivateKey::generate_random()?;
+        let public_key = PublicKey::create_from_private_key(&private_key);
+
+        Ok(KeyPair {
+            public_key,
+            private_key,
+        })
+    }
+
+    pub fn create_from_private_key(private_key: &[u8; 32]) -> Result<KeyPair, MastError> {
+        let private_key = PrivateKey::parse(private_key)?;
+        let public_key = PublicKey::create_from_private_key(&private_key);
+        Ok(KeyPair {
+            public_key,
+            private_key,
+        })
+    }
+}
+
 /// Represents the aggregate public key and the corresponding coefficient.
 #[derive(Debug, Clone, Decode, Encode, scale_info::TypeInfo)]
 pub struct KeyAgg {
