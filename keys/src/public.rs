@@ -76,30 +76,7 @@ impl Default for Public {
     }
 }
 
-impl TryFrom<Public> for musig2::PublicKey {
-    type Error = Error;
-    fn try_from(p: Public) -> Result<Self, Self::Error> {
-        musig2::PublicKey::parse_slice(&p.to_vec()).map_err(|_| Error::InvalidPublic)
-    }
-}
-
-impl TryFrom<musig2::PublicKey> for Public {
-    type Error = Error;
-    fn try_from(p: musig2::PublicKey) -> Result<Self, Self::Error> {
-        Public::from_slice(&p.serialize_compressed())
-    }
-}
-
 impl Public {
-    pub fn to_compressed(self) -> Result<Self, Error> {
-        if let Public::Normal(_) = self {
-            let p: musig2::PublicKey = self.try_into()?;
-            p.try_into()
-        } else {
-            Ok(self)
-        }
-    }
-
     pub fn from_slice(data: &[u8]) -> Result<Self, Error> {
         match data.len() {
             33 => Ok(Public::Compressed(H264::from_slice(data))),
@@ -191,8 +168,8 @@ pub struct XOnly(pub [u8; 32]);
 
 impl XOnly {
     pub fn on_curve(&self) -> Result<bool, Error> {
-        let mut elem = libsecp256k1::curve::Field::default();
-        let mut affine_coords = libsecp256k1::curve::Affine::default();
+        let mut elem = Field::default();
+        let mut affine_coords = Affine::default();
         if elem.set_b32(&self.0) && affine_coords.set_xquad(&elem) {
             Ok(true)
         } else {
@@ -208,8 +185,8 @@ impl XOnly {
 }
 
 /// Convert [`Field`] to [`XOnly`]
-impl From<&mut libsecp256k1::curve::Field> for XOnly {
-    fn from(field: &mut libsecp256k1::curve::Field) -> Self {
+impl From<&mut Field> for XOnly {
+    fn from(field: &mut Field) -> Self {
         field.normalize();
         let slice = field.b32();
         Self(slice)
@@ -244,8 +221,8 @@ impl TryFrom<[u8; 32]> for XOnly {
     type Error = Error;
 
     fn try_from(value: [u8; 32]) -> Result<Self, Self::Error> {
-        let mut elem = libsecp256k1::curve::Field::default();
-        let mut affine_coords = libsecp256k1::curve::Affine::default();
+        let mut elem = Field::default();
+        let mut affine_coords = Affine::default();
         if elem.set_b32(&value) && affine_coords.set_xquad(&elem) {
             Ok(Self(value))
         } else {
@@ -264,8 +241,8 @@ impl TryFrom<libsecp256k1::PublicKey> for XOnly {
     type Error = Error;
 
     fn try_from(pubkey: libsecp256k1::PublicKey) -> Result<Self, Self::Error> {
-        let conmpressed = pubkey.serialize_compressed();
-        let (_, right) = conmpressed.split_at(1);
+        let compressed = pubkey.serialize_compressed();
+        let (_, right) = compressed.split_at(1);
         right.try_into()
     }
 }

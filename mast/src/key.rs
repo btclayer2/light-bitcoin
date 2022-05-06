@@ -487,3 +487,18 @@ impl KeyAgg {
         })
     }
 }
+
+impl TryFrom<light_bitcoin_keys::Public> for PublicKey {
+    type Error = MastError;
+    fn try_from(p: light_bitcoin_keys::Public) -> Result<Self, Self::Error> {
+        PublicKey::parse_slice(&p.to_vec()).map_err(|_| MastError::InvalidPublicKey)
+    }
+}
+
+impl TryFrom<PublicKey> for light_bitcoin_keys::Public {
+    type Error = MastError;
+    fn try_from(p: PublicKey) -> Result<Self, Self::Error> {
+        light_bitcoin_keys::Public::from_slice(&p.serialize_compressed())
+            .map_err(|_| MastError::InvalidPublicKey)
+    }
+}

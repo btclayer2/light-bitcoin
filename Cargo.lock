@@ -649,7 +649,6 @@ dependencies = [
  "light-bitcoin-crypto",
  "light-bitcoin-primitives",
  "light-bitcoin-serialization",
- "musig2",
  "parity-scale-codec 3.1.2",
  "scale-info 2.1.1",
  "serde",
@@ -668,13 +667,16 @@ dependencies = [
  "criterion",
  "digest",
  "hex",
+ "lazy_static",
+ "libsecp256k1 0.7.0 (git+https://github.com/chainx-org/libsecp256k1?branch=upgrade-2021)",
  "light-bitcoin-keys",
  "light-bitcoin-script",
  "light-bitcoin-serialization",
- "musig2",
  "parity-scale-codec 3.1.2",
+ "rand_core",
  "rayon",
  "scale-info 2.1.1",
+ "serde",
  "sha2",
 ]
 
@@ -766,25 +768,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5aa361d4faea93603064a027415f07bd8e1d5c88c9fbf68bf56a285428fd79ce"
 dependencies = [
  "autocfg",
-]
-
-[[package]]
-name = "musig2"
-version = "0.1.0"
-source = "git+https://github.com/chainx-org/Musig2?branch=upgrade-2021#27f06152c31da210f0c27f06c43dc5bc655e4d93"
-dependencies = [
- "arrayref",
- "digest",
- "hex",
- "lazy_static",
- "libsecp256k1 0.7.0 (git+https://github.com/chainx-org/libsecp256k1?branch=upgrade-2021)",
- "log",
- "parity-scale-codec 3.1.2",
- "rand",
- "rand_core",
- "scale-info 2.1.1",
- "serde",
- "sha2",
 ]
 
 [[package]]
