@@ -17,7 +17,7 @@ use digest::Digest;
 use rand_core::{OsRng, RngCore};
 
 #[cfg(not(feature = "std"))]
-use alloc::boxed::Box;
+use alloc::{boxed::Box, vec, vec::Vec};
 use libsecp256k1::{
     curve::{Affine, ECMultContext, ECMultGenContext, Field, Jacobian, Scalar},
     util::{COMPRESSED_PUBLIC_KEY_SIZE, TAG_PUBKEY_EVEN, TAG_PUBKEY_FULL, TAG_PUBKEY_ODD},
