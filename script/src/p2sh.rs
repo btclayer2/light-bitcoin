@@ -1,4 +1,9 @@
 use crate::{Builder, Error, Opcode, Script};
+#[cfg(not(feature = "std"))]
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
 use light_bitcoin_crypto::dhash160;
 use light_bitcoin_keys::{Address, AddressTypes, Network, Public, Type};
 
