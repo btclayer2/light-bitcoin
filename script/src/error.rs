@@ -73,6 +73,10 @@ pub enum Error {
     EmptyWitness,
     InvalidSignature,
     VerifyCommitment,
+
+    // Invalid redeem script
+    InvalidRedeemLength,
+    InvalidThreshold,
 }
 
 #[cfg(feature = "std")]
@@ -157,6 +161,8 @@ impl core::fmt::Display for Error {
             Error::EmptyWitness => "Witness is empty".fmt(f),
             Error::InvalidSignature => "Signature resolution failed".fmt(f),
             Error::VerifyCommitment => "Failure to verify commitment".fmt(f),
+            Error::InvalidRedeemLength => "Invalid redeem length".fmt(f),
+            Error::InvalidThreshold => "Invalid threshold".fmt(f),
         }
     }
 }
