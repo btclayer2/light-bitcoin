@@ -33,6 +33,10 @@ pub enum MastError {
     InvalidStringLength,
     /// Invalid Pubkeys length
     InvalidPubkeysLength,
+    // Invalid redeem script length
+    InvalidRedeemLength,
+    // Invalid redeem script threshold
+    InvalidThreshold,
 }
 
 impl From<io::Error> for MastError {

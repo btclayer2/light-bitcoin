@@ -22,6 +22,7 @@ bitcoin-bech32 = { git = "https://github.com/chainx-org/rust-bech32-bitcoin", br
 
 libsecp256k1 = { git = "https://github.com/chainx-org/libsecp256k1", branch = "develop-2022", default-features = false, features = ["hmac", "static-context"] }
 
+light-bitcoin-crypto = { path = "../crypto", default-features = false }
 light-bitcoin-keys = { path = "../keys", default-features = false }
 light-bitcoin-script = { path = "../script", default-features = false }
 light-bitcoin-serialization = { path = "../serialization", default-features = false }
@@ -43,6 +44,7 @@ std = [
     "hex/std",
     "bitcoin_hashes/std",
     "libsecp256k1/std",
+    "light-bitcoin-crypto/std",
     "light-bitcoin-keys/std",
     "light-bitcoin-script/std",
     "light-bitcoin-serialization/std",

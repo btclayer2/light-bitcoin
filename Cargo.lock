@@ -605,6 +605,7 @@ dependencies = [
  "hex",
  "lazy_static",
  "libsecp256k1",
+ "light-bitcoin-crypto",
  "light-bitcoin-keys",
  "light-bitcoin-script",
  "light-bitcoin-serialization",
