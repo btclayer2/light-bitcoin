@@ -266,8 +266,8 @@ impl Deserializable for Bytes {
         T: io::Read,
     {
         let len = reader.read::<CompactInteger>()?;
-        // Bitcoin block size capped at 1MB to avoid memory leaks.
-        if u64::from(len) > 1024 * 1024 {
+        // Bitcoin block size capped at 4MB to avoid memory leaks.
+        if u64::from(len) > 4 * 1024 * 1024 {
             return Err(Error::OutOfLength);
         }
         let mut bytes = Bytes::new_with_len(len.into());
