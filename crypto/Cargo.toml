@@ -1,0 +1,27 @@
+[package]
+name = "light-bitcoin-crypto"
+version = "0.2.0"
+authors = ["The ChainX Authors"]
+edition = "2018"
+license = "GPL-3.0"
+
+[features]
+default = ["std"]
+std = [
+  "digest/std",
+  "ripemd160/std",
+  "sha-1/std",
+  "sha2/std",
+  "siphasher/std",
+
+  "light-bitcoin-primitives/std",
+]
+
+[dependencies]
+digest = "0.9"
+ripemd160 = { version = "0.9", default-features = false }
+sha-1 = { version = "0.9", default-features = false }
+sha2 = { version = "0.9", default-features = false }
+siphasher = { version = "0.3", default-features = false }
+
+light-bitcoin-primitives = { path = "../primitives", default-features = false }
