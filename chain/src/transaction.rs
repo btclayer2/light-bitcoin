@@ -8,8 +8,8 @@ use core::{fmt, str};
 use light_bitcoin_crypto::dhash256;
 use light_bitcoin_primitives::{hash_rev, io, Bytes, H256};
 use light_bitcoin_serialization::{
-    deserialize, serialize, serialize_with_flags, Deserializable, Reader, Serializable, Stream,
-    SERIALIZE_TRANSACTION_WITNESS,
+    deserialize, serialize, serialize_with_flags, serialized_list_size, CompactInteger,
+    Deserializable, Reader, Serializable, Stream, SERIALIZE_TRANSACTION_WITNESS,
 };
 
 #[cfg(feature = "std")]
@@ -18,9 +18,11 @@ use serde::{Deserialize, Serialize};
 use crate::constants::{LOCKTIME_THRESHOLD, SEQUENCE_FINAL};
 
 /// Must be zero.
-const WITNESS_MARKER: u8 = 0;
+pub const WITNESS_MARKER: u8 = 0;
 /// Must be nonzero.
-const WITNESS_FLAG: u8 = 1;
+pub const WITNESS_FLAG: u8 = 1;
+
+pub const WITNESS_SCALE_FACTOR: usize = 4;
 
 /// A reference to a transaction output
 #[derive(Ord, PartialOrd, PartialEq, Eq, Copy, Clone, scale_info::TypeInfo)]
@@ -328,6 +330,56 @@ impl Transaction {
         }
         result
     }
+
+    /// utility function for size/weight functions.
+    pub fn scaled_size(&self, scale_factor: usize) -> usize {
+        let mut input_weight = 0;
+        let mut inputs_with_witnesses = 0;
+        for input in &self.inputs {
+            input_weight += scale_factor
+                * (32 + 4 + 4 + // outpoint (32+4) + nSequence
+                CompactInteger::from(input.script_sig.len() as u64).serialized_size() +
+                input.script_sig.len());
+            if !input.script_witness.is_empty() {
+                inputs_with_witnesses += 1;
+                input_weight += serialized_list_size(&input.script_witness);
+            }
+        }
+        let mut output_size = 0;
+        for output in &self.outputs {
+            output_size += 8 + // value
+                CompactInteger::from(output.script_pubkey.len() as u64).serialized_size() +
+                output.script_pubkey.len();
+        }
+        let non_input_size =
+        // version:
+        4 +
+        // count varints:
+        CompactInteger::from(self.inputs.len() as u64).serialized_size() +
+        CompactInteger::from(self.outputs.len() as u64).serialized_size() +
+        output_size +
+        // lock_time
+        4;
+        if inputs_with_witnesses == 0 {
+            non_input_size * scale_factor + input_weight
+        } else {
+            non_input_size * scale_factor + input_weight + self.inputs.len() - inputs_with_witnesses
+                + 2
+        }
+    }
+
+    pub fn weight(&self) -> usize {
+        self.scaled_size(WITNESS_SCALE_FACTOR)
+    }
+
+    pub fn size(&self) -> usize {
+        self.scaled_size(1)
+    }
+
+    pub fn vsize(&self) -> usize {
+        let weight = self.weight();
+        (weight + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR
+    }
 }
 
 impl Serializable for Transaction {
@@ -513,6 +565,19 @@ mod tests {
         let raw_tx: &str = "0100000001a6b97044d03da79c005b20ea9c0e1a6d9dc12d9f7b91a5911c9030a439eed8f5000000004948304502206e21798a42fae0e854281abd38bacd1aeed3ee3738d9e1446618c4571d1090db022100e2ac980643b0b82c0e88ffdfec6b64e3e6ba35e7ba5fdd7d5d6cc8d25c6b241501ffffffff0100f2052a010000001976a914404371705fa9bd789a2fcd52d2c580b65d35549d88ac00000000";
         let tx: Transaction = raw_tx.parse().unwrap();
         assert_eq!(tx.serialized_size(), raw_tx.len() / 2);
+    }
+
+    #[test]
+    fn test_transaction_size() {
+        let raw_tx: &str = "01000000000101036c8b887d43380ed2cae2854de23d8f2529af7cf963f95783ba071e9471a25d0100000000ffffffff02f8d400000000000017a914262943ef7ea80d1277124d9e6d6c62d49bee2153871dca38000000000016001406420e58754ce38f8a70b5b4ac04ade31a88fc9802483045022100ba16331df0f0572673e9a06144c8e6c99de3c99b9bb3ede009b713d6044273a2022048a4ebf550de6bd02b4e427dc0daaa175029efefdfb4316b1db6a220eef4cebe012103324dcaabf33e2678676410575b9faa8c067f4571996ca28e461f335b1d1a8db900000000";
+        let tx: Transaction = raw_tx.parse().unwrap();
+        assert_eq!(tx.size(), 224);
+        assert_eq!(tx.vsize(), 142);
+
+        let raw_tx: &str = "02000000000101f57fcc258cdcfc96d6d49b1510e1281ec9889a489d285360f2c424727fc516f90100000000ffffffff012202000000000000225120a1d4ca7c08a6e71418c0bbb3bd9349e2354dd8d19a52508f1002094aad58cafd03403bce997c71bfbbbe654ab9917f787a036bc205da62d3b807ec8c0d26d637b3af197db1d356e22861d3a7119ba4d1c0a34df88763ecf2aeea9ba322401f03036bcd209f24f9f07edb176f8f68cb05e730bbfe00de0299f12a1e8d46b0253b35f6d00bac0063036f7264010118746578742f706c61696e3b636861727365743d7574662d38004c867b2270223a2022746170222c226f70223a2022646d742d6d696e74222c22646570223a2022346439363761663336646361636437653631393963333962646138353564376231623337323638663463383033316665643534303361393961633537666536376930222c227469636b223a20226e6174222c22626c6b223a20223332363636227d6821c17b5236883d4bc52ef6b4846cc3460359d46bc490a97ce9c86f649d933255ba6400000000";
+        let tx: Transaction = raw_tx.parse().unwrap();
+        assert_eq!(tx.size(), 402);
+        assert_eq!(tx.vsize(), 171);
     }
 
     // test case from https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#native-p2wpkh
