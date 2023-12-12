@@ -509,7 +509,7 @@ impl codec::Decode for OutPoint {
 
 impl codec::Encode for Transaction {
     fn encode(&self) -> Vec<u8> {
-        let value = serialize::<Transaction>(self);
+        let value = serialize_with_flags::<Transaction>(self, SERIALIZE_TRANSACTION_WITNESS);
         value.encode()
     }
 }
