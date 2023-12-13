@@ -5,8 +5,6 @@ use light_bitcoin_crypto::dhash256;
 use light_bitcoin_primitives::{hash_rev, Compact, H256};
 use light_bitcoin_serialization::{deserialize, serialize, Deserializable, Reader, Serializable};
 
-
-
 /// A block header, which contains all the block's information except
 /// the actual transactions
 #[derive(
@@ -18,8 +16,8 @@ use light_bitcoin_serialization::{deserialize, serialize, Deserializable, Reader
     Clone,
     Default,
     scale_info::TypeInfo,
-	serde::Serialize,
-	serde::Deserialize,
+    serde::Serialize,
+    serde::Deserialize
 )]
 #[derive(Serializable, Deserializable)]
 pub struct BlockHeader {

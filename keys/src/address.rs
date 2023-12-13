@@ -34,8 +34,8 @@ use crate::{AddressHash, XOnly};
     Decode,
     Encode,
     scale_info::TypeInfo,
-	serde::Serialize,
-	serde::Deserialize,
+    serde::Serialize,
+    serde::Deserialize
 )]
 pub enum Type {
     /// Pay to PubKey Hash
@@ -107,8 +107,8 @@ impl Deserializable for Type {
     Decode,
     Encode,
     scale_info::TypeInfo,
-	serde::Serialize,
-	serde::Deserialize,
+    serde::Serialize,
+    serde::Deserialize
 )]
 pub enum Network {
     // Bitcoin Mainnet
@@ -183,8 +183,8 @@ impl Deserializable for Network {
     Decode,
     Encode,
     scale_info::TypeInfo,
-	serde::Serialize,
-	serde::Deserialize,
+    serde::Serialize,
+    serde::Deserialize
 )]
 pub enum AddressTypes {
     Legacy(AddressHash),
@@ -254,8 +254,8 @@ impl Deserializable for AddressTypes {
     Decode,
     Encode,
     scale_info::TypeInfo,
-	serde::Serialize,
-	serde::Deserialize,
+    serde::Serialize,
+    serde::Deserialize
 )]
 #[derive(Serializable, Deserializable)]
 pub struct Address {

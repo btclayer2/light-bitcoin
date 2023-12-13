@@ -1,7 +1,7 @@
 //! Wrapper around `Vec<u8>`
 
 #[cfg(not(feature = "std"))]
-use alloc::{vec, vec::Vec};
+use alloc::{string::String, vec, vec::Vec};
 use codec::{Decode, Encode};
 use core::{fmt, marker, ops, str};
 
@@ -108,7 +108,6 @@ impl Bytes {
     }
 }
 
-#[cfg(feature = "std")]
 impl serde::Serialize for Bytes {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -119,7 +118,6 @@ impl serde::Serialize for Bytes {
     }
 }
 
-#[cfg(feature = "std")]
 impl<'de> serde::Deserialize<'de> for Bytes {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -129,10 +127,8 @@ impl<'de> serde::Deserialize<'de> for Bytes {
     }
 }
 
-#[cfg(feature = "std")]
 struct BytesVisitor;
 
-#[cfg(feature = "std")]
 impl<'de> serde::de::Visitor<'de> for BytesVisitor {
     type Value = Bytes;
 

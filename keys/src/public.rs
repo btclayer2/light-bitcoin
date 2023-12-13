@@ -9,7 +9,6 @@ use light_bitcoin_primitives::{H264, H512, H520};
 
 use codec::{Decode, Encode};
 
-
 use crate::{
     error::Error,
     schnorr::verify_schnorr,
@@ -30,8 +29,8 @@ use libsecp256k1::curve::{Affine, Field};
     Decode,
     Encode,
     scale_info::TypeInfo,
-	serde::Serialize,
-	serde::Deserialize,
+    serde::Serialize,
+    serde::Deserialize
 )]
 #[cfg_attr(feature = "std", serde(untagged))]
 pub enum Public {
@@ -162,8 +161,8 @@ impl Public {
     Decode,
     Encode,
     scale_info::TypeInfo,
-	serde::Serialize,
-	serde::Deserialize,
+    serde::Serialize,
+    serde::Deserialize
 )]
 pub struct XOnly(pub [u8; 32]);
 
@@ -303,9 +302,17 @@ impl HashInto for XOnly {
 
 #[test]
 fn test_serde_public() {
-    #[derive(Ord, PartialOrd, Eq, PartialEq, Debug, Copy, Clone,
-	serde::Serialize,
-	serde::Deserialize,)]
+    #[derive(
+        Ord,
+        PartialOrd,
+        Eq,
+        PartialEq,
+        Debug,
+        Copy,
+        Clone,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     struct Test(Public);
 
     let pubkey = Test(Public::Compressed(H264::from([1u8; 33])));

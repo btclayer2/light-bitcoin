@@ -12,8 +12,6 @@ use light_bitcoin_serialization::{
     Deserializable, Reader, Serializable, Stream, SERIALIZE_TRANSACTION_WITNESS,
 };
 
-
-
 use crate::constants::{LOCKTIME_THRESHOLD, SEQUENCE_FINAL};
 
 /// Must be zero.
@@ -24,9 +22,17 @@ pub const WITNESS_FLAG: u8 = 1;
 pub const WITNESS_SCALE_FACTOR: usize = 4;
 
 /// A reference to a transaction output
-#[derive(Ord, PartialOrd, PartialEq, Eq, Copy, Clone, scale_info::TypeInfo,
-	serde::Serialize,
-	serde::Deserialize,)]
+#[derive(
+    Ord,
+    PartialOrd,
+    PartialEq,
+    Eq,
+    Copy,
+    Clone,
+    scale_info::TypeInfo,
+    serde::Serialize,
+    serde::Deserialize
+)]
 #[derive(Serializable, Deserializable)]
 pub struct OutPoint {
     /// The referenced transaction's txid
@@ -85,8 +91,8 @@ impl OutPoint {
     Debug,
     Default,
     scale_info::TypeInfo,
-	serde::Serialize,
-	serde::Deserialize,
+    serde::Serialize,
+    serde::Deserialize
 )]
 pub struct TransactionInput {
     /// The reference to the previous output that is being used an an input
@@ -151,9 +157,17 @@ impl Deserializable for TransactionInput {
 }
 
 /// A transaction output, which defines new coins to be created from old ones.
-#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Debug, scale_info::TypeInfo,
-	serde::Serialize,
-	serde::Deserialize,)]
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Clone,
+    Debug,
+    scale_info::TypeInfo,
+    serde::Serialize,
+    serde::Deserialize
+)]
 #[derive(Serializable, Deserializable)]
 pub struct TransactionOutput {
     /// The value of the output, in satoshis
@@ -171,8 +185,8 @@ pub struct TransactionOutput {
     Debug,
     Default,
     scale_info::TypeInfo,
-	serde::Serialize,
-	serde::Deserialize,
+    serde::Serialize,
+    serde::Deserialize
 )]
 #[derive(Serializable, Deserializable)]
 pub struct TransactionOutputArray {
@@ -200,8 +214,8 @@ impl Default for TransactionOutput {
     Decode,
     Encode,
     scale_info::TypeInfo,
-	serde::Serialize,
-	serde::Deserialize,
+    serde::Serialize,
+    serde::Deserialize
 )]
 #[derive(Serializable, Deserializable)]
 pub struct ConstructTransaction {
@@ -228,8 +242,8 @@ impl str::FromStr for ConstructTransaction {
     Debug,
     Default,
     scale_info::TypeInfo,
-	serde::Serialize,
-	serde::Deserialize,
+    serde::Serialize,
+    serde::Deserialize
 )]
 pub struct Transaction {
     /// The protocol version, is currently expected to be 1 or 2 (BIP 68).

@@ -2,7 +2,6 @@ pub use primitive_types::{H160, H256, H512};
 
 use fixed_hash::construct_fixed_hash;
 use impl_codec::impl_fixed_hash_codec;
-#[cfg(feature = "std")]
 use impl_serde::impl_fixed_hash_serde;
 
 construct_fixed_hash! {
@@ -21,7 +20,6 @@ construct_fixed_hash! {
     pub struct H520(65);
 }
 
-#[cfg(feature = "std")]
 mod serde_impls {
     use super::*;
 

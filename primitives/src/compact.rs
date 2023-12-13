@@ -3,7 +3,6 @@
 use crate::U256;
 use codec::{Decode, Encode};
 
-
 /// Compact representation of `U256`
 #[derive(
     Ord,
@@ -17,8 +16,8 @@ use codec::{Decode, Encode};
     Decode,
     Encode,
     scale_info::TypeInfo,
-	serde::Serialize,
-	serde::Deserialize,
+    serde::Serialize,
+    serde::Deserialize
 )]
 pub struct Compact(u32);
 

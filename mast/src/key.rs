@@ -8,7 +8,6 @@ use arrayref::{array_mut_ref, array_ref};
 use codec::{Decode, Encode};
 use core::{cmp::Ordering, convert::TryFrom, ops::Neg};
 
-#[cfg(feature = "std")]
 use core::fmt::Formatter;
 
 use digest::Digest;
@@ -22,7 +21,6 @@ use libsecp256k1::{
     curve::{Affine, ECMultContext, ECMultGenContext, Field, Jacobian, Scalar},
     util::{COMPRESSED_PUBLIC_KEY_SIZE, TAG_PUBKEY_EVEN, TAG_PUBKEY_FULL, TAG_PUBKEY_ODD},
 };
-#[cfg(feature = "std")]
 use serde::{
     de::{Error as SerdeError, Visitor},
     Deserialize, Deserializer, Serialize, Serializer,
@@ -42,7 +40,6 @@ pub struct PublicKey(pub Affine);
 #[derive(Debug, Clone, Eq, PartialEq, Decode, Encode, scale_info::TypeInfo)]
 pub struct PrivateKey(pub Scalar);
 
-#[cfg(feature = "std")]
 impl Serialize for PublicKey {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
     where
@@ -52,7 +49,6 @@ impl Serialize for PublicKey {
     }
 }
 
-#[cfg(feature = "std")]
 impl<'de> Deserialize<'de> for PublicKey {
     fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
     where
@@ -92,7 +88,6 @@ impl Ord for PublicKey {
     }
 }
 
-#[cfg(feature = "std")]
 impl Serialize for PrivateKey {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
     where
@@ -102,7 +97,6 @@ impl Serialize for PrivateKey {
     }
 }
 
-#[cfg(feature = "std")]
 impl<'de> Deserialize<'de> for PrivateKey {
     fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
     where
@@ -431,9 +425,15 @@ impl PrivateKey {
 }
 
 /// Represents a public-private key pair, Decode, Encode, scale_info::TypeInfo
-#[derive(Debug, Clone, Decode, Encode, scale_info::TypeInfo,
-	serde::Serialize,
-	serde::Deserialize,)]
+#[derive(
+    Debug,
+    Clone,
+    Decode,
+    Encode,
+    scale_info::TypeInfo,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct KeyPair {
     pub public_key: PublicKey,
     pub private_key: PrivateKey,
