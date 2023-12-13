@@ -16,8 +16,6 @@ use light_bitcoin_primitives::{io, H160, H256};
 use light_bitcoin_serialization::{Deserializable, Reader, Serializable, Stream};
 
 use codec::{Decode, Encode};
-#[cfg(feature = "std")]
-use serde::{Deserialize, Serialize};
 
 use crate::display::DisplayLayout;
 use crate::error::Error;
@@ -35,9 +33,10 @@ use crate::{AddressHash, XOnly};
     Debug,
     Decode,
     Encode,
-    scale_info::TypeInfo
+    scale_info::TypeInfo,
+	serde::Serialize,
+	serde::Deserialize,
 )]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum Type {
     /// Pay to PubKey Hash
     /// Common P2PKH which begin with the number 1, eg: 1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2.
@@ -107,9 +106,10 @@ impl Deserializable for Type {
     Debug,
     Decode,
     Encode,
-    scale_info::TypeInfo
+    scale_info::TypeInfo,
+	serde::Serialize,
+	serde::Deserialize,
 )]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum Network {
     // Bitcoin Mainnet
     Mainnet,
@@ -182,9 +182,10 @@ impl Deserializable for Network {
     Debug,
     Decode,
     Encode,
-    scale_info::TypeInfo
+    scale_info::TypeInfo,
+	serde::Serialize,
+	serde::Deserialize,
 )]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum AddressTypes {
     Legacy(AddressHash),
     WitnessV0ScriptHash(H256),
@@ -252,9 +253,10 @@ impl Deserializable for AddressTypes {
     Default,
     Decode,
     Encode,
-    scale_info::TypeInfo
+    scale_info::TypeInfo,
+	serde::Serialize,
+	serde::Deserialize,
 )]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Serializable, Deserializable)]
 pub struct Address {
     /// The type of the address.

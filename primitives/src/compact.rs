@@ -2,8 +2,7 @@
 
 use crate::U256;
 use codec::{Decode, Encode};
-#[cfg(feature = "std")]
-use serde::{Deserialize, Serialize};
+
 
 /// Compact representation of `U256`
 #[derive(
@@ -17,9 +16,10 @@ use serde::{Deserialize, Serialize};
     Debug,
     Decode,
     Encode,
-    scale_info::TypeInfo
+    scale_info::TypeInfo,
+	serde::Serialize,
+	serde::Deserialize,
 )]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Compact(u32);
 
 impl From<u32> for Compact {

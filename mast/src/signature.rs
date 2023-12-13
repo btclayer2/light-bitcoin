@@ -5,12 +5,12 @@
 use super::{error::MastError, key::PrivateKey};
 use codec::{Decode, Encode};
 use core::convert::{TryFrom, TryInto};
-#[cfg(feature = "std")]
-use serde::{Deserialize, Serialize};
+
 
 /// A standard for 64-byte Schnorr signatures over the elliptic curve secp256k1
-#[derive(Eq, PartialEq, Clone, Debug, Decode, Encode, scale_info::TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Eq, PartialEq, Clone, Debug, Decode, Encode, scale_info::TypeInfo,
+	serde::Serialize,
+	serde::Deserialize,)]
 pub struct Signature {
     pub rx: PrivateKey,
     pub s: PrivateKey,

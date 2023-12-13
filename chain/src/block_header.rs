@@ -5,8 +5,7 @@ use light_bitcoin_crypto::dhash256;
 use light_bitcoin_primitives::{hash_rev, Compact, H256};
 use light_bitcoin_serialization::{deserialize, serialize, Deserializable, Reader, Serializable};
 
-#[cfg(feature = "std")]
-use serde::{Deserialize, Serialize};
+
 
 /// A block header, which contains all the block's information except
 /// the actual transactions
@@ -18,9 +17,10 @@ use serde::{Deserialize, Serialize};
     Copy,
     Clone,
     Default,
-    scale_info::TypeInfo
+    scale_info::TypeInfo,
+	serde::Serialize,
+	serde::Deserialize,
 )]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Serializable, Deserializable)]
 pub struct BlockHeader {
     /// The protocol version. Should always be 1.

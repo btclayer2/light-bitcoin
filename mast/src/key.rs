@@ -431,8 +431,9 @@ impl PrivateKey {
 }
 
 /// Represents a public-private key pair, Decode, Encode, scale_info::TypeInfo
-#[derive(Debug, Clone, Decode, Encode, scale_info::TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Decode, Encode, scale_info::TypeInfo,
+	serde::Serialize,
+	serde::Deserialize,)]
 pub struct KeyPair {
     pub public_key: PublicKey,
     pub private_key: PrivateKey,
