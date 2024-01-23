@@ -50,7 +50,8 @@ pub struct Mast {
 
 impl Mast {
     /// Create a mast instance
-    pub fn new(person_pubkeys: Vec<PublicKey>, threshold: u32, group: u32) -> Result<Self> {
+    pub fn new(mut person_pubkeys: Vec<PublicKey>, threshold: u32, group: u32) -> Result<Self> {
+        person_pubkeys.sort_unstable();
         let inner_pubkey = KeyAgg::key_aggregation_n(&person_pubkeys)?.x_tilde;
         let (pubkeys, indexs): (Vec<PublicKey>, Vec<Vec<u32>>) =
             generate_combine_pubkey(person_pubkeys.clone(), threshold, group)?
@@ -268,7 +269,7 @@ pub fn ceil_divide(dividend: u32, divisor: u32) -> u32 {
 }
 
 pub fn generate_combine_index(n: u32, k: u32, g: u32) -> Vec<Vec<u32>> {
-    let max = n;
+    let max = n + 1;
     let n = ceil_divide(n, g);
     let k = ceil_divide(k, g);
 
@@ -294,12 +295,10 @@ pub fn generate_combine_index(n: u32, k: u32, g: u32) -> Vec<Vec<u32>> {
     let mut result: Vec<Vec<u32>> = vec![];
     for i in 0..ans.len() {
         let mut r: Vec<u32> = vec![];
-        for j in 0..ans[i].len() {
-            r.extend(
-                (j..(j + 3).min(max as usize))
-                    .map(|v| v as u32)
-                    .collect::<Vec<_>>(),
-            );
+        for j in &ans[i] {
+            let start = (j - 1) * g + 1;
+            let end = (j * g + 1).min(max);
+            r.extend((start..end).collect::<Vec<_>>());
         }
         result.push(r)
     }
@@ -396,12 +395,43 @@ mod tests {
     }
 
     #[test]
+    fn test_generate_combine_index() {
+        assert_eq!(
+            generate_combine_index(3, 2, 1),
+            vec![vec![1, 2], vec![1, 3], vec![2, 3]]
+        );
+
+        assert_eq!(generate_combine_index(3, 2, 2), vec![vec![1, 2], vec![3]]);
+
+        assert_eq!(
+            generate_combine_index(10, 8, 2),
+            vec![
+                vec![1, 2, 3, 4, 5, 6, 7, 8],
+                vec![1, 2, 3, 4, 5, 6, 9, 10],
+                vec![1, 2, 3, 4, 7, 8, 9, 10],
+                vec![1, 2, 5, 6, 7, 8, 9, 10],
+                vec![3, 4, 5, 6, 7, 8, 9, 10],
+            ]
+        );
+
+        assert_eq!(
+            generate_combine_index(11, 7, 3),
+            vec![
+                vec![1, 2, 3, 4, 5, 6, 7, 8, 9],
+                vec![1, 2, 3, 4, 5, 6, 10, 11],
+                vec![1, 2, 3, 7, 8, 9, 10, 11],
+                vec![4, 5, 6, 7, 8, 9, 10, 11],
+            ]
+        );
+    }
+
+    #[test]
     fn test_generate_combine_pubkey() {
         let pubkey_a = convert_hex_to_pubkey("04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672");
         let pubkey_b = convert_hex_to_pubkey("04dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba6592ce19b946c4ee58546f5251d441a065ea50735606985e5b228788bec4e582898");
         let pubkey_c = convert_hex_to_pubkey("04dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8f594bb5f72b37faae396a4259ea64ed5e6fdeb2a51c6467582b275925fab1394");
         assert_eq!(
-            generate_combine_pubkey(vec![pubkey_a, pubkey_b, pubkey_c], 2)
+            generate_combine_pubkey(vec![pubkey_a, pubkey_b, pubkey_c], 2, 1)
                 .unwrap()
                 .iter()
                 .map(|p| hex::encode(&p.0.serialize()))
@@ -420,7 +450,7 @@ mod tests {
         let pubkey_b = convert_hex_to_pubkey("04dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba6592ce19b946c4ee58546f5251d441a065ea50735606985e5b228788bec4e582898");
         let pubkey_c = convert_hex_to_pubkey("04dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8f594bb5f72b37faae396a4259ea64ed5e6fdeb2a51c6467582b275925fab1394");
         let person_pubkeys = vec![pubkey_a, pubkey_b, pubkey_c];
-        let mast = Mast::new(person_pubkeys, 2).unwrap();
+        let mast = Mast::new(person_pubkeys, 2, 1).unwrap();
 
         assert_eq!(
             mast.agg_pubkeys_to_personal()
@@ -435,14 +465,14 @@ mod tests {
                 })
                 .collect::<Vec<_>>(),
             vec![("0443498bc300426635cd1876077e3993bec1168d6c6fa1138f893ce41a5f51bf0a22a2a7a85830e1f9facf02488328be04ece354730e19ce2766d5dca1478483cd".to_owned(),
-                  vec!["04dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba6592ce19b946c4ee58546f5251d441a065ea50735606985e5b228788bec4e582898".to_owned(),
-                       "04dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8f594bb5f72b37faae396a4259ea64ed5e6fdeb2a51c6467582b275925fab1394".to_owned()]),
+                  vec!["04dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8f594bb5f72b37faae396a4259ea64ed5e6fdeb2a51c6467582b275925fab1394".to_owned(),
+                       "04dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba6592ce19b946c4ee58546f5251d441a065ea50735606985e5b228788bec4e582898".to_owned()]),
                  ("04be1979e5e167d216a1229315844990606c2aba2d582472492a9eec7c9466460a286a71973e72f8d057235855253707ba73b5436d6170e702edf2ed5df46722b2".to_owned(),
-                  vec!["04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672".to_owned(),
-                       "04dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8f594bb5f72b37faae396a4259ea64ed5e6fdeb2a51c6467582b275925fab1394".to_owned()]),
+                  vec!["04dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8f594bb5f72b37faae396a4259ea64ed5e6fdeb2a51c6467582b275925fab1394".to_owned(),
+                       "04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672".to_owned()]),
                  ("04e7c92d2ef4294389c385fedd5387fba806687f5aba1c7ba285093dacd69354d9b4f9ea87450c75954ade455677475e92fb5e303db36753c2ea20e47d3e939662".to_owned(),
-                  vec!["04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672".to_owned(),
-                       "04dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba6592ce19b946c4ee58546f5251d441a065ea50735606985e5b228788bec4e582898".to_owned()])]
+                  vec!["04dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba6592ce19b946c4ee58546f5251d441a065ea50735606985e5b228788bec4e582898".to_owned(),
+                       "04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672".to_owned()])]
         )
     }
 
@@ -452,7 +482,7 @@ mod tests {
         let pubkey_b = convert_hex_to_pubkey("04dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba6592ce19b946c4ee58546f5251d441a065ea50735606985e5b228788bec4e582898");
         let pubkey_c = convert_hex_to_pubkey("04dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8f594bb5f72b37faae396a4259ea64ed5e6fdeb2a51c6467582b275925fab1394");
         let person_pubkeys = vec![pubkey_a, pubkey_b, pubkey_c];
-        let mast = Mast::new(person_pubkeys, 2).unwrap();
+        let mast = Mast::new(person_pubkeys, 2, 1).unwrap();
         let root = mast.calc_root().unwrap();
 
         assert_eq!(
@@ -466,8 +496,13 @@ mod tests {
         let pubkey_a = convert_hex_to_pubkey("04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672");
         let pubkey_b = convert_hex_to_pubkey("04dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba6592ce19b946c4ee58546f5251d441a065ea50735606985e5b228788bec4e582898");
         let pubkey_c = convert_hex_to_pubkey("04dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8f594bb5f72b37faae396a4259ea64ed5e6fdeb2a51c6467582b275925fab1394");
-        let person_pubkeys = vec![pubkey_a, pubkey_b, pubkey_c];
-        let mast = Mast::new(person_pubkeys, 2).unwrap();
+        let pubkey_d = convert_hex_to_pubkey("04c719aa9e26501c0a140c55d2976d935d014b03142f3c0abf8d5c13f5fa391001ff24561e7a07ee441cc0e5d250bb556619f66d2d4d64bd071d559a5a220743de");
+        let pubkey_e = convert_hex_to_pubkey("042ecfd6a1ae3231c36f41183acd46b4c45b001d79bdaf76738096e252ee54dae16a6739888e061d07f19db4aec2bf6d7c4f75a3e748b656b572fd2c70f740cb14");
+        let pubkey_f = convert_hex_to_pubkey("049198780fef91ff89034815ed6953c80f3231e857d89d742dba6e1128ebc6296ed417f8d30887017486b8d306bb517b798a6384d63649797ccbd5242eaccbd629");
+
+        // 3/2/1
+        let person_pubkeys = vec![pubkey_a.clone(), pubkey_b.clone(), pubkey_c.clone()];
+        let mast = Mast::new(person_pubkeys, 2, 1).unwrap();
         let pubkey_ab = convert_hex_to_pubkey("04e7c92d2ef4294389c385fedd5387fba806687f5aba1c7ba285093dacd69354d9b4f9ea87450c75954ade455677475e92fb5e303db36753c2ea20e47d3e939662");
 
         let proof = mast.generate_merkle_proof(&pubkey_ab).unwrap();
@@ -475,7 +510,43 @@ mod tests {
         assert_eq!(
             hex::encode(&proof),
             "c0f4152c91b2c78a3524e7858c72ffa360da59e7c3c4d67d6787cf1e3bfe1684c1e38e30c81fc61186d0ed3956b5e49bd175178a638d1410e64f7716697a7e0ccd",
-        )
+        );
+
+        // 6/4/2
+        let person_pubkeys = vec![
+            pubkey_a.clone(),
+            pubkey_b.clone(),
+            pubkey_c.clone(),
+            pubkey_d.clone(),
+            pubkey_e.clone(),
+            pubkey_f.clone(),
+        ];
+        let mast = Mast::new(person_pubkeys, 4, 2).unwrap();
+
+        let pubkey_abef = KeyAgg::key_aggregation_n(&[
+            pubkey_a.clone(),
+            pubkey_b.clone(),
+            pubkey_e.clone(),
+            pubkey_f.clone(),
+        ])
+        .unwrap()
+        .x_tilde;
+        let proof = mast.generate_merkle_proof(&pubkey_abef).unwrap();
+        assert_eq!(
+            hex::encode(&proof),
+            "c1b1194ddbb297bb0fc26d39bfaa9ac4bec4b458775e33d600edc068de31c565231651a7ddda9b73221f02f1f9ade1032c7660ed5ed17f24d6c395b769f2125d4003bb3059b56302e1d3ab177e560459a361f6eaf4ce31aea50f991d2652b964b2",
+        );
+
+        let pubkey_abcf = KeyAgg::key_aggregation_n(&[
+            pubkey_a.clone(),
+            pubkey_b.clone(),
+            pubkey_c.clone(),
+            pubkey_f.clone(),
+        ])
+        .unwrap()
+        .x_tilde;
+        let proof = mast.generate_merkle_proof(&pubkey_abcf);
+        assert_eq!(proof, Err(MastError::MastGenProofError),);
     }
 
     #[test]
@@ -490,7 +561,7 @@ mod tests {
             "02c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f",
         );
         let person_pubkeys = vec![pubkey_alice, pubkey_bob, pubkey_charlie];
-        let mast = Mast::new(person_pubkeys, 2).unwrap();
+        let mast = Mast::new(person_pubkeys, 2, 1).unwrap();
 
         let addr = mast.generate_address("Mainnet").unwrap();
         assert_eq!(
