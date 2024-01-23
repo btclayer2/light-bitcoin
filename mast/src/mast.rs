@@ -40,22 +40,35 @@ pub struct Mast {
     pub person_pubkeys: Vec<PublicKey>,
     /// The index of the person_pubkeys corresponding to each pubkeys
     pub indexs: Vec<Vec<u32>>,
+    /// Total number of person
+    pub n: u32,
+    /// Threshold number of person
+    pub m: u32,
+    /// Number of people in a group
+    pub g: u32,
 }
 
 impl Mast {
     /// Create a mast instance
-    pub fn new(person_pubkeys: Vec<PublicKey>, threshold: u32) -> Result<Self> {
+    pub fn new(person_pubkeys: Vec<PublicKey>, threshold: u32, group: u32) -> Result<Self> {
         let inner_pubkey = KeyAgg::key_aggregation_n(&person_pubkeys)?.x_tilde;
         let (pubkeys, indexs): (Vec<PublicKey>, Vec<Vec<u32>>) =
-            generate_combine_pubkey(person_pubkeys.clone(), threshold)?
+            generate_combine_pubkey(person_pubkeys.clone(), threshold, group)?
                 .into_iter()
                 .unzip();
+
+        let n = person_pubkeys.len() as u32;
+        let m = threshold;
+        let g = group;
 
         Ok(Mast {
             pubkeys,
             inner_pubkey,
             person_pubkeys,
             indexs,
+            n,
+            m,
+            g,
         })
     }
 
@@ -244,14 +257,28 @@ pub fn tweak_pubkey(inner_pubkey: &PublicKey, root: &H256) -> Result<PublicKey> 
     }
 }
 
-pub fn generate_combine_index(n: u32, k: u32) -> Vec<Vec<u32>> {
+pub fn ceil_divide(dividend: u32, divisor: u32) -> u32 {
+    let mut result = dividend / divisor;
+
+    if dividend % divisor != 0 {
+        result += 1;
+    }
+
+    result
+}
+
+pub fn generate_combine_index(n: u32, k: u32, g: u32) -> Vec<Vec<u32>> {
+    let max = n;
+    let n = ceil_divide(n, g);
+    let k = ceil_divide(k, g);
+
     let mut temp: Vec<u32> = vec![];
-    let mut ans: Vec<Vec<u32>> = vec![];
     for i in 1..=k {
         temp.push(i as u32)
     }
     temp.push(n as u32 + 1);
 
+    let mut ans: Vec<Vec<u32>> = vec![];
     let mut j: usize = 0;
     while j < k as usize {
         ans.push(temp[..k as usize].to_vec());
@@ -263,15 +290,30 @@ pub fn generate_combine_index(n: u32, k: u32) -> Vec<Vec<u32>> {
         }
         temp[j] += 1;
     }
-    ans
+
+    let mut result: Vec<Vec<u32>> = vec![];
+    for i in 0..ans.len() {
+        let mut r: Vec<u32> = vec![];
+        for j in 0..ans[i].len() {
+            r.extend(
+                (j..(j + 3).min(max as usize))
+                    .map(|v| v as u32)
+                    .collect::<Vec<_>>(),
+            );
+        }
+        result.push(r)
+    }
+    result
 }
 
 #[cfg(feature = "std")]
 pub fn generate_combine_pubkey(
-    pubkeys: Vec<PublicKey>,
+    mut pubkeys: Vec<PublicKey>,
     k: u32,
+    g: u32,
 ) -> Result<Vec<(PublicKey, Vec<u32>)>> {
-    let all_indexs = generate_combine_index(pubkeys.len() as u32, k);
+    pubkeys.sort_unstable();
+    let all_indexs = generate_combine_index(pubkeys.len() as u32, k, g);
     let mut pks = vec![];
     for indexs in all_indexs {
         let mut temp: Vec<PublicKey> = vec![];
@@ -290,10 +332,12 @@ pub fn generate_combine_pubkey(
 
 #[cfg(not(feature = "std"))]
 pub fn generate_combine_pubkey(
-    pubkeys: Vec<PublicKey>,
+    mut pubkeys: Vec<PublicKey>,
     k: u32,
+    g: u32,
 ) -> Result<Vec<(PublicKey, Vec<u32>)>> {
-    let all_indexs = generate_combine_index(pubkeys.len() as u32, k);
+    pubkeys.sort_unstable();
+    let all_indexs = generate_combine_index(pubkeys.len() as u32, k, g);
     let mut output: Vec<(PublicKey, Vec<u32>)> = vec![];
     for indexs in all_indexs {
         let mut temp: Vec<PublicKey> = vec![];
@@ -392,13 +436,13 @@ mod tests {
                 .collect::<Vec<_>>(),
             vec![("0443498bc300426635cd1876077e3993bec1168d6c6fa1138f893ce41a5f51bf0a22a2a7a85830e1f9facf02488328be04ece354730e19ce2766d5dca1478483cd".to_owned(),
                   vec!["04dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba6592ce19b946c4ee58546f5251d441a065ea50735606985e5b228788bec4e582898".to_owned(),
-                      "04dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8f594bb5f72b37faae396a4259ea64ed5e6fdeb2a51c6467582b275925fab1394".to_owned()]),
+                       "04dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8f594bb5f72b37faae396a4259ea64ed5e6fdeb2a51c6467582b275925fab1394".to_owned()]),
                  ("04be1979e5e167d216a1229315844990606c2aba2d582472492a9eec7c9466460a286a71973e72f8d057235855253707ba73b5436d6170e702edf2ed5df46722b2".to_owned(),
                   vec!["04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672".to_owned(),
-                      "04dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8f594bb5f72b37faae396a4259ea64ed5e6fdeb2a51c6467582b275925fab1394".to_owned()]),
+                       "04dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8f594bb5f72b37faae396a4259ea64ed5e6fdeb2a51c6467582b275925fab1394".to_owned()]),
                  ("04e7c92d2ef4294389c385fedd5387fba806687f5aba1c7ba285093dacd69354d9b4f9ea87450c75954ade455677475e92fb5e303db36753c2ea20e47d3e939662".to_owned(),
                   vec!["04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672".to_owned(),
-                      "04dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba6592ce19b946c4ee58546f5251d441a065ea50735606985e5b228788bec4e582898".to_owned()])]
+                       "04dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba6592ce19b946c4ee58546f5251d441a065ea50735606985e5b228788bec4e582898".to_owned()])]
         )
     }
 
