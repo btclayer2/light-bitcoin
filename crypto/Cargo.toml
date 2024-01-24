@@ -21,7 +21,7 @@ std = [
 digest = "0.9"
 ripemd160 = { version = "0.9", default-features = false }
 sha-1 = { version = "0.9", default-features = false }
-sha2 = { version = "0.9", default-features = false }
+sha2 = { version = "0.10", default-features = false }
 siphasher = { version = "0.3", default-features = false }
 
 light-bitcoin-primitives = { path = "../primitives", default-features = false }
