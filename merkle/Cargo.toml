@@ -26,7 +26,7 @@ light-bitcoin-primitives = { path = "../primitives", default-features = false }
 light-bitcoin-serialization = { path = "../serialization", default-features = false, features = ["derive"] }
 
 [dev-dependencies]
-hashbrown = "0.11"
+hashbrown = "0.14"
 hex = "0.4"
 rand = "0.8"
 light-bitcoin-crypto = { path = "../crypto" }
