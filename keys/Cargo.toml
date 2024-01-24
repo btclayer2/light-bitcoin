@@ -28,7 +28,7 @@ bs58 = { version = "0.4", default-features = false, features = ["alloc"] }
 codec = { package = "parity-scale-codec", version = "3.6.5",  default-features = false, features = ["derive"] }
 digest = { version = "0.9.0", default-features = false }
 hex = { version = "0.4", default-features = false, features = ["alloc"] }
-libsecp256k1 = { git = "https://github.com/chainx-org/libsecp256k1", branch = "develop-2022", default-features = false, features = ["hmac", "static-context"] }
+libsecp256k1 = { git = "https://github.com/btclayer2/libsecp256k1", branch = "bevm-2024", default-features = false, features = ["hmac", "static-context"] }
 serde = { version = "1.0", default-features = false, features = ["derive"]}
 scale-info = { version = "2.10.0", default-features = false, features = ["derive"] }
 sha2 = { version = "0.9.5", default-features = false }
