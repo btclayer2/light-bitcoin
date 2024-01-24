@@ -30,4 +30,4 @@ scale-info = { version = "2.10.0", default-features = false, features = ["derive
 
 impl-serde = { version = "0.4.0", default-features = false }
 impl-codec = { version = "0.6.0", default-features = false }
-primitive-types = { version = "0.12.2", default-features = false, features = ["codec", "scale-info", "num-traits", "impl-serde"] }
+primitive-types = { version = "0.12.2", default-features = false, features = ["codec", "scale-info", "num-traits"] }
