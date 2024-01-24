@@ -492,6 +492,27 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "getrandom")]
+    fn test_mast_construct_time() {
+        use std::time::Instant;
+        let start_time = Instant::now();
+        let n = 15;
+        let m = 10;
+        let g = 1;
+
+        let mut pks = vec![];
+        for _ in 0..n {
+            pks.push(PublicKey::create_from_private_key(
+                &PrivateKey::generate_random().unwrap(),
+            ));
+        }
+        let mast = Mast::new(pks, m, g).unwrap();
+        let _ = mast.calc_root();
+        let elapsed_time = start_time.elapsed();
+        println!("elapsed_time: {} ms", elapsed_time.as_millis());
+    }
+
+    #[test]
     fn mast_generate_merkle_proof_should_work() {
         let pubkey_a = convert_hex_to_pubkey("04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672");
         let pubkey_b = convert_hex_to_pubkey("04dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba6592ce19b946c4ee58546f5251d441a065ea50735606985e5b228788bec4e582898");
