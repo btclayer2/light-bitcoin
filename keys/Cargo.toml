@@ -31,7 +31,7 @@ hex = { version = "0.4", default-features = false, features = ["alloc"] }
 libsecp256k1 = { git = "https://github.com/btclayer2/libsecp256k1", branch = "bevm-2024", default-features = false, features = ["hmac", "static-context"] }
 serde = { version = "1.0", default-features = false, features = ["derive"]}
 scale-info = { version = "2.10.0", default-features = false, features = ["derive"] }
-sha2 = { version = "0.9.5", default-features = false }
+sha2 = { version = "0.10.8", default-features = false }
 # for no-std
 bitcoin-bech32 = { git = "https://github.com/chainx-org/rust-bech32-bitcoin", branch = "master", default-features = false }
 light-bitcoin-crypto = { path = "../crypto", default-features = false }
