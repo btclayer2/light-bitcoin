@@ -533,6 +533,37 @@ mod tests {
             "c0f4152c91b2c78a3524e7858c72ffa360da59e7c3c4d67d6787cf1e3bfe1684c1e38e30c81fc61186d0ed3956b5e49bd175178a638d1410e64f7716697a7e0ccd",
         );
 
+        // 5/3/2
+        let person_pubkeys = vec![
+            pubkey_a.clone(),
+            pubkey_b.clone(),
+            pubkey_c.clone(),
+            pubkey_d.clone(),
+            pubkey_e.clone(),
+        ];
+        let mast = Mast::new(person_pubkeys, 3, 2).unwrap();
+
+        let pubkey_abef =
+            KeyAgg::key_aggregation_n(&[pubkey_b.clone(), pubkey_c.clone(), pubkey_a.clone()])
+                .unwrap()
+                .x_tilde;
+        let proof = mast.generate_merkle_proof(&pubkey_abef).unwrap();
+        assert_eq!(
+            hex::encode(&proof),
+            "c05d173c64d514249707214af1c87206b84daeff743e97d1f85fd6c1d282c547209bec0ccfa0311447bc193675aefb0c0a8a557a2dfcdbb48676adc6aa1f0ea5ee",
+        );
+
+        let pubkey_abcf = KeyAgg::key_aggregation_n(&[
+            pubkey_a.clone(),
+            pubkey_b.clone(),
+            pubkey_c.clone(),
+            pubkey_f.clone(),
+        ])
+        .unwrap()
+        .x_tilde;
+        let proof = mast.generate_merkle_proof(&pubkey_abcf);
+        assert_eq!(proof, Err(MastError::MastGenProofError),);
+
         // 6/4/2
         let person_pubkeys = vec![
             pubkey_a.clone(),
