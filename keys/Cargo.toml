@@ -24,7 +24,7 @@ std = [
 
 [dependencies]
 arrayref = { version = "0.3.6" }
-bs58 = { version = "0.4", default-features = false, features = ["alloc"] }
+bs58 = { version = "0.5", default-features = false, features = ["alloc"] }
 codec = { package = "parity-scale-codec", version = "3.6.5",  default-features = false, features = ["derive"] }
 digest = { version = "0.9.0", default-features = false }
 hex = { version = "0.4", default-features = false, features = ["alloc"] }
